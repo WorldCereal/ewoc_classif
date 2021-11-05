@@ -21,8 +21,16 @@ References:
 """
 
 import argparse
+from datetime import datetime
 import logging
+from pathlib import Path
 import sys
+import tempfile
+from typing import List
+
+from dataship.dag.s3man import recursive_upload_dir_to_s3, get_s3_client
+from worldcereal.worldcereal_products import process_tiles
+
 
 from ewoc_classif import __version__
 
@@ -40,21 +48,34 @@ _logger = logging.getLogger(__name__)
 # when using this Python module as a library.
 
 
-def fib(n):
-    """Fibonacci example function
+def ewoc_classif(tile_id:str,
+                 config_filepath:Path,
+                 block_ids:List[str]=None,
+                 aez_id:int = None,
+                 out_dirpath:Path=Path(tempfile.gettempdir()))->None:
+    """Perform EWoC classification
 
     Args:
       n (int): integer
 
-    Returns:
-      int: n-th Fibonacci number
     """
-    assert n > 0
-    a, b = 1, 1
-    for i in range(n - 1):
-        a, b = b, a + b
-    return a
 
+    ## List all products stored in the bucket related to the tile id
+
+    
+    ## process tile (and optionally select blocks)
+    _logger.info('Use AEZ: .')
+    process_tiles(tile_id, config_filepath, out_dirpath,
+                  blocks=block_ids)
+
+    ## Push the results to the s3 bucket
+    s3_object_dirpath=f'/0000_{aez_id}_{datetime.now()}/'
+    _logger.debug('Push to %s', s3_object_dirpath)
+    recursive_upload_dir_to_s3(get_s3_client, out_dirpath, s3_object_dirpath, 'world-cereal')
+
+    # Change the status in the EWoC database
+
+    # Notify the vdm that the product is available
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -78,7 +99,13 @@ def parse_args(args):
         action="version",
         version="ewoc_classif {ver}".format(ver=__version__),
     )
-    parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
+    parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
+    parser.add_argument(dest="config_filepath", help="Path to the configuration file", type=Path)
+    parser.add_argument('-o','--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path, 
+                        default=tempfile())
+    parser.add_argument('--aez_id', dest="aez_id", help="AEZ ID", type=Path)
+    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process", nargs='*', 
+                        default=tempfile())
     parser.add_argument(
         "-v",
         "--verbose",
@@ -122,8 +149,7 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print("The {}-th Fibonacci number is {}".format(args.n, fib(args.n)))
+    ewoc_classif(args.tile_id, args.config_filepath, blocks=args.block_ids, out_dirpath=args.out_dirpath)
     _logger.info("Script ends here")
 
 
