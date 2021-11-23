@@ -28,11 +28,12 @@ import sys
 import tempfile
 from typing import List
 
-from dataship.dag.s3man import recursive_upload_dir_to_s3, get_s3_client
-from worldcereal.worldcereal_products import process_tiles
+from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
+from worldcereal.worldcereal_products import run_tile
 
 
 from ewoc_classif import __version__
+
 
 __author__ = "Mickael Savinaud"
 __copyright__ = "Mickael Savinaud"
@@ -60,18 +61,33 @@ def ewoc_classif(tile_id:str,
 
     """
 
-    ## List all products stored in the bucket related to the tile id
 
-    
-    ## process tile (and optionally select blocks)
+    production_id = '0000_0_09112021223005'
+
+
+    # Create the config file
+
+    # 1/ Create CSV file
+
+    ewoc_ard_bucket = EWOCARDBucket()
+
+    ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id)
+    ewoc_ard_bucket.optical_to_satio_csv(tile_id,production_id)
+    ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id)
+
+    ewoc_aux_data_bucket = EWOCAuxDataBucket()
+    ewoc_aux_data_bucket.agera5_to_satio_csv()
+
+
+
+    # Process tile (and optionally select blocks)
     _logger.info('Use AEZ: .')
-    process_tiles(tile_id, config_filepath, out_dirpath,
+    run_tile(tile_id, config_filepath, out_dirpath,
                   blocks=block_ids)
 
-    ## Push the results to the s3 bucket
-    s3_object_dirpath=f'/0000_{aez_id}_{datetime.now()}/'
-    _logger.debug('Push to %s', s3_object_dirpath)
-    recursive_upload_dir_to_s3(get_s3_client, out_dirpath, s3_object_dirpath, 'world-cereal')
+    # Push the results to the s3 bucket
+    ewoc_prd_bucket = EWOCPRDBucket()
+    ewoc_prd_bucket.upload_ewoc_prd(out_dirpath, f'{production_id}/')
 
     # Change the status in the EWoC database
 
@@ -102,10 +118,9 @@ def parse_args(args):
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
     parser.add_argument(dest="config_filepath", help="Path to the configuration file", type=Path)
     parser.add_argument('-o','--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path, 
-                        default=tempfile())
+                        default=tempfile.gettempdir())
     parser.add_argument('--aez_id', dest="aez_id", help="AEZ ID", type=Path)
-    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process", nargs='*', 
-                        default=tempfile())
+    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process", nargs='*')
     parser.add_argument(
         "-v",
         "--verbose",
@@ -149,8 +164,7 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    ewoc_classif(args.tile_id, args.config_filepath, blocks=args.block_ids, out_dirpath=args.out_dirpath)
-    _logger.info("Script ends here")
+    ewoc_classif(args.tile_id, args.config_filepath, block_ids=args.block_ids, out_dirpath=args.out_dirpath)
 
 
 def run():
