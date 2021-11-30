@@ -21,12 +21,13 @@ References:
 """
 
 import argparse
-from datetime import datetime
+from json import dump
 import logging
 from pathlib import Path
 import sys
-import tempfile
+from tempfile import gettempdir
 from typing import List
+
 
 from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from worldcereal.worldcereal_products import run_tile
@@ -50,10 +51,9 @@ _logger = logging.getLogger(__name__)
 
 
 def ewoc_classif(tile_id:str,
-                 config_filepath:Path,
-                 block_ids:List[str]=None,
+                 block_ids:List[int]=None,
                  aez_id:int = None,
-                 out_dirpath:Path=Path(tempfile.gettempdir()))->None:
+                 out_dirpath:Path=Path(gettempdir()))->None:
     """Perform EWoC classification
 
     Args:
@@ -67,7 +67,7 @@ def ewoc_classif(tile_id:str,
 
     # Create the config file
 
-    # 1/ Create CSV file
+    # 1/ Create config file
 
     ewoc_ard_bucket = EWOCARDBucket()
 
@@ -78,16 +78,50 @@ def ewoc_classif(tile_id:str,
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
     ewoc_aux_data_bucket.agera5_to_satio_csv()
 
+    season_year= 2019
+    season_period= 'annual'
+    season_type = "cropland"
+
+
+    ewoc_config ={
+	"parameters": {
+		"year": season_year,
+		"season": season_period,
+		"featuresettings": season_type,
+		"save_features": False,
+		"localmodels": True,
+		"segment": False,
+		"filtersettings": {
+			"kernelsize": 5,
+			"conf_threshold": 0.5
+		}
+	},
+	"inputs": {
+		"OPTICAL": str(Path(gettempdir()) / "satio_optical.csv"),
+		"SAR": str(Path(gettempdir()) / "satio_sar.csv"),
+		"THERMAL": str(Path(gettempdir()) / "satio_tir.csv"),
+		"DEM": "s3://ewoc-aux-data/CopDEM_20m",
+		"METEO": str(Path(gettempdir()) / "satio_agera5.csv")
+	},
+	"cropland_mask": "s3://world-cereal/EWOC_OUT",
+	"models": {
+		"annualcropland": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v042/cropland_detector_WorldCerealPixelCatBoost/config.json"
+	    }
+    }
+
+    ewoc_config_filepath= Path(gettempdir())/'ewoc_onfig.json'
+    with open(ewoc_config_filepath, 'w',encoding='UTF-8') as ewoc_config_fp:
+        dump(ewoc_config, ewoc_config_fp, indent=2)
 
 
     # Process tile (and optionally select blocks)
-    _logger.info('Use AEZ: .')
-    run_tile(tile_id, config_filepath, out_dirpath,
+    _logger.info('Run inteference')
+    run_tile(tile_id, ewoc_config_filepath, out_dirpath,
                   blocks=block_ids)
 
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
-    ewoc_prd_bucket.upload_ewoc_prd(out_dirpath, f'{production_id}/')
+    ewoc_prd_bucket.upload_ewoc_prd(out_dirpath/'cogs', f'{production_id}')
 
     # Change the status in the EWoC database
 
@@ -113,14 +147,13 @@ def parse_args(args):
     parser.add_argument(
         "--version",
         action="version",
-        version="ewoc_classif {ver}".format(ver=__version__),
+        version=f"ewoc_classif {__version__}",
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
-    parser.add_argument(dest="config_filepath", help="Path to the configuration file", type=Path)
-    parser.add_argument('-o','--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path, 
-                        default=tempfile.gettempdir())
+    parser.add_argument('-o','--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path,
+                        default=gettempdir())
     parser.add_argument('--aez_id', dest="aez_id", help="AEZ ID", type=Path)
-    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process", nargs='*')
+    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process", nargs='*', type=int)
     parser.add_argument(
         "-v",
         "--verbose",
@@ -164,7 +197,7 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    ewoc_classif(args.tile_id, args.config_filepath, block_ids=args.block_ids, out_dirpath=args.out_dirpath)
+    ewoc_classif(args.tile_id, block_ids=args.block_ids, out_dirpath=args.out_dirpath)
 
 
 def run():
