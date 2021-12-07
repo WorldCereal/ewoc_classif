@@ -153,7 +153,8 @@ def parse_args(args):
     parser.add_argument('-o','--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path,
                         default=gettempdir())
     parser.add_argument('--aez_id', dest="aez_id", help="AEZ ID", type=Path)
-    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process", nargs='*', type=int)
+    parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process",
+                        nargs='*', type=int)
     parser.add_argument(
         "-v",
         "--verbose",
