@@ -1,26 +1,9 @@
+
+# -*- coding: utf-8 -*-
+""" CLI to perform EWoC classification in EWoC processing system
 """
-This is a skeleton file that can serve as a starting point for a Python
-console script. To run this script uncomment the following lines in the
-``[options.entry_points]`` section in ``setup.cfg``::
-
-    console_scripts =
-         fibonacci = ewoc_classif.skeleton:run
-
-Then run ``pip install .`` (or ``pip install -e .`` for editable mode)
-which will install the command ``fibonacci`` inside your current environment.
-
-Besides console scripts, the header (i.e. until ``_logger``...) of this file can
-also be used as template for Python modules.
-
-Note:
-    This skeleton file can be safely removed if not needed!
-
-References:
-    - https://setuptools.readthedocs.io/en/latest/userguide/entry_point.html
-    - https://pip.pypa.io/en/stable/reference/pip_install
-"""
-
 import argparse
+from datetime import datetime
 from json import dump
 import logging
 from pathlib import Path
@@ -31,7 +14,7 @@ from typing import List
 
 from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from worldcereal.worldcereal_products import run_tile
-
+from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
 
@@ -42,16 +25,35 @@ __license__ = "Unlicense"
 
 _logger = logging.getLogger(__name__)
 
+EWOC_CROPLAND_DETECTOR = 'cropland'
+EWOC_CROPTYPE_DETECTOR = 'croptype'
+EWOC_CROPTYPE_DETECTORS = ['cereals',
+                           'maize',
+                           'springcereals',
+                           'springwheat',
+                           'wheat',
+                           'wintercereals',
+                           'winterwheat']
+EWOC_IRRIGATION_DETECTOR = 'irrigation'
+
+EWOC_DETECTORS = [EWOC_CROPLAND_DETECTOR,
+                  EWOC_IRRIGATION_DETECTOR,
+                 ].extend(EWOC_CROPTYPE_DETECTORS)
+
+EWOC_BASE_MODELS_ADRESS = 'https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/'
 
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
 # Python scripts/interactive interpreter, e.g. via
-# `from ewoc_classif.skeleton import fib`,
+# `from ewoc_classif.cli import ewoc_classif`,
 # when using this Python module as a library.
 
 
 def ewoc_classif(tile_id:str,
                  block_ids:List[int]=None,
+                 ewoc_detector:str=EWOC_CROPLAND_DETECTOR,
+                 end_season_year:int=2019,
+                 ewoc_season:str=EWOC_SUPPORTED_SEASONS[3],
                  aez_id:int = None,
                  out_dirpath:Path=Path(gettempdir()))->None:
     """Perform EWoC classification
@@ -60,7 +62,6 @@ def ewoc_classif(tile_id:str,
       n (int): integer
 
     """
-
 
     production_id = '0000_0_09112021223005'
 
@@ -78,16 +79,20 @@ def ewoc_classif(tile_id:str,
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
     ewoc_aux_data_bucket.agera5_to_satio_csv()
 
-    season_year= 2019
-    season_period= 'annual'
-    season_type = "cropland"
-
+    if ewoc_detector == EWOC_CROPLAND_DETECTOR:
+        featuressettings=EWOC_CROPLAND_DETECTOR
+    elif ewoc_detector == EWOC_IRRIGATION_DETECTOR:
+        featuressettings = EWOC_IRRIGATION_DETECTOR
+    elif ewoc_detector in EWOC_CROPTYPE_DETECTORS:
+        featuressettings = EWOC_CROPTYPE_DETECTOR
+    else:
+        raise ValueError(f'{ewoc_detector} not supported ({EWOC_DETECTORS}')
 
     ewoc_config ={
 	"parameters": {
-		"year": season_year,
-		"season": season_period,
-		"featuresettings": season_type,
+		"year": end_season_year,
+		"season": ewoc_season,
+		"featuresettings": featuressettings,
 		"save_features": False,
 		"localmodels": True,
 		"segment": False,
@@ -109,18 +114,20 @@ def ewoc_classif(tile_id:str,
 	    }
     }
 
-    ewoc_config_filepath= Path(gettempdir())/'ewoc_onfig.json'
+    ewoc_config_filepath= Path(gettempdir())/'ewoc_config.json'
     with open(ewoc_config_filepath, 'w',encoding='UTF-8') as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
 
 
     # Process tile (and optionally select blocks)
-    _logger.info('Run inteference')
+    _logger.info('Run inference')
+    # TODO: how to override the aez_id detected from the wc function get_matching_aez_id
     run_tile(tile_id, ewoc_config_filepath, out_dirpath,
                   blocks=block_ids)
 
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
+    _logger.info('{out_dirpath}')
     ewoc_prd_bucket.upload_ewoc_prd(out_dirpath/'cogs', f'{production_id}')
 
     # Change the status in the EWoC database
@@ -132,6 +139,22 @@ def ewoc_classif(tile_id:str,
 # API allowing them to be called directly from the terminal as a CLI
 # executable/script.
 
+def valid_year(cli_str:str)->int:
+    """Check if the intput string is a valid year
+
+    Args:
+        cli_str (str): Input string to convert in year
+
+    Raises:
+        argparse.ArgumentTypeError: [description]
+
+    Returns:
+        int: a valid year as int
+    """
+    try:
+        return datetime.strptime(cli_str, "%Y").year()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Not a valid year: {cli_str}!") from None
 
 def parse_args(args):
     """Parse command line parameters
@@ -152,9 +175,22 @@ def parse_args(args):
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
     parser.add_argument('-o','--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path,
                         default=gettempdir())
-    parser.add_argument('--aez_id', dest="aez_id", help="AEZ ID", type=Path)
+    parser.add_argument('--aez-id', dest="aez_id", help="EWoC AEZ ID", type=str)
     parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process",
                         nargs='*', type=int)
+    parser.add_argument('--ewoc-detector', dest="ewoc_detector", help="EWoC detector",
+                        type=str,
+                        choices=EWOC_DETECTORS,
+                        default=EWOC_CROPLAND_DETECTOR)
+    parser.add_argument('--end-season-year', dest="end_season_year",
+                        help="Year to use infer season date - format YYYY",
+                        type=valid_year,
+                        default=2019)
+    parser.add_argument('--ewoc-season', dest="ewoc_season",
+                        help="EWoC season",
+                        type=str,
+                        default="annual",
+                        choices=EWOC_SUPPORTED_SEASONS)
     parser.add_argument(
         "-v",
         "--verbose",
@@ -174,7 +210,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def setup_logging(loglevel):
+def setup_logging(loglevel:int)->None:
     """Setup basic logging
 
     Args:
@@ -198,7 +234,13 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    ewoc_classif(args.tile_id, block_ids=args.block_ids, out_dirpath=args.out_dirpath)
+    ewoc_classif(args.tile_id,
+                 end_season_year=args.end_season_year,
+                 ewoc_detector=args.ewoc_detector,
+                 ewoc_season=args.ewoc_season,
+                 block_ids=args.block_ids,
+                 aez_id=args.aez_id,
+                 out_dirpath=args.out_dirpath)
 
 
 def run():
