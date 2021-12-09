@@ -40,7 +40,10 @@ EWOC_DETECTORS = [EWOC_CROPLAND_DETECTOR,
                   EWOC_IRRIGATION_DETECTOR,
                  ].extend(EWOC_CROPTYPE_DETECTORS)
 
-EWOC_BASE_MODELS_ADRESS = 'https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/'
+EWOC_MODELS_BASEPATH = 'https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/'
+EWOC_MODELS_TYPE = 'WorldCerealPixelCatBoost'
+EWOC_MODELS_VERSION_ID = 'v042'
+
 
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
@@ -81,10 +84,16 @@ def ewoc_classif(tile_id:str,
 
     if ewoc_detector == EWOC_CROPLAND_DETECTOR:
         featuressettings=EWOC_CROPLAND_DETECTOR
+        ewoc_model_key='annualcropland'
+        ewoc_model_name=f'{EWOC_CROPLAND_DETECTOR}_detector_{EWOC_MODELS_TYPE}'
+        ewoc_model_path=f'{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{EWOC_MODELS_VERSION_ID}/{ewoc_model_name}/config.json'
     elif ewoc_detector == EWOC_IRRIGATION_DETECTOR:
         featuressettings = EWOC_IRRIGATION_DETECTOR
     elif ewoc_detector in EWOC_CROPTYPE_DETECTORS:
         featuressettings = EWOC_CROPTYPE_DETECTOR
+        ewoc_model_key=ewoc_detector
+        ewoc_model_name=f'{ewoc_detector}_detector_{EWOC_MODELS_TYPE}'
+        ewoc_model_path=f'{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{EWOC_MODELS_VERSION_ID}/{ewoc_model_name}/config.json'
     else:
         raise ValueError(f'{ewoc_detector} not supported ({EWOC_DETECTORS}')
 
@@ -110,10 +119,9 @@ def ewoc_classif(tile_id:str,
 	},
 	"cropland_mask": "s3://world-cereal/EWOC_OUT",
 	"models": {
-		"annualcropland": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v042/cropland_detector_WorldCerealPixelCatBoost/config.json"
+		ewoc_model_key: ewoc_model_path
 	    }
     }
-
     ewoc_config_filepath= Path(gettempdir())/'ewoc_config.json'
     with open(ewoc_config_filepath, 'w',encoding='UTF-8') as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
