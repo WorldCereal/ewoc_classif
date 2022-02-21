@@ -2,6 +2,7 @@
 """ CLI to perform EWoC classification in EWoC processing system
 """
 import argparse
+from uuid import uuid4
 from datetime import datetime
 from json import dump
 import logging
@@ -62,8 +63,12 @@ def ewoc_classif(tile_id: str,
       :param out_dirpath: Classification output directory, this folder will be uploaded to s3
     """
 
-    # production_id = '0000_0_09112021223005' # For 31TCJ
-    production_id = '0000_0_10112021004505'  # For 36MUB
+    production_id = '0000_0_09112021223005' # For 31TCJ
+    #production_id = '0000_0_10112021004505'  # For 36MUB, l8_sr case
+    # Add some uniqueness to this code
+    uid = uuid4().hex[:6]
+    uid = tile_id + "_" +uid
+
 
     # Create the config file
 
@@ -73,17 +78,17 @@ def ewoc_classif(tile_id: str,
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
 
     if sar_csv is None:
-        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id)
-        sar_csv = str(Path(gettempdir()) / "satio_sar.csv")
+        sar_csv = str(Path(gettempdir()) / f"{uid}_satio_sar.csv")
+        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath= sar_csv)
     if optical_csv is None:
-        ewoc_ard_bucket.optical_to_satio_csv(tile_id, production_id)
-        optical_csv = str(Path(gettempdir()) / "satio_optical.csv")
+        optical_csv = str(Path(gettempdir()) / f"{uid}_satio_optical.csv")
+        ewoc_ard_bucket.optical_to_satio_csv(tile_id, production_id, filepath=optical_csv)
     if tir_csv is None:
-        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id)
-        tir_csv = str(Path(gettempdir()) / "satio_tir.csv")
+        tir_csv = str(Path(gettempdir()) / f"{uid}_satio_tir.csv")
+        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
-        ewoc_aux_data_bucket.agera5_to_satio_csv()
-        agera5_csv = str(Path(gettempdir()) / "satio_tir.csv")
+        agera5_csv = str(Path(gettempdir()) / f"{uid}_satio_agera5.csv")
+        ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
     if ewoc_detector == EWOC_CROPLAND_DETECTOR:
         featuressettings = EWOC_CROPLAND_DETECTOR
@@ -126,11 +131,13 @@ def ewoc_classif(tile_id: str,
         }
     }
 
-    ewoc_config_filepath = Path(gettempdir()) / 'ewoc_config.json'
+    ewoc_config_filepath = Path(gettempdir()) / f"{uid}_ewoc_config.json"
     with open(ewoc_config_filepath, 'w', encoding='UTF-8') as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
 
     # Process tile (and optionally select blocks)
+    if out_dirpath == Path(gettempdir()):
+        out_dirpath = out_dirpath / uid
     _logger.info('Run inference')
     run_tile(tile_id, ewoc_config_filepath, out_dirpath,
              blocks=block_ids)
@@ -138,7 +145,7 @@ def ewoc_classif(tile_id: str,
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
     _logger.info('{out_dirpath}')
-    ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / 'cogs', f'{production_id}')
+    ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / 'cogs', production_id)
 
     # Change the status in the EWoC database
 
@@ -182,10 +189,10 @@ def parse_args(args):
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
     parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process",
                         nargs='*', type=int)
-    parser.add_argument('--optical-csv', dest="optical_csv", help="List of OPTICAL products for a given S2 tile", type=Path)
-    parser.add_argument('--sar-csv', dest="sar_csv", help="List of SAR products for a given S2 tile", type=Path)
-    parser.add_argument('--tir-csv', dest="tir_csv", help="List of TIR products for a given S2 tile", type=Path)
-    parser.add_argument('--agera5-csv', dest="agera5_csv", help="Agera5 list", type=Path)
+    parser.add_argument('--optical-csv', dest="optical_csv", help="List of OPTICAL products for a given S2 tile", type=Path, default=None)
+    parser.add_argument('--sar-csv', dest="sar_csv", help="List of SAR products for a given S2 tile", default=None, type=Path)
+    parser.add_argument('--tir-csv', dest="tir_csv", help="List of TIR products for a given S2 tile", default=None, type=Path)
+    parser.add_argument('--agera5-csv', dest="agera5_csv", help="Agera5 list", default=None, type=Path)
     parser.add_argument('--ewoc-detector', dest="ewoc_detector", help="EWoC detector",
                         type=str,
                         choices=EWOC_DETECTORS,
