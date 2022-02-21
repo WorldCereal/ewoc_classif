@@ -44,6 +44,10 @@ EWOC_MODELS_VERSION_ID = 'v042'
 
 def ewoc_classif(tile_id: str,
                  block_ids: List[int] = None,
+                 sar_csv: Path = None,
+                 optical_csv: Path = None,
+                 tir_csv: Path = None,
+                 agera5_csv: Path = None,
                  ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
                  end_season_year: int = 2019,
                  ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
@@ -66,14 +70,20 @@ def ewoc_classif(tile_id: str,
     # 1/ Create config file
 
     ewoc_ard_bucket = EWOCARDBucket()
-
-    ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id)
-    ewoc_ard_bucket.optical_to_satio_csv(tile_id, production_id)
-    ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id)
-
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
-    # ewoc_aux_data_bucket._download_prd("AgERA5/satio_agera5.csv", Path(gettempdir()) / "satio_agera5.csv")
-    ewoc_aux_data_bucket.agera5_to_satio_csv()
+
+    if sar_csv is None:
+        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id)
+        sar_csv = str(Path(gettempdir()) / "satio_sar.csv")
+    if optical_csv is None:
+        ewoc_ard_bucket.optical_to_satio_csv(tile_id, production_id)
+        optical_csv = str(Path(gettempdir()) / "satio_optical.csv")
+    if tir_csv is None:
+        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id)
+        tir_csv = str(Path(gettempdir()) / "satio_tir.csv")
+    if agera5_csv is None:
+        ewoc_aux_data_bucket.agera5_to_satio_csv()
+        agera5_csv = str(Path(gettempdir()) / "satio_tir.csv")
 
     if ewoc_detector == EWOC_CROPLAND_DETECTOR:
         featuressettings = EWOC_CROPLAND_DETECTOR
@@ -104,17 +114,18 @@ def ewoc_classif(tile_id: str,
             }
         },
         "inputs": {
-            "OPTICAL": str(Path(gettempdir()) / "satio_optical.csv"),
-            "SAR": str(Path(gettempdir()) / "satio_sar.csv"),
-            "THERMAL": str(Path(gettempdir()) / "satio_tir.csv"),
+            "OPTICAL": optical_csv,
+            "SAR": sar_csv,
+            "THERMAL": tir_csv,
             "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": str(Path(gettempdir()) / "satio_agera5.csv")
+            "METEO": agera5_csv
         },
         "cropland_mask": "s3://world-cereal/EWOC_OUT",
         "models": {
             ewoc_model_key: ewoc_model_path
         }
     }
+
     ewoc_config_filepath = Path(gettempdir()) / 'ewoc_config.json'
     with open(ewoc_config_filepath, 'w', encoding='UTF-8') as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
@@ -162,17 +173,19 @@ def parse_args(args):
     Returns:
       :obj:`argparse.Namespace`: command line parameters namespace
     """
-    parser = argparse.ArgumentParser(description="Just a Fibonacci demonstration")
+    parser = argparse.ArgumentParser(description="EWoC Classification parser")
     parser.add_argument(
         "--version",
         action="version",
         version=f"ewoc_classif {__version__}",
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
-    parser.add_argument('-o', '--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path,
-                        default=gettempdir())
     parser.add_argument('--block-ids', dest="block_ids", help="List of block id to process",
                         nargs='*', type=int)
+    parser.add_argument('--optical-csv', dest="optical_csv", help="List of OPTICAL products for a given S2 tile", type=Path)
+    parser.add_argument('--sar-csv', dest="sar_csv", help="List of SAR products for a given S2 tile", type=Path)
+    parser.add_argument('--tir-csv', dest="tir_csv", help="List of TIR products for a given S2 tile", type=Path)
+    parser.add_argument('--agera5-csv', dest="agera5_csv", help="Agera5 list", type=Path)
     parser.add_argument('--ewoc-detector', dest="ewoc_detector", help="EWoC detector",
                         type=str,
                         choices=EWOC_DETECTORS,
@@ -186,6 +199,8 @@ def parse_args(args):
                         type=str,
                         default="annual",
                         choices=EWOC_SUPPORTED_SEASONS)
+    parser.add_argument('-o', '--out-dirpath', dest="out_dirpath", help="Output Dirpath", type=Path,
+                        default=gettempdir())
     parser.add_argument(
         "-v",
         "--verbose",
