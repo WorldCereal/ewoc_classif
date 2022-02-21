@@ -51,4 +51,4 @@ MANIFEST
 # Per-project virtualenvs
 .venv*/
 .conda*/
-.tar.gz
+*tar.gz
