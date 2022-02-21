@@ -39,7 +39,8 @@ def valid_year(cli_str: str) -> int:
     except ValueError:
         raise argparse.ArgumentTypeError(f"Not a valid year: {cli_str}!") from None
 
-def remove_tmp_files(folder: Path , suffix: str) -> None:
+
+def remove_tmp_files(folder: Path, suffix: str) -> None:
     """
     Remove temporary files created by the classifier in cwd
     :param folder: Folder with temp files, probably cwd
@@ -50,4 +51,3 @@ def remove_tmp_files(folder: Path , suffix: str) -> None:
     for file in files_to_del:
         file.unlink()
         _logger.info(f"Deleted tmp file: {file}")
-

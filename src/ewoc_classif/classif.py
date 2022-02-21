@@ -5,9 +5,11 @@ from tempfile import gettempdir
 from typing import List
 from uuid import uuid4
 
-from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
+from ewoc_dag.bucket.ewoc import (EWOCARDBucket, EWOCAuxDataBucket,
+                                  EWOCPRDBucket)
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
+
 from ewoc_classif.utils import remove_tmp_files
 
 _logger = logging.getLogger(__name__)
@@ -138,7 +140,7 @@ def run_classif(
     ewoc_prd_bucket = EWOCPRDBucket()
     _logger.info(f"{out_dirpath}")
     ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
-    remove_tmp_files(Path.cwd(),f"{tile_id}.tif")
+    remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
     # Change the status in the EWoC database
 
     # Notify the vdm that the product is available
