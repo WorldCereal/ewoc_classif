@@ -42,29 +42,24 @@ EWOC_MODELS_TYPE = 'WorldCerealPixelCatBoost'
 EWOC_MODELS_VERSION_ID = 'v042'
 
 
-# ---- Python API ----
-# The functions defined in this section can be imported by users in their
-# Python scripts/interactive interpreter, e.g. via
-# `from ewoc_classif.cli import ewoc_classif`,
-# when using this Python module as a library.
-
-
 def ewoc_classif(tile_id: str,
                  block_ids: List[int] = None,
                  ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
                  end_season_year: int = 2019,
                  ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
                  out_dirpath: Path = Path(gettempdir())) -> None:
-    """Perform EWoC classification
-
-    Args:
-      n (int): integer
-
+    """
+    Perform EWoC classification
+      :param tile_id: Sentinel-2 MGRS Tile id (ex 31TCJ)
+      :param block_ids: Each tile id is divided into blocks, you can specify a list of blocks to process
+      :param ewoc_detector: Type of classification applied: cropland, cereals, maize, ...
+      :param end_season_year: Season's end year
+      :param ewoc_season: Season: winter, summer1, summer2, ...
+      :param out_dirpath: Classification output directory, this folder will be uploaded to s3
     """
 
-    #production_id = '0000_0_09112021223005' # For 31TCJ
-    production_id = '0000_0_10112021004505' # For 36MUB
-
+    # production_id = '0000_0_09112021223005' # For 31TCJ
+    production_id = '0000_0_10112021004505'  # For 36MUB
 
     # Create the config file
 
@@ -77,7 +72,7 @@ def ewoc_classif(tile_id: str,
     ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id)
 
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
-    #ewoc_aux_data_bucket._download_prd("AgERA5/satio_agera5.csv", Path(gettempdir()) / "satio_agera5.csv")
+    # ewoc_aux_data_bucket._download_prd("AgERA5/satio_agera5.csv", Path(gettempdir()) / "satio_agera5.csv")
     ewoc_aux_data_bucket.agera5_to_satio_csv()
 
     if ewoc_detector == EWOC_CROPLAND_DETECTOR:
@@ -138,11 +133,6 @@ def ewoc_classif(tile_id: str,
 
     # Notify the vdm that the product is available
 
-
-# ---- CLI ----
-# The functions defined in this section are wrappers around the main Python
-# API allowing them to be called directly from the terminal as a CLI
-# executable/script.
 
 def valid_year(cli_str: str) -> int:
     """Check if the intput string is a valid year
@@ -228,14 +218,8 @@ def setup_logging(loglevel: int) -> None:
 
 
 def main(args):
-    """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
-
-    Instead of returning the value from :func:`fib`, it prints the result to the
-    ``stdout`` in a nicely formatted message.
-
-    Args:
-      args (List[str]): command line parameters as list of strings
-          (for example  ``["--verbose", "42"]``).
+    """
+    Run EWoC Classification
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
@@ -256,14 +240,4 @@ def run():
 
 
 if __name__ == "__main__":
-    # ^  This is a guard statement that will prevent the following code from
-    #    being executed in the case someone imports this file instead of
-    #    executing it as a script.
-    #    https://docs.python.org/3/library/__main__.html
-
-    # After installing your project with pip, users can also run your Python
-    # modules as scripts via the ``-m`` flag, as defined in PEP 338::
-    #
-    #     python -m ewoc_classif.skeleton 42
-    #
     run()
