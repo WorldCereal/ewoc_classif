@@ -1,10 +1,11 @@
 import argparse
 import logging
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
 
-_logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def setup_logging(loglevel: int) -> None:
@@ -47,7 +48,11 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
     :param suffix: Pattern for the search ex 31TCJ.tif
     :return: None
     """
-    files_to_del = list(folder.rglob(f"*{suffix}"))
-    for file in files_to_del:
-        file.unlink()
-        _logger.info(f"Deleted tmp file: {file}")
+    elem_to_del = list(folder.rglob(f"*{suffix}"))
+    for elem in elem_to_del:
+        if elem.is_dir():
+            shutil.rmtree(elem)
+            logger.info(f"Deleted tmp file: {elem}")
+        elif elem.is_file():
+            elem.unlink()
+            logger.info(f"Deleted tmp file: {elem}")

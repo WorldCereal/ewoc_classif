@@ -140,7 +140,10 @@ def run_classif(
     ewoc_prd_bucket = EWOCPRDBucket()
     _logger.info(f"{out_dirpath}")
     ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+    # Remove temporary files created by the classifier in cwd
     remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
+    remove_tmp_files(Path.cwd(), "features.zarr")
+
     # Change the status in the EWoC database
 
     # Notify the vdm that the product is available
