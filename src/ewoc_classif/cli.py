@@ -5,6 +5,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import List
 from tempfile import gettempdir
 
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
@@ -38,6 +39,7 @@ def parse_args(args):
         version=f"ewoc_classif {__version__}",
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
+    parser.add_argument(dest="production_id", help="EWoC production id", type=str)
     parser.add_argument(
         "--block-ids",
         dest="block_ids",
@@ -127,6 +129,7 @@ def main(args):
     setup_logging(args.loglevel)
     run_classif(
         args.tile_id,
+        args.production_id,
         sar_csv=args.sar_csv,
         optical_csv=args.optical_csv,
         tir_csv=args.tir_csv,
