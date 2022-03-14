@@ -42,6 +42,7 @@ EWOC_MODELS_VERSION_ID = "v042"
 
 def run_classif(
     tile_id: str,
+    production_id: str,
     block_ids: List[int] = None,
     sar_csv: Path = None,
     optical_csv: Path = None,
@@ -62,9 +63,6 @@ def run_classif(
       :param out_dirpath: Classification output directory, this folder will be uploaded to s3
     """
 
-    production_id = "0000_0_09112021223005"  # For 31TCJ
-    # production_id = '0000_0_10112021004505'  # For 36MUB, l8_sr case
-    # Add some uniqueness to this code
     uid = uuid4().hex[:6]
     uid = tile_id + "_" + uid
 
