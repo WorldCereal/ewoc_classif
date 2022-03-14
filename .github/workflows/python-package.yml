@@ -38,7 +38,7 @@ jobs:
       with:
         repository: "WorldCereal/ewoc_dataship"
         tag: "${{ env.EWOC_DATASHIP_VERSION }}"
-        fileName: "dataship-${{ env.EWOC_DATASHIP_VERSION }}.tar.gz"
+        fileName: "ewoc_dag-${{ env.EWOC_DATASHIP_VERSION }}.tar.gz"
         token: ${{ secrets.CS_ORG_TOKEN }}
 
     - name: Download WORLDCEREAL
