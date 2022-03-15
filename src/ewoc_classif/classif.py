@@ -137,7 +137,9 @@ def run_classif(
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
     _logger.info(f"{out_dirpath}")
-    ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+    nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+    # Add Upload print
+    print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
     # Remove temporary files created by the classifier in cwd
     remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
     remove_tmp_files(Path.cwd(), "features.zarr")
