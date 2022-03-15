@@ -95,6 +95,13 @@ def parse_args(args):
         choices=EWOC_SUPPORTED_SEASONS,
     )
     parser.add_argument(
+        "--model-version",
+        dest="model_version",
+        help="Model version",
+        type=str,
+        default="v200",
+    )
+    parser.add_argument(
         "-o",
         "--out-dirpath",
         dest="out_dirpath",
@@ -138,6 +145,7 @@ def main(args):
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
+        model_version = args.model_version,
         out_dirpath=args.out_dirpath,
     )
 
