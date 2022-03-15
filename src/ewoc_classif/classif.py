@@ -37,7 +37,6 @@ EWOC_MODELS_BASEPATH = (
     "https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/"
 )
 EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
-EWOC_MODELS_VERSION_ID = "v042"
 
 
 def run_classif(
@@ -51,6 +50,7 @@ def run_classif(
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
+    model_version: str = "v200",
     out_dirpath: Path = Path(gettempdir()),
 ) -> None:
     """
@@ -92,14 +92,14 @@ def run_classif(
         featuressettings = EWOC_CROPLAND_DETECTOR
         ewoc_model_key = "annualcropland"
         ewoc_model_name = f"{EWOC_CROPLAND_DETECTOR}_detector_{EWOC_MODELS_TYPE}"
-        ewoc_model_path = f"{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{EWOC_MODELS_VERSION_ID}/{ewoc_model_name}/config.json"
+        ewoc_model_path = f"{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{model_version}/{ewoc_model_name}/config.json"
     elif ewoc_detector == EWOC_IRRIGATION_DETECTOR:
         featuressettings = EWOC_IRRIGATION_DETECTOR
     elif ewoc_detector in EWOC_CROPTYPE_DETECTORS:
         featuressettings = EWOC_CROPTYPE_DETECTOR
         ewoc_model_key = ewoc_detector
         ewoc_model_name = f"{ewoc_detector}_detector_{EWOC_MODELS_TYPE}"
-        ewoc_model_path = f"{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{EWOC_MODELS_VERSION_ID}/{ewoc_model_name}/config.json"
+        ewoc_model_path = f"{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{model_version}/{ewoc_model_name}/config.json"
     else:
         raise ValueError(f"{ewoc_detector} not supported ({EWOC_DETECTORS}")
 
@@ -116,7 +116,7 @@ def run_classif(
         "inputs": {
             "OPTICAL": str(optical_csv),
             "SAR": str(sar_csv),
-            "THERMAL": str(tir_csv),
+            "TIR": str(tir_csv),
             "DEM": "s3://ewoc-aux-data/CopDEM_20m",
             "METEO": str(agera5_csv),
         },
