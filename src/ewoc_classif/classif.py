@@ -10,7 +10,7 @@ from ewoc_dag.bucket.ewoc import (EWOCARDBucket, EWOCAuxDataBucket,
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import remove_tmp_files
+from ewoc_classif.utils import remove_tmp_files, generate_config_file
 
 _logger = logging.getLogger(__name__)
 
@@ -88,42 +88,14 @@ def run_classif(
         agera5_csv = str(Path(gettempdir()) / f"{uid}_satio_agera5.csv")
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
-    if ewoc_detector == EWOC_CROPLAND_DETECTOR:
-        featuressettings = EWOC_CROPLAND_DETECTOR
-        ewoc_model_key = "annualcropland"
-        ewoc_model_name = f"{EWOC_CROPLAND_DETECTOR}_detector_{EWOC_MODELS_TYPE}"
-        ewoc_model_path = f"{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{model_version}/{ewoc_model_name}/config.json"
-    elif ewoc_detector == EWOC_IRRIGATION_DETECTOR:
-        featuressettings = EWOC_IRRIGATION_DETECTOR
-    elif ewoc_detector in EWOC_CROPTYPE_DETECTORS:
-        featuressettings = EWOC_CROPTYPE_DETECTOR
-        ewoc_model_key = ewoc_detector
-        ewoc_model_name = f"{ewoc_detector}_detector_{EWOC_MODELS_TYPE}"
-        ewoc_model_path = f"{EWOC_MODELS_BASEPATH}{EWOC_MODELS_TYPE}/{model_version}/{ewoc_model_name}/config.json"
-    else:
-        raise ValueError(f"{ewoc_detector} not supported ({EWOC_DETECTORS}")
-
-    ewoc_config = {
-        "parameters": {
-            "year": end_season_year,
-            "season": ewoc_season,
-            "featuresettings": featuressettings,
-            "save_features": False,
-            "localmodels": True,
-            "segment": False,
-            "filtersettings": {"kernelsize": 5, "conf_threshold": 0.5},
-        },
-        "inputs": {
-            "OPTICAL": str(optical_csv),
-            "SAR": str(sar_csv),
-            "TIR": str(tir_csv),
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": str(agera5_csv),
-        },
-        "cropland_mask": "s3://world-cereal/EWOC_OUT",
-        "models": {ewoc_model_key: ewoc_model_path},
+    csv_dict = {
+        "OPTICAL": str(optical_csv),
+        "SAR": str(sar_csv),
+        "TIR": str(tir_csv),
+        "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+        "METEO": str(agera5_csv),
     }
-
+    ewoc_config = generate_config_file(ewoc_detector, end_season_year, ewoc_season, model_version, csv_dict)
     ewoc_config_filepath = Path(gettempdir()) / f"{uid}_ewoc_config.json"
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
