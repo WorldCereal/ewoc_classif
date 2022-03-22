@@ -102,17 +102,19 @@ def run_classif(
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
     logger.info("Run inference")
-    total_ids = 483
+
     if block_ids is not None:
-        logger.info(f'Processing custom ids from CLI {"-".join(block_ids)}')
+        total_ids = len(block_ids)-1
+        logger.info(f'Processing custom ids from CLI {block_ids}')
         ids_range = block_ids
     else:
+        total_ids = 483
         logger.info(f'Processing {total_ids} blocks')
         ids_range = range(total_ids + 1)
     for block_id in ids_range:
         try:
             logger.info(f"[{block_id}/{total_ids}] Start processing")
-            run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[block_id], postprocess=False, process=True)
+            run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False, process=True)
         except:
             logger.error(f"failed for block {block_id}")
     logger.info("Start cog mosaic")

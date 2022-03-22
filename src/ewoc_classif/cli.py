@@ -44,8 +44,7 @@ def parse_args(args):
         "--block-ids",
         dest="block_ids",
         help="List of block id to process",
-        nargs="*",
-        type=int,
+        nargs="+",
     )
     parser.add_argument(
         "--optical-csv",
