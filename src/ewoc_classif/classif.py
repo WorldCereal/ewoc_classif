@@ -1,4 +1,5 @@
 import logging
+from loguru import logger
 from json import dump
 from pathlib import Path
 from tempfile import gettempdir
@@ -11,9 +12,6 @@ from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
 from ewoc_classif.utils import remove_tmp_files, generate_config_file
-
-_logger = logging.getLogger(__name__)
-
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -40,18 +38,18 @@ EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
 
 
 def run_classif(
-    tile_id: str,
-    production_id: str,
-    block_ids: List[int] = None,
-    sar_csv: Path = None,
-    optical_csv: Path = None,
-    tir_csv: Path = None,
-    agera5_csv: Path = None,
-    ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
-    end_season_year: int = 2019,
-    ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-    model_version: str = "v200",
-    out_dirpath: Path = Path(gettempdir()),
+        tile_id: str,
+        production_id: str,
+        block_ids: List[int] = None,
+        sar_csv: Path = None,
+        optical_csv: Path = None,
+        tir_csv: Path = None,
+        agera5_csv: Path = None,
+        ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
+        end_season_year: int = 2019,
+        ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
+        model_version: str = "v200",
+        out_dirpath: Path = Path(gettempdir()),
 ) -> None:
     """
     Perform EWoC classification
@@ -103,12 +101,27 @@ def run_classif(
     # Process tile (and optionally select blocks)
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
-    _logger.info("Run inference")
-    run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=block_ids)
+    logger.info("Run inference")
 
+    if block_ids is not None:
+        total_ids = len(block_ids)-1
+        logger.info(f'Processing custom ids from CLI {block_ids}')
+        ids_range = block_ids
+    else:
+        total_ids = 483
+        logger.info(f'Processing {total_ids} blocks')
+        ids_range = range(total_ids + 1)
+    for block_id in ids_range:
+        try:
+            logger.info(f"[{block_id}/{total_ids}] Start processing")
+            run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False, process=True)
+        except:
+            logger.error(f"failed for block {block_id}")
+    logger.info("Start cog mosaic")
+    run_tile(tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False)
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
-    _logger.info(f"{out_dirpath}")
+    logger.info(f"{out_dirpath}")
     nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
     # Add Upload print
     print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
