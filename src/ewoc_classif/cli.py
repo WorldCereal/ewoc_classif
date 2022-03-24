@@ -108,6 +108,13 @@ def parse_args(args):
         default=True,
     )
     parser.add_argument(
+        "--postprocess",
+        dest="postprocess",
+        help="True if you want to do mosaic only",
+        type=bool,
+        default=False,
+    )
+    parser.add_argument(
         "-o",
         "--out-dirpath",
         dest="out_dirpath",
@@ -153,6 +160,7 @@ def main(args):
         block_ids=args.block_ids,
         model_version = args.model_version,
         upload_block = args.upload_block,
+        postprocess = args.postprocess,
         out_dirpath=args.out_dirpath,
     )
 
