@@ -101,6 +101,13 @@ def parse_args(args):
         default="v200",
     )
     parser.add_argument(
+        "--upload-block",
+        dest="upload_block",
+        help="True if you want to upload each block",
+        type=bool,
+        default=True,
+    )
+    parser.add_argument(
         "-o",
         "--out-dirpath",
         dest="out_dirpath",
@@ -145,6 +152,7 @@ def main(args):
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
         model_version = args.model_version,
+        upload_block = args.upload_block,
         out_dirpath=args.out_dirpath,
     )
 

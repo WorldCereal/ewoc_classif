@@ -1,4 +1,6 @@
 import logging
+import shutil
+
 from loguru import logger
 from json import dump
 from pathlib import Path
@@ -49,6 +51,7 @@ def run_classif(
         end_season_year: int = 2019,
         ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
         model_version: str = "v200",
+        upload_block: bool = True,
         out_dirpath: Path = Path(gettempdir()),
 ) -> None:
     """
@@ -115,20 +118,24 @@ def run_classif(
         try:
             logger.info(f"[{block_id}/{total_ids}] Start processing")
             run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False, process=True)
+            if upload_block:
+                ewoc_prd_bucket = EWOCPRDBucket()
+                logger.info(f"Push block id {block_id} to S3")
+                nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "blocks", production_id+"/blocks")
+                shutil.rmtree(out_dirpath/"blocks")
+                # Add Upload print
+                print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
         except:
             logger.error(f"failed for block {block_id}")
-    logger.info("Start cog mosaic")
-    run_tile(tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False)
-    # Push the results to the s3 bucket
-    ewoc_prd_bucket = EWOCPRDBucket()
-    logger.info(f"{out_dirpath}")
-    nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
-    # Add Upload print
-    print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+    if not upload_block:
+        logger.info("Start cog mosaic")
+        run_tile(tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False)
+        # Push the results to the s3 bucket
+        ewoc_prd_bucket = EWOCPRDBucket()
+        nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+        # Add Upload print
+        print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
     # Remove temporary files created by the classifier in cwd
     remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
     remove_tmp_files(Path.cwd(), "features.zarr")
 
-    # Change the status in the EWoC database
-
-    # Notify the vdm that the product is available
