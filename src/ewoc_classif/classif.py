@@ -158,7 +158,7 @@ def run_classif(
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
     if not postprocess:
-        process_blocks(tile_id, tile_id, ewoc_config_filepath, block_ids, production_id, upload_block, out_dirpath)
+        process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, upload_block, out_dirpath)
     else:
         logger.info('Postprocess: only mosaic')
         postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
