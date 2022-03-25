@@ -1,8 +1,10 @@
 import argparse
 import logging
+import os
 import shutil
 import sys
 from datetime import datetime
+from distutils.util import strtobool
 from pathlib import Path
 
 from loguru import logger
@@ -58,7 +60,7 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
             logger.info(f"Deleted tmp file: {elem}")
 
 
-def generate_config_file(featuresettings, end_season_year, ewoc_season, model_version, csv_dict):
+def generate_config_file(featuresettings, end_season_year, ewoc_season,production_id, model_version, csv_dict):
     parameters = {
         "year": end_season_year,
         "season": ewoc_season,
@@ -77,10 +79,16 @@ def generate_config_file(featuresettings, end_season_year, ewoc_season, model_ve
         config = {"parameters": parameters, "inputs": csv_dict, "models": models}
         return config
     elif featuresettings == "croptype":
+        is_dev = strtobool(os.getenv("EWOC_DEV_MODE", "False"))
+        if is_dev:
+            cropland_mask_bucket = f"s3://ewoc-prd-dev/{production_id}"
+        else:
+            cropland_mask_bucket = f"s3://ewoc-prd/{production_id}"
+
         logger.info("Updating config file for croptype")
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters.update({"active_marker": True,
-                           "cropland_mask": "s3://world-cereal/EWOC_OUT",
+                           "cropland_mask": cropland_mask_bucket,
                            "irrigation": True,
                            "irrparameters": "irrigation",
                            "irrmodels":
@@ -112,8 +120,13 @@ def generate_config_file(featuresettings, end_season_year, ewoc_season, model_ve
 
 
 if __name__ == "__main__":
-    import pprint
 
+    production_id = "EWoC_admin_12048_20220302203007"
+    is_dev = strtobool(os.getenv("EWOC_DEV_MODE", "False"))
+    if is_dev:
+        cropland_mask_bucket = f"s3://ewoc-prd-dev/{production_id}"
+    else:
+        cropland_mask_bucket = f"s3://ewoc-prd/{production_id}"
     csv_dict = {
         "OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
         "SAR": "/data/worldcereal/s3collections/satio_sar.csv",
@@ -121,6 +134,7 @@ if __name__ == "__main__":
         "DEM": "s3://ewoc-aux-data/CopDEM_20m",
         "METEO": "/data/worldcereal/s3collections/satio_agera5.csv"
     }
+
     cropland_config_ref = {
         "parameters": {
             "year": "2019",
@@ -160,7 +174,7 @@ if __name__ == "__main__":
                 "conf_threshold": 0.75
             },
             "active_marker": True,
-            "cropland_mask": "s3://world-cereal/EWOC_OUT",
+            "cropland_mask": cropland_mask_bucket,
             "irrigation": True,
             "irrparameters": "irrigation",
             "irrmodels": {
@@ -194,7 +208,7 @@ if __name__ == "__main__":
                 "conf_threshold": 0.75
             },
             "active_marker": True,
-            "cropland_mask": "s3://world-cereal/EWOC_OUT",
+            "cropland_mask": cropland_mask_bucket,
             "irrigation": True,
             "irrparameters": "irrigation",
             "irrmodels": {
@@ -226,7 +240,7 @@ if __name__ == "__main__":
                 "conf_threshold": 0.75
             },
             "active_marker": True,
-            "cropland_mask": "s3://world-cereal/EWOC_OUT",
+            "cropland_mask": cropland_mask_bucket,
             "irrigation": True,
             "irrparameters": "irrigation",
             "irrmodels": {
@@ -246,10 +260,10 @@ if __name__ == "__main__":
         }
     }
 
-    cropland_ = generate_config_file("cropland", "2019", "annual", "v200", csv_dict)
-    summer1_ = generate_config_file("croptype", "2019", "summer1", "v200", csv_dict)
-    summer2_ = generate_config_file("croptype", "2019", "summer2", "v200", csv_dict)
-    winter_ = generate_config_file("croptype", "2019", "winter", "v200", csv_dict)
+    cropland_ = generate_config_file("cropland", "2019", "annual", production_id, "v200", csv_dict)
+    summer1_ = generate_config_file("croptype", "2019", "summer1",production_id, "v200", csv_dict)
+    summer2_ = generate_config_file("croptype", "2019", "summer2", production_id,"v200", csv_dict)
+    winter_ = generate_config_file("croptype", "2019", "winter", production_id,"v200", csv_dict)
 
     if not cropland_ == cropland_config_ref:
         logger.error("test for cropland failed")
