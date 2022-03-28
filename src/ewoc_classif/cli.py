@@ -74,7 +74,6 @@ def parse_args(args):
         "--ewoc-detector",
         dest="ewoc_detector",
         help="EWoC detector",
-        nargs="+",
         choices=EWOC_DETECTORS,
         default=EWOC_CROPLAND_DETECTOR,
     )
@@ -147,6 +146,8 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
+    # This print if here on purpose!
+    print("Start of processing")
     run_classif(
         args.tile_id,
         args.production_id,
