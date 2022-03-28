@@ -149,7 +149,7 @@ def run_classif(
         "DEM": "s3://ewoc-aux-data/CopDEM_20m",
         "METEO": str(agera5_csv),
     }
-    ewoc_config = generate_config_file(ewoc_detector, end_season_year, ewoc_season, model_version, csv_dict)
+    ewoc_config = generate_config_file(ewoc_detector, end_season_year, ewoc_season,production_id, model_version, csv_dict)
     ewoc_config_filepath = Path(gettempdir()) / f"{uid}_ewoc_config.json"
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)

@@ -74,7 +74,6 @@ def parse_args(args):
         "--ewoc-detector",
         dest="ewoc_detector",
         help="EWoC detector",
-        nargs="+",
         choices=EWOC_DETECTORS,
         default=EWOC_CROPLAND_DETECTOR,
     )
