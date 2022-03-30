@@ -15,14 +15,16 @@ In dev mode please export ``EWOC_DEV_MODE=True``.
 
 .. code-block::
 
-    EWoC Classification
+    EWoC Classification parser
+
     positional arguments:
-    tile_id               MGRS S2 tile id
+      tile_id               MGRS S2 tile id
+      production_id         EWoC production id
 
     optional arguments:
       -h, --help            show this help message and exit
       --version             show program's version number and exit
-      --block-ids [BLOCK_IDS [BLOCK_IDS ...]]
+      --block-ids BLOCK_IDS [BLOCK_IDS ...]
                             List of block id to process
       --optical-csv OPTICAL_CSV
                             List of OPTICAL products for a given S2 tile
@@ -36,10 +38,17 @@ In dev mode please export ``EWOC_DEV_MODE=True``.
                             Year to use infer season date - format YYYY
       --ewoc-season {winter,summer1,summer2,annual,custom}
                             EWoC season
+      --model-version MODEL_VERSION
+                            Model version
+      --upload-block UPLOAD_BLOCK
+                            True if you want to upload each block
+      --postprocess POSTPROCESS
+                            True if you want to do mosaic only
       -o OUT_DIRPATH, --out-dirpath OUT_DIRPATH
                             Output Dirpath
       -v, --verbose         set loglevel to INFO
       -vv, --very-verbose   set loglevel to DEBUG
+
 
 **Example**
 

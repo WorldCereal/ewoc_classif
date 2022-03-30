@@ -13,7 +13,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import generate_config_file, remove_tmp_files
+from ewoc_classif.utils import generate_config_file
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -43,16 +43,18 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
     logger.info("Run inference")
 
     if block_ids is not None:
-        total_ids = len(block_ids) - 1
         logger.info(f'Processing custom ids from CLI {block_ids}')
         ids_range = block_ids
     else:
-        total_ids = 483
+        if str(os.getenv("EWOC_BLOCKSIZE","512")) == "512":
+            total_ids = 483
+        elif str(os.getenv("EWOC_BLOCKSIZE","512")) == "1024":
+            total_ids = 120
         logger.info(f'Processing {total_ids} blocks')
         ids_range = range(total_ids + 1)
     for block_id in ids_range:
         try:
-            logger.info(f"[{block_id}/{total_ids}] Start processing")
+            logger.info(f"[{block_id}] Start processing")
             run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False,
                      process=True)
             if upload_block:
@@ -162,7 +164,4 @@ def run_classif(
     else:
         logger.info('Postprocess: only mosaic')
         postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
-    # Remove temporary files created by the classifier in cwd
-    remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
-    remove_tmp_files(Path.cwd(), "features.zarr")
 
