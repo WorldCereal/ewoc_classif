@@ -99,8 +99,8 @@ def generate_config_file(featuresettings, end_season_year, ewoc_season,productio
         if ewoc_season == "summer1":
             models = {
                 "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/maize_detector_WorldCerealPixelCatBoost/config.json",
-                "springcereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/springcereals_detector_WorldCerealPixelCatBoost/config.json",
-                "springwheat": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/springwheat_detector_WorldCerealPixelCatBoost/config.json"
+                "springcereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/springcereals_detector_WorldCerealPixelCatBoost/config.json"
+
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             return config
