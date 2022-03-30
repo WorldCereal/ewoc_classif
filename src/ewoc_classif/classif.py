@@ -43,16 +43,18 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
     logger.info("Run inference")
 
     if block_ids is not None:
-        total_ids = len(block_ids) - 1
         logger.info(f'Processing custom ids from CLI {block_ids}')
         ids_range = block_ids
     else:
-        total_ids = 483
+        if str(os.getenv("EWOC_BLOCKSIZE","512")) == "512":
+            total_ids = 483
+        elif str(os.getenv("EWOC_BLOCKSIZE","512")) == "1024":
+            total_ids = 120
         logger.info(f'Processing {total_ids} blocks')
         ids_range = range(total_ids + 1)
     for block_id in ids_range:
         try:
-            logger.info(f"[{block_id}/{total_ids}] Start processing")
+            logger.info(f"[{block_id}] Start processing")
             run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False,
                      process=True)
             if upload_block:
