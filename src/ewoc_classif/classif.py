@@ -13,7 +13,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import generate_config_file, remove_tmp_files
+from ewoc_classif.utils import generate_config_file
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -162,7 +162,4 @@ def run_classif(
     else:
         logger.info('Postprocess: only mosaic')
         postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
-    # Remove temporary files created by the classifier in cwd
-    remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
-    remove_tmp_files(Path.cwd(), "features.zarr")
 
