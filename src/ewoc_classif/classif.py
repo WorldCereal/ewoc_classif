@@ -13,7 +13,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import generate_config_file
+from ewoc_classif.utils import generate_config_file, remove_tmp_files
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -173,3 +173,4 @@ def run_classif(
             logger.error("Postprocess failed")
     logger.info(f"Cleaning the output folder {out_dirpath}")
     shutil.rmtree(out_dirpath)
+    remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
