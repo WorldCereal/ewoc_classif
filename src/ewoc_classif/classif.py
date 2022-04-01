@@ -13,7 +13,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import generate_config_file
+from ewoc_classif.utils import generate_config_file, remove_tmp_files
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -55,6 +55,7 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
     for block_id in ids_range:
         try:
             logger.info(f"[{block_id}] Start processing")
+            out_dirpath.mkdir(exist_ok=True)
             run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False,
                      process=True)
             if upload_block:
@@ -75,6 +76,8 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
         # Add Upload print
         print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+
+
 
 def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath):
     # Download the blocks from S3
@@ -104,7 +107,7 @@ def run_classif(
         ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
         end_season_year: int = 2019,
         ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-        model_version: str = "v200",
+        model_version: str = "v210",
         upload_block: bool = True,
         postprocess: bool = False,
         out_dirpath: Path = Path(gettempdir()),
@@ -129,19 +132,22 @@ def run_classif(
     ewoc_ard_bucket = EWOCARDBucket()
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
 
+    if out_dirpath == Path(gettempdir()):
+        out_dirpath = out_dirpath / uid
+        out_dirpath.mkdir()
     if sar_csv is None:
-        sar_csv = str(Path(gettempdir()) / f"{uid}_satio_sar.csv")
+        sar_csv = str(out_dirpath/ f"{uid}_satio_sar.csv")
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
     if optical_csv is None:
-        optical_csv = str(Path(gettempdir()) / f"{uid}_satio_optical.csv")
+        optical_csv = str(out_dirpath / f"{uid}_satio_optical.csv")
         ewoc_ard_bucket.optical_to_satio_csv(
             tile_id, production_id, filepath=optical_csv
         )
     if tir_csv is None:
-        tir_csv = str(Path(gettempdir()) / f"{uid}_satio_tir.csv")
+        tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
-        agera5_csv = str(Path(gettempdir()) / f"{uid}_satio_agera5.csv")
+        agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
     csv_dict = {
@@ -152,16 +158,19 @@ def run_classif(
         "METEO": str(agera5_csv),
     }
     ewoc_config = generate_config_file(ewoc_detector, end_season_year, ewoc_season,production_id, model_version, csv_dict)
-    ewoc_config_filepath = Path(gettempdir()) / f"{uid}_ewoc_config.json"
+    ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
 
     # Process tile (and optionally select blocks)
-    if out_dirpath == Path(gettempdir()):
-        out_dirpath = out_dirpath / uid
     if not postprocess:
         process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, upload_block, out_dirpath)
     else:
         logger.info('Postprocess: only mosaic')
-        postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
-
+        try:
+            postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
+        except:
+            logger.error("Postprocess failed")
+    logger.info(f"Cleaning the output folder {out_dirpath}")
+    shutil.rmtree(out_dirpath)
+    remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
