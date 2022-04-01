@@ -55,6 +55,7 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
     for block_id in ids_range:
         try:
             logger.info(f"[{block_id}] Start processing")
+            out_dirpath.mkdir(exist_ok=True)
             run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False,
                      process=True)
             if upload_block:
@@ -67,9 +68,6 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
                 print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
         except:
             logger.error(f"failed for block {block_id}")
-        finally:
-            logger.info(f"Cleaning the output folder {out_dirpath}")
-            shutil.rmtree(out_dirpath)
     if not upload_block:
         logger.info("Start cog mosaic")
         run_tile(tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False)
@@ -78,8 +76,7 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
         # Add Upload print
         print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
-        logger.info(f"Cleaning the output folder {out_dirpath}")
-        shutil.rmtree(out_dirpath)
+
 
 
 def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath):
@@ -98,8 +95,6 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
     nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
     # Add Upload print
     print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
-    logger.info(f"Cleaning the output folder {out_dirpath}")
-    shutil.rmtree(out_dirpath)
 
 def run_classif(
         tile_id: str,
@@ -172,4 +167,9 @@ def run_classif(
         process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, upload_block, out_dirpath)
     else:
         logger.info('Postprocess: only mosaic')
-        postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
+        try:
+            postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath)
+        except:
+            logger.error("Postprocess failed")
+    logger.info(f"Cleaning the output folder {out_dirpath}")
+    shutil.rmtree(out_dirpath)
