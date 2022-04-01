@@ -117,4 +117,3 @@ def generate_config_file(featuresettings, end_season_year, ewoc_season,productio
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             return config
-
