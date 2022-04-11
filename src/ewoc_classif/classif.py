@@ -13,7 +13,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import generate_config_file, remove_tmp_files
+from ewoc_classif.utils import generate_config_file, remove_tmp_files, update_agera5_bucket
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -149,6 +149,7 @@ def run_classif(
     if agera5_csv is None:
         agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
+        update_agera5_bucket(agera5_csv)
 
     csv_dict = {
         "OPTICAL": str(optical_csv),
