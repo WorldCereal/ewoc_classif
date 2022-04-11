@@ -125,7 +125,7 @@ def update_agera5_bucket(filepath):
     nb_buckets = os.getenv("NB_BUCKETS", 20)
     b_index = str((int(pod_index) % int(nb_buckets)) + 1)
     # Calculate new agera5 bucket index and replace in bucket name
-    ag_bucket = f"s3://ewoc-agera5-{b_index.lstrip('0')}/"
+    ag_bucket = f"s3://ewoc-agera5-{b_index.zfill(2)}/"
     old_bucket = "s3://ewoc-aux-data/"
     # Read agera5 csv
     df = pd.read_csv(filepath)
