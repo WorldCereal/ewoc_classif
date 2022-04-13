@@ -13,7 +13,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import generate_config_file, remove_tmp_files
+from ewoc_classif.utils import generate_config_file, remove_tmp_files, update_agera5_bucket, check_outfold
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -59,13 +59,23 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
             run_tile(tile_id, ewoc_config_filepath, out_dirpath, blocks=[int(block_id)], postprocess=False,
                      process=True)
             if upload_block:
-                ewoc_prd_bucket = EWOCPRDBucket()
-                logger.info(f"Push block id {block_id} to S3")
-                nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "blocks",
-                                                                          production_id + "/blocks")
-                shutil.rmtree(out_dirpath / "blocks")
-                # Add Upload print
-                print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+                if check_outfold(out_dirpath / "blocks"):
+                    ewoc_prd_bucket = EWOCPRDBucket()
+                    logger.info(f"Push block id {block_id} to S3")
+                    nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "blocks",
+                                                                              production_id + "/blocks")
+                    nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs", production_id+"/exitlogs")
+                    nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs", production_id+"/proclogs")
+                    shutil.rmtree(out_dirpath / "blocks")
+                    # Add Upload print
+                    print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+                else:
+                    logger.info("Successful processing with empty upload folder")
+                    nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs", production_id+"/exitlogs")
+                    nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs", production_id+"/proclogs")
+                    shutil.rmtree(out_dirpath / "blocks")
+                    # Add Upload print
+                    print(f"Uploaded {0} files to bucket | placeholder")
         except:
             logger.error(f"failed for block {block_id}")
     if not upload_block:
@@ -74,6 +84,10 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+        nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs",
+                                                                        production_id + "/exitlogs")
+        nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs",
+                                                                        production_id + "/proclogs")
         # Add Upload print
         print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
 
@@ -88,11 +102,19 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
     bucket._download_prd(prd_prefix, out_dirpath)
     logger.info("Blocks download successful")
     # Mosaic
+    # Setup symlink for gdal translate
+    os.symlink("/usr/bin/gdal_translate","/opt/ewoc_classif_venv/bin/gdal_translate")
+    logger.info(f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}")
     run_tile(tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False)
     logger.info("Mosaic is done!")
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
     nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+    logger.info(f"Uploaded {out_dirpath}/cogs to {production_id} ")
+    nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs",
+                                                                    production_id + "/exitlogs")
+    nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs",
+                                                                    production_id + "/proclogs")
     # Add Upload print
     print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
 
@@ -114,6 +136,14 @@ def run_classif(
 ) -> None:
     """
     Perform EWoC classification
+      :param postprocess:
+      :param upload_block:
+      :param model_version:
+      :param agera5_csv:
+      :param tir_csv:
+      :param optical_csv:
+      :param sar_csv:
+      :param production_id:
       :param tile_id: Sentinel-2 MGRS Tile id (ex 31TCJ)
       :param block_ids: Each tile id is divided into blocks, you can specify a list of blocks to process
       :param ewoc_detector: Type of classification applied: cropland, cereals, maize, ...
@@ -126,9 +156,6 @@ def run_classif(
     uid = tile_id + "_" + uid
 
     # Create the config file
-
-    # 1/ Create config file
-
     ewoc_ard_bucket = EWOCARDBucket()
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
 
@@ -149,6 +176,7 @@ def run_classif(
     if agera5_csv is None:
         agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
+        update_agera5_bucket(agera5_csv)
 
     csv_dict = {
         "OPTICAL": str(optical_csv),

@@ -6,6 +6,7 @@ import sys
 from datetime import datetime
 from distutils.util import strtobool
 from pathlib import Path
+import pandas as pd
 
 from loguru import logger
 
@@ -60,7 +61,7 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
             logger.info(f"Deleted tmp file: {elem}")
 
 
-def generate_config_file(featuresettings, end_season_year, ewoc_season,production_id, model_version, csv_dict):
+def generate_config_file(featuresettings, end_season_year, ewoc_season, production_id, model_version, csv_dict):
     parameters = {
         "year": end_season_year,
         "season": ewoc_season,
@@ -117,3 +118,30 @@ def generate_config_file(featuresettings, end_season_year, ewoc_season,productio
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             return config
+
+
+def update_agera5_bucket(filepath):
+    pod_index = os.getenv("POD_INDEX", 20)
+    nb_buckets = os.getenv("NB_BUCKETS", 20)
+    b_index = str((int(pod_index) % int(nb_buckets)) + 1)
+    # Calculate new agera5 bucket index and replace in bucket name
+    ag_bucket = f"s3://ewoc-agera5-{b_index.zfill(2)}/"
+    old_bucket = "s3://ewoc-aux-data/"
+    # Read agera5 csv
+    df = pd.read_csv(filepath)
+    # replace old bucket name
+    df["path"].replace(old_bucket, ag_bucket, regex=True, inplace=True)
+    # remove Unnamed: 0 column
+    if "Unnamed: 0" in df.columns:
+        df.drop("Unnamed: 0", axis=1, inplace=True)
+    # Overwrite existing file
+    df.to_csv(filepath)
+    logger.info(f"Update Agera5 csv with {ag_bucket}")
+
+def check_outfold(outdir: Path):
+    dir_content = outdir.iterdir()
+    if len(list(dir_content))!=0:
+        return True
+    else:
+        logger.info(f'Empty {outdir}')
+        return False
