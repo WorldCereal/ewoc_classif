@@ -137,3 +137,11 @@ def update_agera5_bucket(filepath):
     # Overwrite existing file
     df.to_csv(filepath)
     logger.info(f"Update Agera5 csv with {ag_bucket}")
+
+def check_outfold(outdir: Path):
+    dir_content = outdir.iterdir()
+    if len(list(dir_content))!=0:
+        return True
+    else:
+        logger.info(f'Empty {outdir}')
+        return False
