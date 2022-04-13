@@ -110,6 +110,7 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
     # Push the results to the s3 bucket
     ewoc_prd_bucket = EWOCPRDBucket()
     nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "cogs", production_id)
+    logger.info(f"Uploaded {out_dirpath}/cogs to {production_id} ")
     nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs",
                                                                     production_id + "/exitlogs")
     nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs",
@@ -155,9 +156,6 @@ def run_classif(
     uid = tile_id + "_" + uid
 
     # Create the config file
-
-    # 1/ Create config file
-
     ewoc_ard_bucket = EWOCARDBucket()
     ewoc_aux_data_bucket = EWOCAuxDataBucket()
 
