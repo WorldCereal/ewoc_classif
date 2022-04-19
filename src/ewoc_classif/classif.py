@@ -71,8 +71,11 @@ def process_blocks(tile_id, ewoc_config_filepath, block_ids, production_id, uplo
                     print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
                 else:
                     logger.info("Successful processing with empty upload folder")
-                    nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs", production_id+"/exitlogs")
-                    nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs", production_id+"/proclogs")
+                    try:
+                        nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "exitlogs", production_id+"/exitlogs")
+                        nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(out_dirpath / "proclogs", production_id+"/proclogs")
+                    except:
+                        logger.warning("Could not upload logs")
                     shutil.rmtree(out_dirpath / "blocks", ignore_errors=True)
                     # Add Upload print
                     print(f"Uploaded {0} files to bucket | placeholder")
