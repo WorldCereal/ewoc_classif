@@ -138,10 +138,12 @@ def update_agera5_bucket(filepath):
     df.to_csv(filepath)
     logger.info(f"Update Agera5 csv with {ag_bucket}")
 
+
 def check_outfold(outdir: Path):
-    dir_content = outdir.iterdir()
-    if len(list(dir_content))!=0:
-        return True
+    if outdir.exists():
+        dir_content = outdir.iterdir()
+        if len(list(dir_content)) != 0:
+            return True
     else:
-        logger.info(f'Empty {outdir}')
+        logger.info(f'Empty or non existing folder {outdir}')
         return False
