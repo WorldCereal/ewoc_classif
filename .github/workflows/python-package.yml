@@ -20,10 +20,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [3.8]
-        # python-version: [3.7, 3.8, 3.9]
+
     env:
-      EWOC_DATASHIP_VERSION: "0.7.1"
-      WORLDCEREAL_VERSION: "0.6.0"
+      EWOC_DATASHIP_VERSION: "0.7.5"
+      WORLDCEREAL_VERSION: "0.6.4"
 
     steps:
 
