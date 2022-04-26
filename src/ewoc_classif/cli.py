@@ -5,14 +5,13 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import List
 from tempfile import gettempdir
+from typing import List
 
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
-from ewoc_classif.classif import (EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS,
-                                  run_classif)
+from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, run_classif
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -159,9 +158,9 @@ def main(args):
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
-        model_version = args.model_version,
-        upload_block = args.upload_block,
-        postprocess = args.postprocess,
+        model_version=args.model_version,
+        upload_block=args.upload_block,
+        postprocess=args.postprocess,
         out_dirpath=args.out_dirpath,
     )
 
