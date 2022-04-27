@@ -15,6 +15,7 @@ from worldcereal.worldcereal_products import run_tile
 from ewoc_classif.utils import (
     check_outfold,
     generate_config_file,
+    paginated_download,
     remove_tmp_files,
     update_agera5_bucket,
 )
@@ -130,20 +131,21 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
         s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
         endpoint_url="https://s3.waw2-1.cloudferro.com",
     )
-    with open(ewoc_config_filepath,'r') as f:
+    with open(ewoc_config_filepath, "r") as f:
         data = load(f)
     year = data["parameters"]["year"]
     season = data["parameters"]["season"]
     prd_prefix = f"{production_id}/blocks/{tile_id}/{year}_{season}"
-    out_folder = out_dirpath/f"blocks/{tile_id}"
-    out_folder.mkdir(exist_ok=True,parents=True)
+    out_folder = out_dirpath / f"blocks/{tile_id}"
+    out_folder.mkdir(exist_ok=True, parents=True)
     logger.info(f"Trying to download blocks: {prd_prefix} to {out_folder} ")
-    bucket._download_prd(prd_prefix, out_folder)
-    logger.info("Blocks download successful")
+    paginated_download(bucket, prd_prefix, out_folder)
     # Mosaic
     # Setup symlink for gdal translate
     if not os.path.islink("/opt/ewoc_classif_venv/bin/gdal_translate"):
-        os.symlink("/usr/bin/gdal_translate", "/opt/ewoc_classif_venv/bin/gdal_translate")
+        os.symlink(
+            "/usr/bin/gdal_translate", "/opt/ewoc_classif_venv/bin/gdal_translate"
+        )
         logger.info(
             f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
         )
@@ -161,7 +163,7 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
         # Add Upload print
         print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
     else:
-        Exception("Upload folder must be empty, the mosaic failed")
+        raise Exception("Upload folder must be empty, the mosaic failed")
 
 
 def run_classif(

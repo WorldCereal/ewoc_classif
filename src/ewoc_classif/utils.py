@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 import shutil
@@ -6,9 +7,10 @@ import sys
 from datetime import datetime
 from distutils.util import strtobool
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
+from ewoc_dag.bucket.eobucket import EOBucket
 from loguru import logger
 
 
@@ -158,3 +160,77 @@ def check_outfold(outdir: Path) -> None:
         logger.info(f"Empty or non existing folder {outdir}")
         return False
 
+
+def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
+    # Find all json metadata files
+    metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
+    if metajsons:
+        for meta in metajsons:
+            with open(out_dir_folder / meta, "r") as f:
+                data = json.load(f)
+            # Update links
+            for link in data["links"]:
+                if link["rel"] == "self":
+                    link["href"] = link["href"].replace(str(out_dir_folder), root_path)
+            # Update assets
+            for asset in data["assets"]:
+                prd = data["assets"][asset]
+                prd["href"] = prd["href"].replace(str(out_dir_folder), root_path)
+            with open(out_dir_folder / meta, "w") as out:
+                json.dump(data, out)
+            logger.info(f"Updated {meta} with {root_path}")
+    else:
+        logger.error("No json file found using **metadata_*.json wildcard")
+
+
+def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> None:
+    client = bucket._s3_client
+    paginator = client.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=bucket._bucket_name, Prefix=prd_prefix)
+    counter = 0
+    for i, page in enumerate(pages):
+        page_counter = 0
+        logger.info(f"Paginated download: page {i+1}")
+        try:
+            for obj in page["Contents"]:
+                if not obj["Key"].endswith("/"):
+                    filename = obj["Key"].split(
+                        sep="/", maxsplit=len(prd_prefix.split("/")) - 1
+                    )[-1]
+                    output_filepath = out_dirpath / filename
+                    (output_filepath.parent).mkdir(parents=True, exist_ok=True)
+                    if not output_filepath.exists():
+                        bucket._s3_client.download_file(
+                            Bucket=bucket._bucket_name,
+                            Key=obj["Key"],
+                            Filename=str(output_filepath),
+                        )
+                        counter += 1
+                        page_counter += 1
+                    else:
+                        logger.info(
+                            f"{output_filepath} already available, skip downloading!"
+                        )
+            logger.info(f"Downloaded {page_counter} files from page {i+1}")
+        except:
+            logger.error("No files were downloaded, check if the bucket is empty")
+    if counter == 0:
+        logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
+    else:
+        logger.info(f"Downloaded a total of {counter} files to {out_dirpath}")
+
+
+if __name__ == "__main__":
+    from ewoc_dag.bucket.eobucket import EOBucket
+
+    bucket = EOBucket(
+        "ewoc-prd",
+        s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
+        s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
+        endpoint_url="https://s3.waw2-1.cloudferro.com",
+    )
+    from pathlib import Path
+
+    paginated_download(
+        bucket, "EWoC_admin_6136_20220302115324/blocks/36TWS/2021_winter/", Path("/tmp")
+    )
