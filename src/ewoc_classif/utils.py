@@ -150,16 +150,16 @@ def update_agera5_bucket(filepath: Path) -> None:
     df.to_csv(filepath)
     logger.info(f"Update Agera5 csv with {ag_bucket}")
 
-
-def check_outfold(outdir: Path) -> None:
+def check_outfold(outdir: Path) -> bool:
+    check = False
     if outdir.exists():
-        dir_content = outdir.iterdir()
-        if len(list(dir_content)) != 0:
-            return True
+        for root, dirs, files in os.walk(outdir):
+            if len(files)>0:
+                check = True
+                break
     else:
-        logger.info(f"Empty or non existing folder {outdir}")
-        return False
-
+        logger.info(f"Non existing folder: {outdir}")
+    return check
 
 def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
     # Find all json metadata files
@@ -218,19 +218,3 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
         logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
     else:
         logger.info(f"Downloaded a total of {counter} files to {out_dirpath}")
-
-
-if __name__ == "__main__":
-    from ewoc_dag.bucket.eobucket import EOBucket
-
-    bucket = EOBucket(
-        "ewoc-prd",
-        s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
-        s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
-        endpoint_url="https://s3.waw2-1.cloudferro.com",
-    )
-    from pathlib import Path
-
-    paginated_download(
-        bucket, "EWoC_admin_6136_20220302115324/blocks/36TWS/2021_winter/", Path("/tmp")
-    )
