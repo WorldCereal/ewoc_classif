@@ -6,12 +6,12 @@ import logging
 import sys
 from pathlib import Path
 from tempfile import gettempdir
-from typing import List
 
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
-from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, run_classif
+from ewoc_classif.classif import (EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS,
+                                  run_classif)
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -101,7 +101,7 @@ def parse_args(args):
     parser.add_argument(
         "--upload-block",
         dest="upload_block",
-        help="True if you want to upload each block",
+        help="True if you want to upload each block, true by default",
         type=bool,
         default=True,
     )

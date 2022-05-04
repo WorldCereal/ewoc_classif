@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Classification and postprocessing tools
+"""
 import os
-import traceback
 import shutil
+import traceback
 from json import dump, load
 from pathlib import Path
 from tempfile import gettempdir
@@ -8,18 +12,15 @@ from typing import List
 from uuid import uuid4
 
 from ewoc_dag.bucket.eobucket import EOBucket
-from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
+from ewoc_dag.bucket.ewoc import (EWOCARDBucket, EWOCAuxDataBucket,
+                                  EWOCPRDBucket)
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import (
-    check_outfold,
-    generate_config_file,
-    paginated_download,
-    remove_tmp_files,
-    update_agera5_bucket,
-)
+from ewoc_classif.utils import (check_outfold, generate_config_file,
+                                paginated_download, remove_tmp_files,
+                                update_agera5_bucket)
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
@@ -46,8 +47,30 @@ EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
 
 
 def process_blocks(
-    tile_id, ewoc_config_filepath, block_ids, production_id, upload_block, out_dirpath
-):
+    tile_id: str,
+    ewoc_config_filepath: Path,
+    block_ids: List[int],
+    production_id: str,
+    upload_block: bool,
+    out_dirpath: Path,
+) -> None:
+    """
+    Process a single block, cropland/croptype prediction
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param ewoc_config_filepath: Path to the config file generated previously
+    :type ewoc_config_filepath: Path
+    :param block_ids: List of block ids to process (blocks= equal area subdivisions of a tile)
+    :type block_ids: List[int]
+    :param production_id: EWoC production id
+    :type production_id: str
+    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+     processed and merged into a mosaic within the same process (or command)
+    :type upload_block: bool
+    :param out_dirpath: Output directory path
+    :type out_dirpath: Path
+    :return: None
+    """
     logger.info("Run inference")
 
     if block_ids is not None:
@@ -64,7 +87,7 @@ def process_blocks(
         try:
             logger.info(f"[{block_id}] Start processing")
             out_dirpath.mkdir(exist_ok=True)
-            ret =run_tile(
+            ret = run_tile(
                 tile_id,
                 ewoc_config_filepath,
                 out_dirpath,
@@ -72,23 +95,23 @@ def process_blocks(
                 postprocess=False,
                 process=True,
             )
-            if ret==0:
+            if ret == 0:
                 logger.info(f"Block finished with code {ret}")
                 ewoc_prd_bucket = EWOCPRDBucket()
                 logger.info(f"Pushing block id {block_id} to S3")
                 nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
-                out_dirpath / "blocks", production_id + "/blocks"
+                    out_dirpath / "blocks", production_id + "/blocks"
                 )
-                nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(
-                out_dirpath / "exitlogs", production_id + "/exitlogs"
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "exitlogs", production_id + "/exitlogs"
                 )
-                nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(
-                out_dirpath / "proclogs", production_id + "/proclogs"
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "proclogs", production_id + "/proclogs"
                 )
                 shutil.rmtree(out_dirpath / "blocks")
                 # Add Upload print
                 print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
-            elif ret==1:
+            elif ret == 1:
                 logger.info(f"Skipped block, return code: {ret}")
                 shutil.rmtree(out_dirpath / "blocks", ignore_errors=True)
                 # Add Upload print
@@ -107,17 +130,31 @@ def process_blocks(
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
             out_dirpath / "cogs", production_id
         )
-        nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(
+        ewoc_prd_bucket.upload_ewoc_prd(
             out_dirpath / "exitlogs", production_id + "/exitlogs"
         )
-        nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(
+        ewoc_prd_bucket.upload_ewoc_prd(
             out_dirpath / "proclogs", production_id + "/proclogs"
         )
         # Add Upload print
         print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
 
 
-def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath):
+def postprocess_mosaic(
+    tile_id: str, production_id: str, ewoc_config_filepath: Path, out_dirpath: Path
+) -> None:
+    """
+    Postprocessing (mosaic)
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param production_id: EWoC production id
+    :type production_id: str
+    :param ewoc_config_filepath: Path to the config file generated previously
+    :type ewoc_config_filepath: Path
+    :param out_dirpath: Output directory path
+    :type out_dirpath: Path
+    :return: None
+    """
     # Download the blocks from S3
     bucket = EOBucket(
         "ewoc-prd",
@@ -143,7 +180,7 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
         logger.info(
             f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
         )
-    ret = run_tile(
+    run_tile(
         tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
     )
     logger.info("Start upload")
@@ -178,22 +215,37 @@ def run_classif(
 ) -> None:
     """
     Perform EWoC classification
-      :param postprocess:
-      :param upload_block:
-      :param model_version:
-      :param agera5_csv:
-      :param tir_csv:
-      :param optical_csv:
-      :param sar_csv:
-      :param production_id:
-      :param tile_id: Sentinel-2 MGRS Tile id (ex 31TCJ)
-      :param block_ids: Each tile id is divided into blocks, you can specify a list of blocks to process
-      :param ewoc_detector: Type of classification applied: cropland, cereals, maize, ...
-      :param end_season_year: Season's end year
-      :param ewoc_season: Season: winter, summer1, summer2, ...
-      :param out_dirpath: Classification output directory, this folder will be uploaded to s3
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param production_id: EWoC production id
+    :type production_id: str
+    :param block_ids: List of block ids to process (blocks= equal area subdivisions of a tile)
+    :type block_ids: List[int]
+    :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1 images to process
+    :type sar_csv: Path
+    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/ Landsat 8 images to process
+    :type optical_csv: Path
+    :param tir_csv: Path to a csv file with all the detail about all the Landsat 8 TIR images to process
+    :type tir_csv: Path
+    :param agera5_csv: Path to a csv file with all the detail about all the AgERA5 images to process
+    :type agera5_csv: Path
+    :param ewoc_detector: Type of detector to use, possible choices are cropland or croptype
+    :type ewoc_detector: str
+    :param end_season_year: End of season year
+    :type end_season_year: int
+    :param ewoc_season: Which season are we processing, possible options: annual, summer1, summer2 and winter
+    :type ewoc_season: str
+    :param model_version: The version of the AI model used for the cropland/croptype prediction
+    :type model_version: str
+    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+     processed and merged into a mosaic within the same process (or command)
+    :type upload_block: bool
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, default to False
+    :type postprocess: bool
+    :param out_dirpath: Output directory path
+    :type out_dirpath: Path
+    :return: None
     """
-
     uid = uuid4().hex[:6]
     uid = tile_id + "_" + uid
 
