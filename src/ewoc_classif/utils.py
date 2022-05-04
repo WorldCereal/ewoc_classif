@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import traceback
 import shutil
 import sys
 from datetime import datetime
@@ -212,8 +213,10 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
                             f"{output_filepath} already available, skip downloading!"
                         )
             logger.info(f"Downloaded {page_counter} files from page {i+1}")
-        except:
+        except Exception:
             logger.error("No files were downloaded, check if the bucket is empty")
+            logger.error(traceback.format_exc())
+            raise
     if counter == 0:
         logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
     else:

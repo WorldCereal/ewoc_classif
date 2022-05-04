@@ -1,4 +1,5 @@
 import os
+import traceback
 import shutil
 from json import dump, load
 from pathlib import Path
@@ -63,7 +64,7 @@ def process_blocks(
         try:
             logger.info(f"[{block_id}] Start processing")
             out_dirpath.mkdir(exist_ok=True)
-            run_tile(
+            ret =run_tile(
                 tile_id,
                 ewoc_config_filepath,
                 out_dirpath,
@@ -71,38 +72,31 @@ def process_blocks(
                 postprocess=False,
                 process=True,
             )
-            if upload_block:
-                if check_outfold(out_dirpath / "blocks"):
-                    ewoc_prd_bucket = EWOCPRDBucket()
-                    logger.info(f"Push block id {block_id} to S3")
-                    nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
-                        out_dirpath / "blocks", production_id + "/blocks"
-                    )
-                    nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(
-                        out_dirpath / "exitlogs", production_id + "/exitlogs"
-                    )
-                    nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(
-                        out_dirpath / "proclogs", production_id + "/proclogs"
-                    )
-                    shutil.rmtree(out_dirpath / "blocks")
-                    # Add Upload print
-                    print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
-                else:
-                    logger.info("Successful processing with empty upload folder")
-                    try:
-                        nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(
-                            out_dirpath / "exitlogs", production_id + "/exitlogs"
-                        )
-                        nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(
-                            out_dirpath / "proclogs", production_id + "/proclogs"
-                        )
-                    except:
-                        logger.warning("Could not upload logs")
-                    shutil.rmtree(out_dirpath / "blocks", ignore_errors=True)
-                    # Add Upload print
-                    print(f"Uploaded {0} files to bucket | placeholder")
-        except:
+            if ret==0:
+                logger.info(f"Block finished with code {ret}")
+                ewoc_prd_bucket = EWOCPRDBucket()
+                logger.info(f"Pushing block id {block_id} to S3")
+                nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
+                out_dirpath / "blocks", production_id + "/blocks"
+                )
+                nb_prd_ex, size_of, up_dir_ex = ewoc_prd_bucket.upload_ewoc_prd(
+                out_dirpath / "exitlogs", production_id + "/exitlogs"
+                )
+                nb_prd_pr, size_of, up_dir_pr = ewoc_prd_bucket.upload_ewoc_prd(
+                out_dirpath / "proclogs", production_id + "/proclogs"
+                )
+                shutil.rmtree(out_dirpath / "blocks")
+                # Add Upload print
+                print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+            elif ret==1:
+                logger.info(f"Skipped block, return code: {ret}")
+                shutil.rmtree(out_dirpath / "blocks", ignore_errors=True)
+                # Add Upload print
+                print(f"Uploaded {0} files to bucket | placeholder")
+        except Exception:
             logger.error(f"failed for block {block_id}")
+            logger.error(traceback.format_exc())
+
     if not upload_block:
         logger.info("Start cog mosaic")
         run_tile(
@@ -149,7 +143,7 @@ def postprocess_mosaic(tile_id, production_id, ewoc_config_filepath, out_dirpath
         logger.info(
             f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
         )
-    run_tile(
+    ret = run_tile(
         tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
     )
     logger.info("Start upload")
@@ -260,8 +254,9 @@ def run_classif(
             postprocess_mosaic(
                 tile_id, production_id, ewoc_config_filepath, out_dirpath
             )
-    except:
+    except Exception:
         logger.error("Processing failed")
+        logger.error(traceback.format_exc())
     finally:
         logger.info(f"Cleaning the output folder {out_dirpath}")
         shutil.rmtree(out_dirpath)
