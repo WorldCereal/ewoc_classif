@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Helpful functions for the classification process
+"""
 import argparse
 import json
 import logging
 import os
 import shutil
 import sys
+import traceback
 from datetime import datetime
 from distutils.util import strtobool
 from pathlib import Path
@@ -38,7 +43,7 @@ def valid_year(cli_str: str) -> int:
     Raises:
         argparse.ArgumentTypeError: [description]
 
-    Returns:
+    Returs:
         int: a valid year as int
     """
     try:
@@ -72,6 +77,22 @@ def generate_config_file(
     model_version: str,
     csv_dict: Dict,
 ) -> Dict:
+    """
+    Automatic generation of worldcereal config files
+    :param featuresettings: cropland or croptype
+    :type featuresettings: str
+    :param end_season_year: End of season year
+    :type end_season_year: str
+    :param ewoc_season: The season to process: annual, summer1, summer2 or winter
+    :type ewoc_season: str
+    :param production_id: EWoC production ID
+    :type production_id: str
+    :param model_version: The AI model version used for the predictions
+    :type model_version: str
+    :param csv_dict: A dictionary with the initial params of the config file
+    :type csv_dict: Dict
+    :return: Dict
+    """
     parameters = {
         "year": end_season_year,
         "season": ewoc_season,
@@ -133,6 +154,12 @@ def generate_config_file(
 
 
 def update_agera5_bucket(filepath: Path) -> None:
+    """
+    Update stac json files
+    :param filepath: Json file path
+    :type filepath: Path
+    :return: None
+    """
     pod_index = os.getenv("POD_INDEX", 20)
     nb_buckets = os.getenv("NB_BUCKETS", 20)
     b_index = str((int(pod_index) % int(nb_buckets)) + 1)
@@ -150,18 +177,33 @@ def update_agera5_bucket(filepath: Path) -> None:
     df.to_csv(filepath)
     logger.info(f"Update Agera5 csv with {ag_bucket}")
 
+
 def check_outfold(outdir: Path) -> bool:
+    """
+    Check if folder is (really) empty
+    :param outdir: Folder to check
+    :return: bool
+    """
     check = False
     if outdir.exists():
         for root, dirs, files in os.walk(outdir):
-            if len(files)>0:
+            if len(files) > 0:
                 check = True
                 break
     else:
         logger.info(f"Non existing folder: {outdir}")
     return check
 
+
 def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
+    """
+    Update all stac json files in a folder
+    :param root_path: Root path in s3 bucket, will be used to replace local folders
+    :type root_path: str
+    :param out_dir_folder: Folder to scan and update
+    :type out_dir_folder: Path
+    :return: None
+    """
     # Find all json metadata files
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
@@ -184,6 +226,16 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
 
 
 def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> None:
+    """
+    Download files (recursively) from s3 bucket
+    :param bucket: EOBucket
+    :type bucket: EOBucket
+    :param prd_prefix: Prefix in s3 bucket
+    :type prd_prefix: str
+    :param out_dirpath: Folder where the files will be written
+    :type out_dirpath: Path
+    :return: None
+    """
     client = bucket._s3_client
     paginator = client.get_paginator("list_objects_v2")
     pages = paginator.paginate(Bucket=bucket._bucket_name, Prefix=prd_prefix)
@@ -212,8 +264,10 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
                             f"{output_filepath} already available, skip downloading!"
                         )
             logger.info(f"Downloaded {page_counter} files from page {i+1}")
-        except:
+        except Exception:
             logger.error("No files were downloaded, check if the bucket is empty")
+            logger.error(traceback.format_exc())
+            raise
     if counter == 0:
         logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
     else:
