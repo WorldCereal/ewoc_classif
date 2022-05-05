@@ -222,7 +222,7 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
                 json.dump(data, out)
             logger.info(f"Updated {meta} with {root_path}")
     else:
-        logger.error("No json file found using **metadata_*.json wildcard")
+        logger.warning("No json file found using **metadata_*.json wildcard")
 
 
 def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> None:
