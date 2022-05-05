@@ -20,8 +20,7 @@ from worldcereal.worldcereal_products import run_tile
 
 from ewoc_classif.utils import (check_outfold, generate_config_file,
                                 paginated_download, remove_tmp_files,
-                                update_agera5_bucket)
-
+                                update_agera5_bucket, update_metajsons)
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
 EWOC_CROPTYPE_DETECTORS = [
@@ -185,6 +184,9 @@ def postprocess_mosaic(
     )
     logger.info("Start upload")
     if check_outfold(out_dirpath / f"cogs/{tile_id}/{year}_{season}"):
+        # Update json stac
+        root_s3 = f"s3://ewoc-prd/{production_id}"
+        update_metajsons(root_s3,out_dirpath / "cogs")
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
