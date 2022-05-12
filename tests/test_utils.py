@@ -22,7 +22,7 @@ def test_generate_config_file(config_ref):
         if config != "annual":
             config_ref[config]["parameters"]["cropland_mask"] = cropland_mask_bucket
 
-    assert generate_config_file("cropland", "2019", "annual",production_id, "v210", csv_dict) == config_ref["annual"]
-    assert generate_config_file("croptype", "2019", "summer1",production_id,"v210", csv_dict) == config_ref["summer1"]
-    assert generate_config_file("croptype", "2019", "summer2",production_id, "v210", csv_dict) == config_ref["summer2"]
-    assert generate_config_file("croptype", "2019", "winter",production_id, "v210", csv_dict) == config_ref["winter"]
+    assert generate_config_file("cropland", "2019", "annual",production_id, "v420", csv_dict) == config_ref["annual"]
+    assert generate_config_file("croptype", "2019", "summer1",production_id,"v420", csv_dict) == config_ref["summer1"]
+    assert generate_config_file("croptype", "2019", "summer2",production_id, "v420", csv_dict) == config_ref["summer2"]
+    assert generate_config_file("croptype", "2019", "winter",production_id, "v420", csv_dict) == config_ref["winter"]
