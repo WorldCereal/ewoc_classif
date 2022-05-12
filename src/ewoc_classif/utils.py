@@ -145,10 +145,7 @@ def generate_config_file(
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             return config
         elif ewoc_season == "winter":
-            models = {
-                "winterwheat": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/winterwheat_detector_WorldCerealPixelCatBoost/config.json",
-                "wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/wintercereals_detector_WorldCerealPixelCatBoost/config.json",
-            }
+            models = {"wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/wintercereals_detector_WorldCerealPixelCatBoost/config.json"}
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             return config
 

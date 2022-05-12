@@ -96,7 +96,7 @@ def parse_args(args):
         dest="model_version",
         help="Model version",
         type=str,
-        default="v210",
+        default="v420",
     )
     parser.add_argument(
         "--upload-block",
