@@ -157,11 +157,17 @@ def update_agera5_bucket(filepath: Path) -> None:
     :type filepath: Path
     :return: None
     """
-    pod_index = os.getenv("POD_INDEX", 20)
-    nb_buckets = os.getenv("NB_BUCKETS", 20)
-    b_index = str((int(pod_index) % int(nb_buckets)) + 1)
-    # Calculate new agera5 bucket index and replace in bucket name
-    ag_bucket = f"s3://ewoc-agera5-{b_index.zfill(2)}/"
+    if os.getenv("AGERA5_BUCKET") is None:
+        logger.info("Using pod index to update bucket name")
+        pod_index = os.getenv("POD_INDEX", 20)
+        nb_buckets = os.getenv("NB_BUCKETS", 20)
+        b_index = str((int(pod_index) % int(nb_buckets)) + 1)
+        # Calculate new agera5 bucket index and replace in bucket name
+        ag_bucket = f"s3://ewoc-agera5-{b_index.zfill(2)}/"
+    else:
+        b_name = os.getenv("AGERA5_BUCKET")
+        logger.info(f"Using {b_name} to update bucket name")
+        ag_bucket = f"s3://{b_name}/"
     old_bucket = "s3://ewoc-aux-data/"
     # Read agera5 csv
     df = pd.read_csv(filepath)
