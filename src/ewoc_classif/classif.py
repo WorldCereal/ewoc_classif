@@ -250,10 +250,9 @@ def run_classif(
     """
     uid = uuid4().hex[:6]
     uid = tile_id + "_" + uid
-
+    agera5_bucket=os.getenv("AGERA5_BUCKET","ewoc-aux-data")
     # Create the config file
     ewoc_ard_bucket = EWOCARDBucket()
-    ewoc_aux_data_bucket = EWOCAuxDataBucket()
 
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
@@ -271,6 +270,9 @@ def run_classif(
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
         agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
+        ewoc_aux_data_bucket = EWOCAuxDataBucket()
+        ewoc_aux_data_bucket._bucket_name = agera5_bucket
+        logger.info(f"Using bucket {agera5_bucket}")
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
         update_agera5_bucket(agera5_csv)
 
