@@ -207,6 +207,15 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
     :type out_dir_folder: Path
     :return: None
     """
+    if root_path.endswith("/"):
+        user_id_tmp = root_path.split("/")[-2]
+    else:
+        user_id_tmp = root_path.split("/")[-1]
+    user_id_tmp = user_id_tmp.split("_")[:-2]
+    if len(user_id_tmp) == 1:
+        user_id = user_id_tmp[0]
+    else:
+        user_id = "_".join(user_id_tmp)
     # Find all json metadata files
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
@@ -221,6 +230,19 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
             for asset in data["assets"]:
                 prd = data["assets"][asset]
                 prd["href"] = prd["href"].replace(str(out_dir_folder), root_path)
+            # Update visibility
+            if data["properties"]["public"] == "false":
+                data["properties"]["public"] = "true"
+                logger.info(f"Updated public for {meta} with to true")
+            # Update users
+            if data["properties"]["users"] == ["0000"]:
+                data["properties"]["users"] = [user_id]
+                logger.info(f"Updated user id for {meta} with {user_id}")
+            # Update user id
+            if data["properties"]["tile_collection_id"].split("_")[-1] == "0000":
+                tmp_coll_id = "_".join(data["properties"]["tile_collection_id"].split("_")[:-1])+"_"+user_id
+                data["properties"]["tile_collection_id"] = tmp_coll_id
+                logger.info(f"Updated tile collection id to {tmp_coll_id}")
             with open(out_dir_folder / meta, "w") as out:
                 json.dump(data, out)
             logger.info(f"Updated {meta} with {root_path}")
