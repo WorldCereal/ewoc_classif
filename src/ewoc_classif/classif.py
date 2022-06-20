@@ -97,6 +97,9 @@ def process_blocks(
             if ret == 0:
                 logger.info(f"Block finished with code {ret}")
                 ewoc_prd_bucket = EWOCPRDBucket()
+                if os.getenv("PRD_BUCKET") is not None:
+                    ewoc_prd_bucket._bucket_name = os.getenv("PRD_BUCKET")
+                    logger.info(f"Output bucket set to: {ewoc_prd_bucket._bucket_name}")
                 logger.info(f"Pushing block id {block_id} to S3")
                 nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
                     out_dirpath / "blocks", production_id + "/blocks"
@@ -126,6 +129,9 @@ def process_blocks(
         )
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
+        if os.getenv("PRD_BUCKET") is not None:
+            ewoc_prd_bucket._bucket_name = os.getenv("PRD_BUCKET")
+            logger.info(f"Output bucket set to: {ewoc_prd_bucket._bucket_name}")
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
             out_dirpath / "cogs", production_id
         )
@@ -155,8 +161,13 @@ def postprocess_mosaic(
     :return: None
     """
     # Download the blocks from S3
+    if os.getenv("PRD_BUCKET") is not None:
+        in_bucket = os.getenv("PRD_BUCKET")
+    else:
+        in_bucket = "ewoc-prd"
+    logger.info(f"Getting blocks from {in_bucket}")
     bucket = EOBucket(
-        "ewoc-prd",
+        in_bucket,
         s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
         s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
         endpoint_url="https://s3.waw2-1.cloudferro.com",
@@ -189,6 +200,9 @@ def postprocess_mosaic(
         update_metajsons(root_s3,out_dirpath / "cogs")
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
+        if os.getenv("PRD_BUCKET") is not None:
+            ewoc_prd_bucket._bucket_name = os.getenv("PRD_BUCKET")
+            logger.info(f"Output bucket set to: {ewoc_prd_bucket._bucket_name}")
         nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
             out_dirpath / "cogs", production_id
         )
