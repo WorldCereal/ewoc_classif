@@ -167,8 +167,8 @@ def postprocess_mosaic(
         in_bucket = "ewoc-prd"
     logger.info(f"Getting blocks from {in_bucket}")
     ewoc_endpoint_url = os.getenv("EWOC_ENDPOINT_URL",None)
-    if os.getenv("EWOC_ENDPOINT_URL").lower=="aws":
-        ewoc_endpoint_url=None
+    if os.getenv("EWOC_ENDPOINT_URL").lower() == "aws":
+        ewoc_endpoint_url = None
     bucket = EOBucket(
         in_bucket,
         s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
