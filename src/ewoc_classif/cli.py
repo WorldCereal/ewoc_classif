@@ -96,6 +96,13 @@ def parse_args(args):
         dest="model_version",
         help="Model version",
         type=str,
+        default="v502",
+    )
+    parser.add_argument(
+        "--irr-model-version",
+        dest="irr_model_version",
+        help="Irrigation model version",
+        type=str,
         default="v420",
     )
     parser.add_argument(
@@ -159,6 +166,7 @@ def main(args):
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
         model_version=args.model_version,
+        irr_model_version = args.irr_model_version,
         upload_block=args.upload_block,
         postprocess=args.postprocess,
         out_dirpath=args.out_dirpath,
