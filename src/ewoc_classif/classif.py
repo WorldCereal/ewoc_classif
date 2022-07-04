@@ -161,6 +161,9 @@ def postprocess_mosaic(
     :return: None
     """
     # Download the blocks from S3
+    endpoint_url = os.getenv("EWOC_ENDPOINT_URL","https://s3.waw2-1.cloudferro.com")
+    if endpoint_url == "aws":
+        endpoint_url = None
     if os.getenv("PRD_BUCKET") is not None:
         in_bucket = os.getenv("PRD_BUCKET")
     else:
@@ -170,7 +173,7 @@ def postprocess_mosaic(
         in_bucket,
         s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
         s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
-        endpoint_url="https://s3.waw2-1.cloudferro.com",
+        endpoint_url=endpoint_url,
     )
     with open(ewoc_config_filepath, "r") as f:
         data = load(f)
