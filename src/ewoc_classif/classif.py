@@ -161,6 +161,9 @@ def postprocess_mosaic(
     :return: None
     """
     # Download the blocks from S3
+    endpoint_url = os.getenv("EWOC_ENDPOINT_URL","https://s3.waw2-1.cloudferro.com")
+    if endpoint_url == "aws":
+        endpoint_url = None
     if os.getenv("PRD_BUCKET") is not None:
         in_bucket = os.getenv("PRD_BUCKET")
     else:
@@ -170,7 +173,7 @@ def postprocess_mosaic(
         in_bucket,
         s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
         s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
-        endpoint_url="https://s3.waw2-1.cloudferro.com",
+        endpoint_url=endpoint_url,
     )
     with open(ewoc_config_filepath, "r") as f:
         data = load(f)
@@ -224,7 +227,8 @@ def run_classif(
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-    model_version: str = "v210",
+    model_version: str = "v502",
+    irr_model_version: str = "v420",
     upload_block: bool = True,
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
@@ -253,6 +257,8 @@ def run_classif(
     :type ewoc_season: str
     :param model_version: The version of the AI model used for the cropland/croptype prediction
     :type model_version: str
+    :param irr_model_version: The version of the AI model used for croptype irrigation
+    :type irr_model_version: str
     :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
@@ -303,6 +309,7 @@ def run_classif(
         ewoc_season,
         production_id,
         model_version,
+        irr_model_version,
         csv_dict,
     )
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
