@@ -164,6 +164,10 @@ def postprocess_mosaic(
     endpoint_url = os.getenv("EWOC_ENDPOINT_URL","https://s3.waw2-1.cloudferro.com")
     if endpoint_url == "aws":
         endpoint_url = None
+    if endpoint_url is not None:
+        if not endpoint_url.startswith("https://"):
+            endpoint_url="https://"+endpoint_url
+            logger.info(f"Updating endpoint to {endpoint_url}")
     if os.getenv("PRD_BUCKET") is not None:
         in_bucket = os.getenv("PRD_BUCKET")
     else:
