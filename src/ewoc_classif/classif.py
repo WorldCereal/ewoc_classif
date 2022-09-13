@@ -12,15 +12,21 @@ from typing import List
 from uuid import uuid4
 
 from ewoc_dag.bucket.eobucket import EOBucket
-from ewoc_dag.bucket.ewoc import (EWOCARDBucket, EWOCAuxDataBucket,
-                                  EWOCPRDBucket)
+from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
-from ewoc_classif.utils import (check_outfold, generate_config_file,
-                                paginated_download, remove_tmp_files,
-                                update_agera5_bucket, update_metajsons)
+from ewoc_classif.utils import (
+    check_outfold,
+    generate_config_file,
+    paginated_download,
+    remove_tmp_files,
+    update_agera5_bucket,
+    update_config,
+    update_metajsons,
+)
+
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
 EWOC_CROPTYPE_DETECTORS = [
@@ -161,12 +167,12 @@ def postprocess_mosaic(
     :return: None
     """
     # Download the blocks from S3
-    endpoint_url = os.getenv("EWOC_ENDPOINT_URL","https://s3.waw2-1.cloudferro.com")
+    endpoint_url = os.getenv("EWOC_ENDPOINT_URL", "https://s3.waw2-1.cloudferro.com")
     if endpoint_url == "aws":
         endpoint_url = None
     if endpoint_url is not None:
         if not endpoint_url.startswith("https://"):
-            endpoint_url="https://"+endpoint_url
+            endpoint_url = "https://" + endpoint_url
             logger.info(f"Updating endpoint to {endpoint_url}")
     if os.getenv("PRD_BUCKET") is not None:
         in_bucket = os.getenv("PRD_BUCKET")
@@ -204,7 +210,7 @@ def postprocess_mosaic(
     if check_outfold(out_dirpath / f"cogs/{tile_id}/{year}_{season}"):
         # Update json stac
         root_s3 = f"s3://ewoc-prd/{production_id}"
-        update_metajsons(root_s3,out_dirpath / "cogs")
+        update_metajsons(root_s3, out_dirpath / "cogs")
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
         if os.getenv("PRD_BUCKET") is not None:
@@ -228,6 +234,7 @@ def run_classif(
     optical_csv: Path = None,
     tir_csv: Path = None,
     agera5_csv: Path = None,
+    data_folder: Path = None,
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
@@ -253,6 +260,8 @@ def run_classif(
     :type tir_csv: Path
     :param agera5_csv: Path to a csv file with all the detail about all the AgERA5 images to process
     :type agera5_csv: Path
+    :param data_folder: Folder with CopDEM and/or cropland data
+    :type data_folder: Path
     :param ewoc_detector: Type of detector to use, possible choices are cropland or croptype
     :type ewoc_detector: str
     :param end_season_year: End of season year
@@ -274,7 +283,7 @@ def run_classif(
     """
     uid = uuid4().hex[:6]
     uid = tile_id + "_" + uid
-    agera5_bucket=os.getenv("AGERA5_BUCKET","ewoc-aux-data")
+    agera5_bucket = os.getenv("AGERA5_BUCKET", "ewoc-aux-data")
     # Create the config file
     ewoc_ard_bucket = EWOCARDBucket()
 
@@ -317,9 +326,10 @@ def run_classif(
         csv_dict,
     )
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
+    if data_folder is not None:
+        ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
-
     # Process tile (and optionally select blocks)
     try:
         if not postprocess:
