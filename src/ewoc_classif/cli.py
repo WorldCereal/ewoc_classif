@@ -10,8 +10,7 @@ from tempfile import gettempdir
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
-from ewoc_classif.classif import (EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS,
-                                  run_classif)
+from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, run_classif
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -68,6 +67,13 @@ def parse_args(args):
     )
     parser.add_argument(
         "--agera5-csv", dest="agera5_csv", help="Agera5 list", default=None, type=Path
+    )
+    parser.add_argument(
+        "--data-folder",
+        dest="data_folder",
+        help="Folder storing CopDEM and Cropland data",
+        default=None,
+        type=Path,
     )
     parser.add_argument(
         "--ewoc-detector",
@@ -152,7 +158,7 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    # This print if here on purpose!
+    # This print is here on purpose!
     print("Start of processing")
     run_classif(
         args.tile_id,
@@ -161,12 +167,13 @@ def main(args):
         optical_csv=args.optical_csv,
         tir_csv=args.tir_csv,
         agera5_csv=args.agera5_csv,
+        data_folder=args.data_folder,
         end_season_year=args.end_season_year,
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
         model_version=args.model_version,
-        irr_model_version = args.irr_model_version,
+        irr_model_version=args.irr_model_version,
         upload_block=args.upload_block,
         postprocess=args.postprocess,
         out_dirpath=args.out_dirpath,
