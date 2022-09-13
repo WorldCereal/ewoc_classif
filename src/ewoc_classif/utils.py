@@ -133,7 +133,9 @@ def generate_config_file(
                 },
             }
         )
-        logger.info(f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}")
+        logger.info(
+            f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
+        )
         if ewoc_season == "summer1":
             models = {
                 "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/maize_detector_WorldCerealPixelCatBoost_{model_version}/config.json",
@@ -150,7 +152,9 @@ def generate_config_file(
             logger.info(f"[{ewoc_season}] - Using model version: {model_version}")
             return config
         elif ewoc_season == "winter":
-            models = {"wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{model_version}/config.json"}
+            models = {
+                "wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{model_version}/config.json"
+            }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {model_version}")
             return config
@@ -246,7 +250,11 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
                 logger.info(f"Updated user id for {meta} with {user_id}")
             # Update user id
             if data["properties"]["tile_collection_id"].split("_")[-1] == "0000":
-                tmp_coll_id = "_".join(data["properties"]["tile_collection_id"].split("_")[:-1])+"_"+user_id
+                tmp_coll_id = (
+                    "_".join(data["properties"]["tile_collection_id"].split("_")[:-1])
+                    + "_"
+                    + user_id
+                )
                 data["properties"]["tile_collection_id"] = tmp_coll_id
                 logger.info(f"Updated tile collection id to {tmp_coll_id}")
             with open(out_dir_folder / meta, "w") as out:
@@ -254,6 +262,35 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
             logger.info(f"Updated {meta} with {root_path}")
     else:
         logger.warning("No json file found using **metadata_*.json wildcard")
+
+
+def update_config(config_dict: Dict, ewoc_detector: str, data_folder: Path) -> Dict:
+    """
+    Update CopDEM and/or cropland path
+    :param config_dict: worldcereal config dictionary
+    :param ewoc_detector: cropland of croptype
+    :param data_folder: the folder where CopDEM and/or Cropland data is stored
+    :return: Dict
+    """
+
+    # Update only CopDEM path to local
+    old_dem_path = config_dict["inputs"]["DEM"]
+    config_dict["inputs"]["DEM"] = old_dem_path.replace(
+        "s3://ewoc-aux-data", str(data_folder)
+    )
+    logger.info(
+        f"Updated CopDEM path from {old_dem_path} to {config_dict['inputs']['DEM']}"
+    )
+    if ewoc_detector == "croptype":
+        # Update cropland mask path
+        old_crop_path = config_dict["parameters"]["cropland_mask"]
+        config_dict["parameters"]["cropland_mask"] = str(
+            data_folder / old_crop_path.split("/")[-1]
+        )
+        logger.info(
+            f"Updated CopDEM path from {old_crop_path} to {config_dict['parameters']['cropland_mask']}"
+        )
+    return config_dict
 
 
 def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> None:
@@ -273,7 +310,7 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
     counter = 0
     for i, page in enumerate(pages):
         page_counter = 0
-        logger.info(f"Paginated download: page {i+1}")
+        logger.info(f"Paginated download: page {i + 1}")
         try:
             for obj in page["Contents"]:
                 if not obj["Key"].endswith("/"):
@@ -294,7 +331,7 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
                         logger.info(
                             f"{output_filepath} already available, skip downloading!"
                         )
-            logger.info(f"Downloaded {page_counter} files from page {i+1}")
+            logger.info(f"Downloaded {page_counter} files from page {i + 1}")
         except Exception:
             logger.error("No files were downloaded, check if the bucket is empty")
             logger.error(traceback.format_exc())
@@ -303,3 +340,67 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
         logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
     else:
         logger.info(f"Downloaded a total of {counter} files to {out_dirpath}")
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+
+    from rich.pretty import pprint
+
+    test_dict = {
+        "parameters": {
+            "year": 2019,
+            "season": "annual",
+            "featuresettings": "cropland",
+            "save_confidence": True,
+            "save_features": False,
+            "localmodels": True,
+            "segment": False,
+            "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
+        },
+        "inputs": {
+            "OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
+            "SAR": "/data/worldcereal/s3collections/satio_sar.csv",
+            "TIR": "/data/worldcereal/s3collections/satio_tir.csv",
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
+        },
+        "models": {
+            "annualcropland": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v502/cropland_detector_WorldCerealPixelCatBoost_v502/config.json"
+        },
+    }
+    test_dict_croptype = {
+        "parameters": {
+            "year": 2019,
+            "season": "summer1",
+            "featuresettings": "croptype",
+            "save_confidence": True,
+            "save_features": False,
+            "localmodels": True,
+            "segment": False,
+            "filtersettings": {"kernelsize": 7, "conf_threshold": 0.75},
+            "active_marker": True,
+            "cropland_mask": "s3://world-cereal/EWOC_OUT",
+            "irrigation": True,
+            "irrparameters": "irrigation",
+            "irrmodels": {
+                "irrigation": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v420/irrigation_detector_WorldCerealPixelCatBoost_v420/config.json"
+            },
+        },
+        "inputs": {
+            "OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
+            "SAR": "/data/worldcereal/s3collections/satio_sar.csv",
+            "TIR": "/data/worldcereal/s3collections/satio_tir.csv",
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
+        },
+        "models": {
+            "maize": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v502/maize_detector_WorldCerealPixelCatBoost_v502/config.json",
+            "springcereals": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v502/springcereals_detector_WorldCerealPixelCatBoost_v502/config.json",
+        },
+    }
+    update_config(test_dict, "cropland", Path("/tmp/data_folder/"))
+    config_dict = update_config(
+        test_dict_croptype, "croptype", Path("/tmp/data_folder/")
+    )
+    pprint(config_dict)
