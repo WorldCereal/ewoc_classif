@@ -345,7 +345,7 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
 if __name__ == "__main__":
     from pathlib import Path
 
-    from rich.pretty import pprint
+    from pprint import pprint
 
     test_dict = {
         "parameters": {
@@ -403,4 +403,4 @@ if __name__ == "__main__":
     config_dict = update_config(
         test_dict_croptype, "croptype", Path("/tmp/data_folder/")
     )
-    pprint(config_dict)
+    pprint(config_dict, indent=4)
