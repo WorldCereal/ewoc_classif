@@ -238,7 +238,8 @@ def run_classif(
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-    model_version: str = "v502",
+    cropland_model_version: str = "v512",
+    croptype_model_version: str = "v502",
     irr_model_version: str = "v420",
     upload_block: bool = True,
     postprocess: bool = False,
@@ -268,8 +269,10 @@ def run_classif(
     :type end_season_year: int
     :param ewoc_season: Which season are we processing, possible options: annual, summer1, summer2 and winter
     :type ewoc_season: str
-    :param model_version: The version of the AI model used for the cropland/croptype prediction
-    :type model_version: str
+    :param cropland_model_version: The version of the AI model used for the cropland prediction
+    :type cropland_model_version: str
+    :param croptype_model_version: The version of the AI model used for the croptype prediction
+    :type croptype_model_version: str
     :param irr_model_version: The version of the AI model used for croptype irrigation
     :type irr_model_version: str
     :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
@@ -321,7 +324,8 @@ def run_classif(
         end_season_year,
         ewoc_season,
         production_id,
-        model_version,
+        cropland_model_version,
+        croptype_model_version,
         irr_model_version,
         csv_dict,
     )
