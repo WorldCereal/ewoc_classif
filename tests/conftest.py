@@ -8,12 +8,8 @@
 """
 import pytest
 import json
-from worldcereal.resources import exampleconfigs
-
-try:
-    import importlib.resources as pkg_resources
-except ImportError:
-    import importlib_resources as pkg_resources
+import worldcereal.resources.exampleconfigs
+import importlib_resources as pkg_resources
 
 
 @pytest.fixture
@@ -22,7 +18,7 @@ def config_ref():
                    "example_bucketrun_summer2_config.json","example_bucketrun_winter_config.json"]
     config_ref_list = {}
     for config_file in config_list:
-        data = pkg_resources.open_text(exampleconfigs, config_file)
+        data = pkg_resources.open_text(worldcereal.resources.exampleconfigs, config_file)
         data_js = json.load(data)
         data_js["parameters"]["year"]=str(data_js["parameters"]["year"])
         config_name = config_file.split("_")[2]
