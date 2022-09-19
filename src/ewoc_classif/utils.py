@@ -109,11 +109,18 @@ def generate_config_file(
         "segment": False,
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
     }
-
+    # Support the switch between local models and use of artifactory
+    use_local_models = os.getenv("LOCAL_MODELS", None)
+    if use_local_models is None:
+        model_prefix = "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal"
+        logger.info(f"[Artifactory Mode] using artifactory for the models. URL: {model_prefix}")
+    else:
+        model_prefix = ""
+        logger.info(f"[Local Models] using local models from /models {model_prefix}")
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
         models = {
-            "annualcropland": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}/config.json"
+            "annualcropland": f"{model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}/config.json"
         }
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
         config = {"parameters": parameters, "inputs": csv_dict, "models": models}
@@ -134,7 +141,7 @@ def generate_config_file(
                 "irrigation": True,
                 "irrparameters": "irrigation",
                 "irrmodels": {
-                    "irrigation": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                    "irrigation": f"{model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
                 },
             }
         )
@@ -143,22 +150,22 @@ def generate_config_file(
         )
         if ewoc_season == "summer1":
             models = {
-                "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
-                "springcereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "maize": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "springcereals": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
         elif ewoc_season == "summer2":
             models = {
-                "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "maize": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
         elif ewoc_season == "winter":
             models = {
-                "wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "wintercereals": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
