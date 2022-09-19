@@ -98,9 +98,16 @@ def parse_args(args):
         choices=EWOC_SUPPORTED_SEASONS,
     )
     parser.add_argument(
-        "--model-version",
-        dest="model_version",
-        help="Model version",
+        "--cropland-model-version",
+        dest="cropland_model_version",
+        help="Cropland model version",
+        type=str,
+        default="v512",
+    )
+    parser.add_argument(
+        "--croptype-model-version",
+        dest="croptype_model_version",
+        help="Croptype model version",
         type=str,
         default="v502",
     )
@@ -172,7 +179,8 @@ def main(args):
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
-        model_version=args.model_version,
+        cropland_model_version=args.cropland_model_version,
+        croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
         upload_block=args.upload_block,
         postprocess=args.postprocess,

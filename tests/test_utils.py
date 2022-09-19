@@ -21,9 +21,10 @@ def test_generate_config_file(config_ref):
     for config in config_ref:
         if config != "annual":
             config_ref[config]["parameters"]["cropland_mask"] = cropland_mask_bucket
-    model_version = "v502"
+    cropland_model_version = "v512"
+    croptype_model_version: str="v502"
     irr_model_version = "v420"
-    assert generate_config_file("cropland", "2019", "annual",production_id, model_version,irr_model_version, csv_dict) == config_ref["annual"]
-    assert generate_config_file("croptype", "2019", "summer1",production_id,model_version,irr_model_version, csv_dict) == config_ref["summer1"]
-    assert generate_config_file("croptype", "2019", "summer2",production_id, model_version,irr_model_version, csv_dict) == config_ref["summer2"]
-    assert generate_config_file("croptype", "2019", "winter",production_id, model_version,irr_model_version, csv_dict) == config_ref["winter"]
+    assert generate_config_file("cropland", "2019", "annual",production_id, cropland_model_version, croptype_model_version, irr_model_version, csv_dict) == config_ref["annual"]
+    assert generate_config_file("croptype", "2019", "summer1",production_id,croptype_model_version, croptype_model_version, irr_model_version, csv_dict) == config_ref["summer1"]
+    assert generate_config_file("croptype", "2019", "summer2",production_id, croptype_model_version, croptype_model_version, irr_model_version, csv_dict) == config_ref["summer2"]
+    assert generate_config_file("croptype", "2019", "winter",production_id, croptype_model_version, croptype_model_version, irr_model_version, csv_dict) == config_ref["winter"]

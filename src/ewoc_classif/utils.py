@@ -74,7 +74,8 @@ def generate_config_file(
     end_season_year: str,
     ewoc_season: str,
     production_id: str,
-    model_version: str,
+    cropland_model_version: str,
+    croptype_model_version: str,
     irr_model_version: str,
     csv_dict: Dict,
 ) -> Dict:
@@ -88,8 +89,12 @@ def generate_config_file(
     :type ewoc_season: str
     :param production_id: EWoC production ID
     :type production_id: str
-    :param model_version: The AI model version used for the predictions
-    :type model_version: str
+    :param cropland_model_version: The AI model version used for the cropland predictions
+    :type cropland_model_version: str
+    :param croptype_model_version: The AI model version used for the croptype predictions
+    :type croptype_model_version: str
+    :param irr_model_version: The AI model version used for the irrigation
+    :type irr_model_version: str
     :param csv_dict: A dictionary with the initial params of the config file
     :type csv_dict: Dict
     :return: Dict
@@ -108,9 +113,9 @@ def generate_config_file(
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
         models = {
-            "annualcropland": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/cropland_detector_WorldCerealPixelCatBoost_{model_version}/config.json"
+            "annualcropland": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}/config.json"
         }
-        logger.info(f"[{featuresettings}] - Using model version: {model_version}")
+        logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
         config = {"parameters": parameters, "inputs": csv_dict, "models": models}
         return config
     elif featuresettings == "croptype":
@@ -138,25 +143,25 @@ def generate_config_file(
         )
         if ewoc_season == "summer1":
             models = {
-                "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/maize_detector_WorldCerealPixelCatBoost_{model_version}/config.json",
-                "springcereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/springcereals_detector_WorldCerealPixelCatBoost_{model_version}/config.json",
+                "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "springcereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
-            logger.info(f"[{ewoc_season}] - Using model version: {model_version}")
+            logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
         elif ewoc_season == "summer2":
             models = {
-                "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/maize_detector_WorldCerealPixelCatBoost_{model_version}/config.json"
+                "maize": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
-            logger.info(f"[{ewoc_season}] - Using model version: {model_version}")
+            logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
         elif ewoc_season == "winter":
             models = {
-                "wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{model_version}/config.json"
+                "wintercereals": f"https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
-            logger.info(f"[{ewoc_season}] - Using model version: {model_version}")
+            logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
 
 
