@@ -11,9 +11,14 @@ Usage
 -----
 
 Before using the CLI you'll need to export some variables: ``EWOC_S3_ACCESS_KEY_ID`` and ``EWOC_S3_SECRET_ACCESS_KEY``.
-In dev mode please export ``EWOC_DEV_MODE=True``.
+In dev mode please export ``EWOC_DEV_MODE=True``. For the full list of env vars to use see `classification-docker` readme
 
 .. code-block::
+
+    usage: ewoc_classif [-h] [--version] [--block-ids BLOCK_IDS [BLOCK_IDS ...]] [--optical-csv OPTICAL_CSV] [--sar-csv SAR_CSV] [--tir-csv TIR_CSV] [--agera5-csv AGERA5_CSV] [--data-folder DATA_FOLDER]
+                        [--ewoc-detector EWOC_DETECTOR] [--end-season-year END_SEASON_YEAR] [--ewoc-season {winter,summer1,summer2,annual,custom}] [--cropland-model-version CROPLAND_MODEL_VERSION]
+                        [--croptype-model-version CROPTYPE_MODEL_VERSION] [--irr-model-version IRR_MODEL_VERSION] [--upload-block UPLOAD_BLOCK] [--postprocess POSTPROCESS] [-o OUT_DIRPATH] [-v] [-vv]
+                        tile_id production_id
 
     EWoC Classification parser
 
@@ -32,16 +37,22 @@ In dev mode please export ``EWOC_DEV_MODE=True``.
       --tir-csv TIR_CSV     List of TIR products for a given S2 tile
       --agera5-csv AGERA5_CSV
                             Agera5 list
+      --data-folder DATA_FOLDER
+                            Folder storing CopDEM and Cropland data
       --ewoc-detector EWOC_DETECTOR
                             EWoC detector
       --end-season-year END_SEASON_YEAR
                             Year to use infer season date - format YYYY
       --ewoc-season {winter,summer1,summer2,annual,custom}
                             EWoC season
-      --model-version MODEL_VERSION
-                            Model version
+      --cropland-model-version CROPLAND_MODEL_VERSION
+                            Cropland model version
+      --croptype-model-version CROPTYPE_MODEL_VERSION
+                            Croptype model version
+      --irr-model-version IRR_MODEL_VERSION
+                            Irrigation model version
       --upload-block UPLOAD_BLOCK
-                            True if you want to upload each block
+                            True if you want to upload each block, true by default
       --postprocess POSTPROCESS
                             True if you want to do mosaic only
       -o OUT_DIRPATH, --out-dirpath OUT_DIRPATH
@@ -51,10 +62,11 @@ In dev mode please export ``EWOC_DEV_MODE=True``.
 
 
 
+
 **Example**
 
 .. code-block::
 
-    ewoc_classif 31TCJ --block-ids 12
-This CLI will run the cropland classification for 31TCJ only on block #12. The csv files necessary for the creation of the classifier input config file are created directly from the  s3 bucket
+    ewoc_classif 31TCJ c728b264-5c97-4f4c-81fe-1500d4c4dfbd --end-season-year 2021 --cropland-model-version v512 --croptype-model-version v502 --irr-model-version v420 --block-ids 12 --ewoc-detector croptype --ewoc-season summer1
+This CLI will run the summer1 croptype classification for 31TCJ only on block #12. The csv files necessary for the creation of the classifier input config file are created directly from the  s3 bucket
 
