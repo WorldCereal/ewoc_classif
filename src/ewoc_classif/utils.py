@@ -59,14 +59,18 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
     :param suffix: Pattern for the search ex 31TCJ.tif
     :return: None
     """
-    elem_to_del = list(folder.rglob(f"*{suffix}"))
-    for elem in elem_to_del:
-        if elem.is_dir():
-            shutil.rmtree(elem)
-            logger.info(f"Deleted tmp file: {elem}")
-        elif elem.is_file():
-            elem.unlink()
-            logger.info(f"Deleted tmp file: {elem}")
+    try:
+        elem_to_del = list(folder.rglob(f"*{suffix}"))
+        for elem in elem_to_del:
+                if elem.is_dir():
+                    shutil.rmtree(elem)
+                    logger.info(f"Deleted tmp file: {elem}")
+                elif elem.is_file():
+                    elem.unlink()
+                    logger.info(f"Deleted tmp file: {elem}")
+    except:
+        logger.warning(f"Could not delete all tmp files")
+
 
 
 def generate_config_file(
