@@ -244,7 +244,7 @@ def run_classif(
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-    cropland_model_version: str = "v512",
+    cropland_model_version: str = "v605",
     croptype_model_version: str = "v502",
     irr_model_version: str = "v420",
     upload_block: bool = True,

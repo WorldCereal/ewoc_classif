@@ -111,8 +111,7 @@ def generate_config_file(
         "season": ewoc_season,
         "featuresettings": featuresettings,
         "save_confidence": True,
-        "save_features": True,
-        "features_dir": feature_blocks_dir,
+        "save_features": False,
         "localmodels": True,
         "segment": False,
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
@@ -127,6 +126,9 @@ def generate_config_file(
         logger.info(f"[Local Models] using local models from /models {model_prefix}")
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
+        parameters["localmodels"]=False
+        parameters["save_features"]= True
+        parameters["features_dir"]=str(feature_blocks_dir)
         models = {
             "annualcropland": f"{model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}/config.json"
         }
