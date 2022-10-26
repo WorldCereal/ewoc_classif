@@ -82,6 +82,7 @@ def generate_config_file(
     croptype_model_version: str,
     irr_model_version: str,
     csv_dict: Dict,
+    feature_blocks_dir: str,
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
@@ -101,6 +102,8 @@ def generate_config_file(
     :type irr_model_version: str
     :param csv_dict: A dictionary with the initial params of the config file
     :type csv_dict: Dict
+    :param feature_blocks_dir: Block features dir
+    :type feature_blocks_dir: str
     :return: Dict
     """
     parameters = {
@@ -123,9 +126,13 @@ def generate_config_file(
         logger.info(f"[Local Models] using local models from /models {model_prefix}")
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
+        parameters["localmodels"]=False
+        parameters["save_features"]= True
+        parameters["features_dir"]=str(feature_blocks_dir)
         models = {
             "annualcropland": f"{model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}/config.json"
         }
+
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
         config = {"parameters": parameters, "inputs": csv_dict, "models": models}
         return config

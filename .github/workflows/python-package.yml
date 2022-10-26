@@ -22,8 +22,8 @@ jobs:
         python-version: [3.8]
 
     env:
-      EWOC_DATASHIP_VERSION: "0.7.5"
-      WORLDCEREAL_VERSION: "0.6.4"
+      EWOC_DATASHIP_VERSION: "0.8.4"
+      WORLDCEREAL_VERSION: "1.0.7"
 
     steps:
 
@@ -45,7 +45,7 @@ jobs:
       uses: robinraju/release-downloader@v1.1
       with:
         repository: "WorldCereal/wc-classification"
-        tag: "v${{ env.WORLDCEREAL_VERSION }}"
+        tag: "${{ env.WORLDCEREAL_VERSION }}"
         fileName: "worldcereal-${{ env.WORLDCEREAL_VERSION }}.tar.gz"
         token: ${{ secrets.CS_ORG_TOKEN }}
 
