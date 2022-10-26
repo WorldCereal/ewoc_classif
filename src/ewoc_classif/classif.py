@@ -88,6 +88,9 @@ def process_blocks(
             total_ids = 120
         logger.info(f"Processing {total_ids} blocks")
         ids_range = range(total_ids + 1)
+    with open(ewoc_config_filepath) as json_file:
+        data = load(json_file)
+        blocks_feature_dir = Path(data["parameters"]["features_dir"])
     for block_id in ids_range:
         try:
             logger.info(f"[{block_id}] Start processing")
@@ -115,6 +118,9 @@ def process_blocks(
                 )
                 ewoc_prd_bucket.upload_ewoc_prd(
                     out_dirpath / "proclogs", production_id + "/proclogs"
+                )
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    blocks_feature_dir, production_id + "/block_features"
                 )
                 shutil.rmtree(out_dirpath / "blocks")
                 # Add Upload print
@@ -238,7 +244,7 @@ def run_classif(
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-    cropland_model_version: str = "v512",
+    cropland_model_version: str = "v605",
     croptype_model_version: str = "v502",
     irr_model_version: str = "v420",
     upload_block: bool = True,
@@ -293,6 +299,8 @@ def run_classif(
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
         out_dirpath.mkdir()
+    feature_blocks_dir = out_dirpath / "block_features"
+    feature_blocks_dir.mkdir(parents=True,exist_ok=True)
     if sar_csv is None:
         sar_csv = str(out_dirpath / f"{uid}_satio_sar.csv")
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
@@ -328,6 +336,7 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
+        feature_blocks_dir= feature_blocks_dir
     )
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
     if data_folder is not None:
