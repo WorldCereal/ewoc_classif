@@ -130,7 +130,7 @@ def generate_config_file(
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
         models = {
-            "annualcropland": f"{model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms/config.json"
+            "annualcropland": f"{model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
