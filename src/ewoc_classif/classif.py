@@ -172,34 +172,16 @@ def postprocess_mosaic(
     :type out_dirpath: Path
     :return: None
     """
-    # Download the blocks from S3
-    endpoint_url = os.getenv("EWOC_ENDPOINT_URL", "https://s3.waw2-1.cloudferro.com")
-    if endpoint_url == "aws":
-        endpoint_url = None
-    if endpoint_url is not None:
-        if not endpoint_url.startswith("https://"):
-            endpoint_url = "https://" + endpoint_url
-            logger.info(f"Updating endpoint to {endpoint_url}")
-    if os.getenv("PRD_BUCKET") is not None:
-        in_bucket = os.getenv("PRD_BUCKET")
-    else:
-        in_bucket = "ewoc-prd"
-    logger.info(f"Getting blocks from {in_bucket}")
-    bucket = EOBucket(
-        in_bucket,
-        s3_access_key_id=os.getenv("EWOC_S3_ACCESS_KEY_ID"),
-        s3_secret_access_key=os.getenv("EWOC_S3_SECRET_ACCESS_KEY"),
-        endpoint_url=endpoint_url,
-    )
+    # Retrieve some parameters from config file
     with open(ewoc_config_filepath, "r") as f:
         data = load(f)
     year = data["parameters"]["year"]
     season = data["parameters"]["season"]
-    prd_prefix = f"{production_id}/blocks/{tile_id}/{year}_{season}"
-    out_folder = out_dirpath / f"blocks/{tile_id}"
-    out_folder.mkdir(exist_ok=True, parents=True)
-    logger.info(f"Trying to download blocks: {prd_prefix} to {out_folder} ")
-    paginated_download(bucket, prd_prefix, out_folder)
+
+    # Retrieve blocks data from EWoC products bucket
+    logger.info(f"Getting blocks from EWoC products bucket on {os.getenv('EWOC_CLOUD_PROVIDER')}")
+    get_blocks(production_id, tile_id, season, year, out_dirpath)
+
     # Mosaic
     # Setup symlink for gdal translate
     if not os.path.islink("/opt/ewoc_classif_venv/bin/gdal_translate"):
@@ -209,9 +191,12 @@ def postprocess_mosaic(
         logger.info(
             f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
         )
+    # Use VITO code to perform mosaic
     run_tile(
         tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
     )
+
+    # Upload data to EWoC product bucket
     logger.info("Start upload")
     if check_outfold(out_dirpath / f"cogs/{tile_id}/{year}_{season}"):
         # Update json stac
