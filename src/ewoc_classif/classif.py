@@ -11,7 +11,7 @@ from tempfile import gettempdir
 from typing import List
 from uuid import uuid4
 
-from ewoc_dag.bucket.eobucket import EOBucket
+from ewoc_dag.ewoc_dag import get_blocks
 from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
@@ -20,7 +20,6 @@ from worldcereal.worldcereal_products import run_tile
 from ewoc_classif.utils import (
     check_outfold,
     generate_config_file,
-    paginated_download,
     remove_tmp_files,
     update_agera5_bucket,
     update_config,
@@ -350,3 +349,89 @@ def run_classif(
         logger.info(f"Cleaning the output folder {out_dirpath}")
         shutil.rmtree(out_dirpath)
         remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
+
+
+if __name__ == "__main__":
+
+    import logging
+    import sys
+
+    LOG_FORMAT = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format=LOG_FORMAT,
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
+    out_dirpath=Path(gettempdir())
+    tile_id= '50QLL'
+    sar_csv=None
+    optical_csv=None
+    tir_csv=None
+    agera5_csv=None
+    production_id='c728b264-5c97-4f4c-81fe-1500d4c4dfbd_26178_20221025141020'
+    ewoc_detector= EWOC_CROPLAND_DETECTOR
+    end_season_year = 2021
+    cropland_model_version = 'v700'
+    croptype_model_version = 'toto'
+    irr_model_version = 'toto'
+    ewoc_season='annual'
+    data_folder=Path('/tmp')
+
+    uid = uuid4().hex[:6]
+    uid = tile_id + "_" + uid
+    agera5_bucket = os.getenv("AGERA5_BUCKET", "ewoc-aux-data")
+    # Create the config file
+    ewoc_ard_bucket = EWOCARDBucket()
+
+    if out_dirpath == Path(gettempdir()):
+        out_dirpath = out_dirpath / uid
+        out_dirpath.mkdir()
+    feature_blocks_dir = out_dirpath / "block_features"
+    feature_blocks_dir.mkdir(parents=True,exist_ok=True)
+    if sar_csv is None:
+        sar_csv = str(out_dirpath / f"{uid}_satio_sar.csv")
+        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
+    if optical_csv is None:
+        optical_csv = str(out_dirpath / f"{uid}_satio_optical.csv")
+        ewoc_ard_bucket.optical_to_satio_csv(
+            tile_id, production_id, filepath=optical_csv
+        )
+    if tir_csv is None:
+        tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
+        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
+    if agera5_csv is None:
+        agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
+        ewoc_aux_data_bucket = EWOCAuxDataBucket()
+        ewoc_aux_data_bucket._bucket_name = agera5_bucket
+        logger.info(f"Using bucket {agera5_bucket}")
+        ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
+        update_agera5_bucket(agera5_csv)
+
+    csv_dict = {
+        "OPTICAL": str(optical_csv),
+        "SAR": str(sar_csv),
+        "TIR": str(tir_csv),
+        "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+        "METEO": str(agera5_csv),
+    }
+    ewoc_config = generate_config_file(
+        ewoc_detector,
+        end_season_year,
+        ewoc_season,
+        production_id,
+        cropland_model_version,
+        croptype_model_version,
+        irr_model_version,
+        csv_dict,
+        feature_blocks_dir= feature_blocks_dir
+    )
+    ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
+    if data_folder is not None:
+        ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
+    with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
+        dump(ewoc_config, ewoc_config_fp, indent=2)
+
+    postprocess_mosaic(tile_id,production_id,ewoc_config_filepath, out_dirpath)
