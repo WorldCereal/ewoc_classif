@@ -22,7 +22,7 @@ jobs:
         python-version: [3.8]
 
     env:
-      EWOC_DATASHIP_VERSION: "0.8.5"
+      EWOC_DATASHIP_VERSION: "0.8.6"
       WORLDCEREAL_VERSION: "1.0.9"
 
     steps:
