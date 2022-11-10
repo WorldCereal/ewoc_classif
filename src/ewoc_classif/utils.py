@@ -114,6 +114,7 @@ def generate_config_file(
         "save_features": False,
         "localmodels": True,
         "segment": False,
+        "decision_threshold": 0.7,
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
     }
     # Support the switch between local models and use of artifactory
