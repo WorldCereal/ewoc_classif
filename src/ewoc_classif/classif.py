@@ -200,7 +200,7 @@ def postprocess_mosaic(
     if check_outfold(out_dirpath / f"cogs/{tile_id}/{year}_{season}"):
         # Update json stac
         root_s3 = f"s3://ewoc-prd/{production_id}"
-        update_metajsons(root_s3, out_dirpath / "cogs")
+        stac_paths = update_metajsons(root_s3, out_dirpath / "cogs")
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
         if os.getenv("PRD_BUCKET") is not None:
@@ -212,6 +212,15 @@ def postprocess_mosaic(
         logger.info(f"Uploaded {out_dirpath}/cogs to {production_id} ")
         # Add Upload print
         print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+
+        # Starting ingestion of products in the VDM
+        if stac_paths:
+            logger.info("Notifying the VDM of new products to ingest")
+            for stac in stac_paths:
+                if not ingest_into_vdm(out_dirpath / f"cogs/{tile_id}/{year}_{season}"):
+                    logger.error(f'VDM ingestion error for tile: "{tile_id}" ({year}, {season})')
+        else:
+            logger.warning('No STAC files were found to start ingestion')
     else:
         raise Exception("Upload folder must be empty, the mosaic failed")
 

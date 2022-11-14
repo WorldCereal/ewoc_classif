@@ -18,6 +18,7 @@ import pandas as pd
 from ewoc_dag.bucket.eobucket import EOBucket
 from loguru import logger
 
+import requests
 
 def setup_logging(loglevel: int) -> None:
     """Setup basic logging
@@ -231,14 +232,14 @@ def check_outfold(outdir: Path) -> bool:
     return check
 
 
-def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
+def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
     """
     Update all stac json files in a folder
     :param root_path: Root path in s3 bucket, will be used to replace local folders
     :type root_path: str
     :param out_dir_folder: Folder to scan and update
     :type out_dir_folder: Path
-    :return: None
+    :return: list of json stac file paths
     """
     if root_path.endswith("/"):
         user_id_tmp = root_path.split("/")[-2]
@@ -285,6 +286,8 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> None:
             logger.info(f"Updated {meta} with {root_path}")
     else:
         logger.warning("No json file found using **metadata_*.json wildcard")
+
+    return metajsons
 
 
 def update_config(config_dict: Dict, ewoc_detector: str, data_folder: Path) -> Dict:
@@ -363,6 +366,43 @@ def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> 
         logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
     else:
         logger.info(f"Downloaded a total of {counter} files to {out_dirpath}")
+
+
+def ingest_into_vdm(stac_path) -> bool:
+    if not os.path.isfile(stac_path):
+        logger.error(f'JSON STAC file not found: "{stac_path}"')
+        return False
+
+    vdm_host = os.environ.get('VDM_HOST')
+    if not vdm_host:
+        logger.error(f'VDM host required ; environment variable "VDM_HOST" not set')
+        return False
+    vdm_endpoint = f'http://{vdm_host}/rest/project/worldCereal/product'
+
+    vdm_auth = os.environ.get('VDM_USERINFO')
+    if not vdm_auth:
+        logger.error(f'VDM user info missing ; environment variable "VDM_USERINFO" not set')
+        return False
+    headers = {'x-userinfo': vdm_auth}
+
+    with open(stac_path, 'r') as fh:
+        try:
+            payload = json.load(fh)
+            # 5 sec connection timeout, 10 sec timeout to receive data
+            resp = requests.post(vdm_endpoint, headers=headers, json=payload, timeout=(5, 15))
+            resp.raise_for_status()
+            print('VDM-Ingestion Response code:', resp.status_code)
+            return resp.status_code == 200
+        except requests.ConnectTimeout as x:
+            logger.error(f'VDM Connection timeout for endpoint "{vdm_endpoint}"')
+            return False
+        except requests.ReadTimeout as x:
+            logger.error(f'VDM Read timeout (no data received) from endpoint "{vdm_endpoint}"')
+            return False
+        except Exception as x:
+            logger.error(f'VDM ingestion failed (status code: {resp.status_code}): {x}')
+            return False
+
 
 
 if __name__ == "__main__":
