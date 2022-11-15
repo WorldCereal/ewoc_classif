@@ -217,7 +217,7 @@ def postprocess_mosaic(
         if stac_paths:
             logger.info("Notifying the VDM of new products to ingest")
             for stac in stac_paths:
-                if not ingest_into_vdm(out_dirpath / f"cogs/{tile_id}/{year}_{season}"):
+                if not ingest_into_vdm(stac):
                     logger.error(f'VDM ingestion error for tile: "{tile_id}" ({year}, {season})')
         else:
             logger.warning('No STAC files were found to start ingestion')
