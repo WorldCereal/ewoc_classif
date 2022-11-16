@@ -119,9 +119,10 @@ def process_blocks(
                 ewoc_prd_bucket.upload_ewoc_prd(
                     out_dirpath / "proclogs", production_id + "/proclogs"
                 )
-                ewoc_prd_bucket.upload_ewoc_prd(
-                    blocks_feature_dir, production_id + "/block_features"
-                )
+                if any(blocks_feature_dir.iterdir()):
+                    ewoc_prd_bucket.upload_ewoc_prd(
+                        blocks_feature_dir, production_id + "/block_features"
+                    )
                 shutil.rmtree(out_dirpath / "blocks")
                 # Add Upload print
                 print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
