@@ -20,6 +20,7 @@ from worldcereal.worldcereal_products import run_tile
 from ewoc_classif.utils import (
     check_outfold,
     generate_config_file,
+    ingest_into_vdm,
     remove_tmp_files,
     update_agera5_bucket,
     update_config,
