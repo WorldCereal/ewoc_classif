@@ -119,12 +119,12 @@ def generate_config_file(
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
     }
     # Support the switch between local models and use of artifactory
-    use_local_models = os.getenv("LOCAL_MODELS", None)
+    use_local_models = os.getenv("EWOC_MODELS_DIR_ROOT", None)
     if use_local_models is None:
         model_prefix = "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal"
         logger.info(f"[Artifactory Mode] using artifactory for the models. URL: {model_prefix}")
     else:
-        model_prefix = ""
+        model_prefix = use_local_models
         logger.info(f"[Local Models] using local models from /models {model_prefix}")
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
