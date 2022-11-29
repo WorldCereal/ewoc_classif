@@ -125,6 +125,8 @@ def generate_config_file(
     }
     # Support the switch between local models and use of artifactory
     ewoc_model_prefix = os.getenv("EWOC_MODELS_DIR_ROOT", "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal")
+    logger.info(f"Using model from {ewoc_model_prefix}")
+    
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
         parameters["localmodels"]=False
