@@ -105,6 +105,8 @@ def generate_config_file(
     :type csv_dict: Dict
     :param feature_blocks_dir: Block features dir
     :type feature_blocks_dir: str
+    :var EWOC_MODELS_DIR_ROOT: environment variable for models local path
+    :type EWOC_MODELS_DIR_ROOT : str
     :return: Dict
     """
     parameters = {
@@ -119,12 +121,8 @@ def generate_config_file(
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
     }
     # Support the switch between local models and use of artifactory
-    use_local_models = os.getenv("EWOC_MODELS_DIR_ROOT", None)
-    if use_local_models is None:
-        model_prefix = "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal"
-        logger.info(f"[Artifactory Mode] using artifactory for the models. URL: {model_prefix}")
-    else:
-        model_prefix = use_local_models
+    _ewoc_model_prefix_ = os.getenv("EWOC_MODELS_DIR_ROOT", "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal")
+    logger.info(f"[Artifactory Mode] using artifactory for the models. URL: {_ewoc_model_prefix_}")
         logger.info(f"[Local Models] using local models from /models {model_prefix}")
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
