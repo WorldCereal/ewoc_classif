@@ -105,9 +105,8 @@ def generate_config_file(
     :type csv_dict: Dict
     :param feature_blocks_dir: Block features dir
     :type feature_blocks_dir: str
-    :var EWOC_MODELS_DIR_ROOT: environment variable for models local path
-    :type EWOC_MODELS_DIR_ROOT : str
     :return: Dict
+    :var ewoc_model_prefix : take value of environment variable EWOC_MODELS_DIR_ROOT (refering to the directory where models are stored in local) if specified, else use artifactory link
     """
     parameters = {
         "year": end_season_year,
@@ -121,14 +120,14 @@ def generate_config_file(
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
     }
     # Support the switch between local models and use of artifactory
-    _ewoc_model_prefix_ = os.getenv("EWOC_MODELS_DIR_ROOT", "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal")
+    ewoc_model_prefix = os.getenv("EWOC_MODELS_DIR_ROOT", "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal")
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
         parameters["localmodels"]=False
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
         models = {
-            "annualcropland": f"{_ewoc_model_prefix_}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
+            "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
@@ -152,7 +151,7 @@ def generate_config_file(
                 "irrigation": True,
                 "irrparameters": "irrigation",
                 "irrmodels": {
-                    "irrigation": f"{_ewoc_model_prefix_}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                    "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
                 },
             }
         )
@@ -161,22 +160,22 @@ def generate_config_file(
         )
         if ewoc_season == "summer1":
             models = {
-                "maize": f"{_ewoc_model_prefix_}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
-                "springcereals": f"{_ewoc_model_prefix_}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
         elif ewoc_season == "summer2":
             models = {
-                "maize": f"{_ewoc_model_prefix_}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
             return config
         elif ewoc_season == "winter":
             models = {
-                "wintercereals": f"{_ewoc_model_prefix_}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
