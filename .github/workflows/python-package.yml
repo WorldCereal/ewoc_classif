@@ -66,6 +66,7 @@ jobs:
         python -m pip install mypy
         python -m pip install boto3-stubs
         python -m pip install pandas-stubs
+        python -m pip install types-beautifulsoup4
         python -m pip install types-requests
         mypy src/
 
