@@ -43,7 +43,7 @@ EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
 def process_blocks(
     tile_id: str,
     ewoc_config_filepath: Path,
-    block_ids: List[int],
+    block_ids: Optional[List[int]],
     production_id: str,
     upload_block: bool,
     out_dirpath: Path,
@@ -77,9 +77,11 @@ def process_blocks(
             total_ids = 120
         logger.info(f"Processing {total_ids} blocks")
         ids_range = range(total_ids + 1)
+
     with open(ewoc_config_filepath) as json_file:
         data = load(json_file)
         blocks_feature_dir = Path(data["parameters"]["features_dir"])
+
     for block_id in ids_range:
         try:
             logger.info(f"[{block_id}] Start processing")
@@ -403,7 +405,7 @@ if __name__ == "__main__":
         tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
-        agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
+        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
         ewoc_aux_data_bucket._bucket_name = agera5_bucket
         logger.info(f"Using bucket {agera5_bucket}")
