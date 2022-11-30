@@ -29,21 +29,10 @@ from ewoc_classif.utils import (
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
-EWOC_CROPTYPE_DETECTORS = [
-    "cereals",
-    "maize",
-    "springcereals",
-    "springwheat",
-    "wheat",
-    "wintercereals",
-    "winterwheat",
-]
-EWOC_IRRIGATION_DETECTOR = "irrigation"
 
 EWOC_DETECTORS = [
     EWOC_CROPLAND_DETECTOR,
-    EWOC_IRRIGATION_DETECTOR,
-].extend(EWOC_CROPTYPE_DETECTORS)
+    EWOC_CROPTYPE_DETECTOR,]
 
 EWOC_MODELS_BASEPATH = (
     "https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/"
