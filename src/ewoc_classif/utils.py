@@ -83,7 +83,7 @@ def generate_config_file(
     croptype_model_version: str,
     irr_model_version: str,
     csv_dict: Dict,
-    feature_blocks_dir: str,
+    feature_blocks_dir: Path,
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
@@ -104,7 +104,7 @@ def generate_config_file(
     :param csv_dict: A dictionary with the initial params of the config file
     :type csv_dict: Dict
     :param feature_blocks_dir: Block features dir
-    :type feature_blocks_dir: str
+    :type feature_blocks_dir: Path
     :return: Dict
     """
     parameters = {

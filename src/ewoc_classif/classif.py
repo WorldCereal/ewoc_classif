@@ -286,18 +286,18 @@ def run_classif(
     feature_blocks_dir = out_dirpath / "block_features"
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
     if sar_csv is None:
-        sar_csv = str(out_dirpath / f"{uid}_satio_sar.csv")
+        sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
     if optical_csv is None:
-        optical_csv = str(out_dirpath / f"{uid}_satio_optical.csv")
+        optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
             tile_id, production_id, filepath=optical_csv
         )
     if tir_csv is None:
-        tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
+        tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
-        agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
+        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
         ewoc_aux_data_bucket._bucket_name = agera5_bucket
         logger.info(f"Using bucket {agera5_bucket}")
@@ -313,7 +313,7 @@ def run_classif(
     }
     ewoc_config = generate_config_file(
         ewoc_detector,
-        end_season_year,
+        str(end_season_year),
         ewoc_season,
         production_id,
         cropland_model_version,
@@ -419,7 +419,7 @@ if __name__ == "__main__":
     }
     ewoc_config = generate_config_file(
         ewoc_detector,
-        end_season_year,
+        str(end_season_year),
         ewoc_season,
         production_id,
         cropland_model_version,
