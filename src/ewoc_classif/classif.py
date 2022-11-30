@@ -8,7 +8,7 @@ import traceback
 from json import dump, load
 from pathlib import Path
 from tempfile import gettempdir
-from typing import List
+from typing import Optional, List
 from uuid import uuid4
 
 from ewoc_dag.ewoc_dag import get_blocks
@@ -230,12 +230,12 @@ def postprocess_mosaic(
 def run_classif(
     tile_id: str,
     production_id: str,
-    block_ids: List[int] = None,
-    sar_csv: Path = None,
-    optical_csv: Path = None,
-    tir_csv: Path = None,
-    agera5_csv: Path = None,
-    data_folder: Path = None,
+    block_ids: Optional[List[int]] = None,
+    sar_csv: Optional[Path] = None,
+    optical_csv: Optional[Path] = None,
+    tir_csv: Optional[Path] = None,
+    agera5_csv: Optional[Path] = None,
+    data_folder: Optional[Path] = None,
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
