@@ -6,11 +6,14 @@ name: Python
 on:
   push:
     branches:
-    - [ main, develop ]
+    - 'main'
+    - 'develop'
     tags:
     - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
-    branches: [ develop ]
+    types: [opened, synchronize]
+    branches:
+     - 'develop'
 
 jobs:
   build-python:
