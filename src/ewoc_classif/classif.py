@@ -76,7 +76,7 @@ def process_blocks(
         elif str(os.getenv("EWOC_BLOCKSIZE", "512")) == "1024":
             total_ids = 120
         logger.info(f"Processing {total_ids} blocks")
-        ids_range = range(total_ids + 1)
+        ids_range = list(range(total_ids + 1))
 
     with open(ewoc_config_filepath) as json_file:
         data = load(json_file)

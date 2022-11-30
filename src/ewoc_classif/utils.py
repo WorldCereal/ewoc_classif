@@ -245,11 +245,11 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
         user_id_tmp = root_path.split("/")[-2]
     else:
         user_id_tmp = root_path.split("/")[-1]
-    user_id_tmp = user_id_tmp.split("_")[:-2]
-    if len(user_id_tmp) == 1:
-        user_id = user_id_tmp[0]
+    user_id_tmp2 = user_id_tmp.split("_")[:-2]
+    if len(user_id_tmp2) == 1:
+        user_id = user_id_tmp2[0]
     else:
-        user_id = "_".join(user_id_tmp)
+        user_id = "_".join(user_id_tmp2)
     # Find all json metadata files
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
