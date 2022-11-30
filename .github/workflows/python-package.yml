@@ -54,8 +54,7 @@ jobs:
         python -m pip install "pip<22" --upgrade
         python -m pip install "setuptools<61" --upgrade
         python -m pip install ewoc_dag-${{ env.EWOC_DATASHIP_VERSION }}.tar.gz
-
-# python -m pip install worldcereal-${{ env.WORLDCEREAL_VERSION }}.tar.gz --extra-index-url https://artifactory.vgt.vito.be/api/pypi/python-packages/simple
+      # python -m pip install worldcereal-${{ env.WORLDCEREAL_VERSION }}.tar.gz --extra-index-url https://artifactory.vgt.vito.be/api/pypi/python-packages/simple
 
     - name: Analysing the code with pylint
       run: |
@@ -69,6 +68,9 @@ jobs:
         python -m pip install pandas-stubs
         python -m pip install types-requests
         mypy src/
+
+    # - name: Run tests
+    #   run: python -m unittest discover -s tests
 
     - name: Build package
       run: |
