@@ -126,6 +126,7 @@ def generate_config_file(
     else:
         model_prefix = ""
         logger.info(f"[Local Models] using local models from /models {model_prefix}")
+
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
         parameters["localmodels"]=False
@@ -136,8 +137,6 @@ def generate_config_file(
         }
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
-        config = {"parameters": parameters, "inputs": csv_dict, "models": models}
-        return config
     elif featuresettings == "croptype":
         is_dev = strtobool(os.getenv("EWOC_DEV_MODE", "False"))
         if is_dev:
@@ -168,23 +167,21 @@ def generate_config_file(
                 "maize": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
                 "springcereals": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
-            config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
-            return config
         elif ewoc_season == "summer2":
             models = {
                 "maize": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
-            config = {"parameters": parameters, "inputs": csv_dict, "models": models}
+
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
-            return config
         elif ewoc_season == "winter":
             models = {
                 "wintercereals": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
-            config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
-            return config
+
+    config = {"parameters": parameters, "inputs": csv_dict, "models": models}
+    return config
 
 
 def update_agera5_bucket(filepath: Path) -> None:
@@ -248,11 +245,11 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
         user_id_tmp = root_path.split("/")[-2]
     else:
         user_id_tmp = root_path.split("/")[-1]
-    user_id_tmp = user_id_tmp.split("_")[:-2]
-    if len(user_id_tmp) == 1:
-        user_id = user_id_tmp[0]
+    user_id_tmp2 = user_id_tmp.split("_")[:-2]
+    if len(user_id_tmp2) == 1:
+        user_id = user_id_tmp2[0]
     else:
-        user_id = "_".join(user_id_tmp)
+        user_id = "_".join(user_id_tmp2)
     # Find all json metadata files
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
