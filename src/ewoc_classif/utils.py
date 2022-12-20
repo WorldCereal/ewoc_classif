@@ -136,7 +136,6 @@ def generate_config_file(
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
         config = {"parameters": parameters, "inputs": csv_dict, "models": models}
-        return config
     elif featuresettings == "croptype":
         is_dev = strtobool(os.getenv("EWOC_DEV_MODE", "False"))
         if is_dev:
@@ -169,22 +168,23 @@ def generate_config_file(
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
-            return config
         elif ewoc_season == "summer2":
             models = {
                 "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
-            return config
         elif ewoc_season == "winter":
             models = {
                 "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
-            return config
+    else:
+        logger.error(f'{featuresettings} not accepeted as value!')
+        config={}
 
+    return config
 
 def update_agera5_bucket(filepath: Path) -> None:
     """
