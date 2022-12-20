@@ -63,16 +63,14 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
     try:
         elem_to_del = list(folder.rglob(f"*{suffix}"))
         for elem in elem_to_del:
-                if elem.is_dir():
-                    shutil.rmtree(elem)
-                    logger.info(f"Deleted tmp file: {elem}")
-                elif elem.is_file():
-                    elem.unlink()
-                    logger.info(f"Deleted tmp file: {elem}")
+            if elem.is_dir():
+                shutil.rmtree(elem)
+                logger.info(f"Deleted tmp file: {elem}")
+            elif elem.is_file():
+                elem.unlink()
+                logger.info(f"Deleted tmp file: {elem}")
     except:
         logger.warning(f"Could not delete all tmp files")
-
-
 
 def generate_config_file(
     featuresettings: str,
@@ -87,6 +85,11 @@ def generate_config_file(
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
+    
+    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local path to the models.
+    If not specified, it use artifactory a source
+    
+    
     :param featuresettings: cropland or croptype
     :type featuresettings: str
     :param end_season_year: End of season year
@@ -119,13 +122,9 @@ def generate_config_file(
         "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
     }
     # Support the switch between local models and use of artifactory
-    use_local_models = os.getenv("LOCAL_MODELS", None)
-    if use_local_models is None:
-        model_prefix = "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal"
-        logger.info(f"[Artifactory Mode] using artifactory for the models. URL: {model_prefix}")
-    else:
-        model_prefix = ""
-        logger.info(f"[Local Models] using local models from /models {model_prefix}")
+    ewoc_model_prefix = os.getenv("EWOC_MODELS_DIR_ROOT",
+        "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal")
+    logger.info(f"Using model from {ewoc_model_prefix}")
 
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
@@ -133,10 +132,11 @@ def generate_config_file(
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
         models = {
-            "annualcropland": f"{model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
+            "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
+        config = {"parameters": parameters, "inputs": csv_dict, "models": models}
     elif featuresettings == "croptype":
         is_dev = strtobool(os.getenv("EWOC_DEV_MODE", "False"))
         if is_dev:
@@ -155,7 +155,7 @@ def generate_config_file(
                 "irrigation": True,
                 "irrparameters": "irrigation",
                 "irrmodels": {
-                    "irrigation": f"{model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                    "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
                 },
             }
         )
@@ -164,25 +164,28 @@ def generate_config_file(
         )
         if ewoc_season == "summer1":
             models = {
-                "maize": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
-                "springcereals": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
+            config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
         elif ewoc_season == "summer2":
             models = {
-                "maize": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
-
+            config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
         elif ewoc_season == "winter":
             models = {
-                "wintercereals": f"{model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
+            config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
+    else:
+        logger.error(f'{featuresettings} not accepeted as value!')
+        config={}
 
-    config = {"parameters": parameters, "inputs": csv_dict, "models": models}
     return config
-
 
 def update_agera5_bucket(filepath: Path) -> None:
     """

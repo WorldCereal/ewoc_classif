@@ -70,3 +70,4 @@ In dev mode please export ``EWOC_DEV_MODE=True``. For the full list of env vars 
     ewoc_classif 31TCJ c728b264-5c97-4f4c-81fe-1500d4c4dfbd --end-season-year 2021 --cropland-model-version v512 --croptype-model-version v502 --irr-model-version v420 --block-ids 12 --ewoc-detector croptype --ewoc-season summer1
 This CLI will run the summer1 croptype classification for 31TCJ only on block #12. The csv files necessary for the creation of the classifier input config file are created directly from the  s3 bucket
 
+You can set the environment variable EWOC_MODELS_DIR_ROOT with the path where are located models, if this environnement variable is not set, the VITO artifactory is used as source.
