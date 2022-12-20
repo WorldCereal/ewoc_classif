@@ -22,7 +22,6 @@ from ewoc_classif.utils import (
     generate_config_file,
     ingest_into_vdm,
     remove_tmp_files,
-    update_agera5_bucket,
     update_config,
     update_metajsons,
 )
@@ -83,7 +82,7 @@ def process_blocks(
         logger.info(f"Processing {total_ids} blocks")
         ids_range = list(range(total_ids + 1))
 
-    with open(ewoc_config_filepath) as json_file:
+    with open(ewoc_config_filepath, encoding="UTF-8") as json_file:
         data = load(json_file)
         blocks_feature_dir = Path(data["parameters"]["features_dir"])
 
@@ -142,7 +141,7 @@ def process_blocks(
                 shutil.rmtree(out_dirpath / "blocks", ignore_errors=True)
 
     if not all(return_codes):
-        logger.error(f'One of the block failed with an unexpected return code')
+        logger.error('One of the block failed with an unexpected return code')
         return False
 
     # If we process all the tile, generate the cogs and upload if requested
@@ -156,7 +155,7 @@ def process_blocks(
         if upload_product:
         # Push the results to the s3 bucket
             ewoc_prd_bucket = EWOCPRDBucket()
-            nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
+            nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
                 out_dirpath / "cogs", production_id
             )
             ewoc_prd_bucket.upload_ewoc_prd(
@@ -168,7 +167,7 @@ def process_blocks(
             # Add Upload print
             print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
         else:
-            logger.info('No product uploaded as requested.') 
+            logger.info('No product uploaded as requested.')
         if clean:
             logger.warning('Clean nothing!')
 
@@ -190,8 +189,8 @@ def postprocess_mosaic(
     :return: None
     """
     # Retrieve some parameters from config file
-    with open(ewoc_config_filepath, "r") as f:
-        data = load(f)
+    with open(ewoc_config_filepath, "r", encoding='UTF-8') as config_file:
+        data = load(config_file)
     year = data["parameters"]["year"]
     season = data["parameters"]["season"]
 
@@ -221,10 +220,7 @@ def postprocess_mosaic(
         stac_paths = update_metajsons(root_s3, out_dirpath / "cogs")
         # Push the results to the s3 bucket
         ewoc_prd_bucket = EWOCPRDBucket()
-        if os.getenv("PRD_BUCKET") is not None:
-            ewoc_prd_bucket._bucket_name = os.getenv("PRD_BUCKET")
-            logger.info(f"Output bucket set to: {ewoc_prd_bucket._bucket_name}")
-        nb_prd, size_of, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
+        nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
             out_dirpath / "cogs", production_id
         )
         logger.info(f"Uploaded {out_dirpath}/cogs to {production_id} ")
@@ -304,7 +300,6 @@ def run_classif(
     """
     uid = uuid4().hex[:6]
     uid = tile_id + "_" + uid
-    agera5_bucket = os.getenv("AGERA5_BUCKET", "ewoc-aux-data")
     # Create the config file
     ewoc_ard_bucket = EWOCARDBucket()
 
@@ -327,10 +322,7 @@ def run_classif(
     if agera5_csv is None:
         agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
-        ewoc_aux_data_bucket._bucket_name = agera5_bucket
-        logger.info(f"Using bucket {agera5_bucket}")
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
-        update_agera5_bucket(agera5_csv)
 
     csv_dict = {
         "OPTICAL": str(optical_csv),
@@ -368,7 +360,7 @@ def run_classif(
                 clean=clean
             )
             if not process_status:
-                raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!") 
+                raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!")
         else:
             postprocess_mosaic(
                 tile_id, production_id, ewoc_config_filepath, out_dirpath
@@ -383,86 +375,4 @@ def run_classif(
 
 
 if __name__ == "__main__":
-
-    import logging
-    import sys
-
-    LOG_FORMAT = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(
-        level=logging.INFO,
-        stream=sys.stdout,
-        format=LOG_FORMAT,
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-
-    out_dirpath=Path(gettempdir())
-    tile_id= '50QLL'
-    sar_csv=None
-    optical_csv=None
-    tir_csv=None
-    agera5_csv=None
-    production_id='c728b264-5c97-4f4c-81fe-1500d4c4dfbd_26178_20221025141020'
-    ewoc_detector= EWOC_CROPLAND_DETECTOR
-    end_season_year = 2021
-    cropland_model_version = 'v700'
-    croptype_model_version = 'toto'
-    irr_model_version = 'toto'
-    ewoc_season='annual'
-    data_folder=Path('/tmp')
-
-    uid = uuid4().hex[:6]
-    uid = tile_id + "_" + uid
-    agera5_bucket = os.getenv("AGERA5_BUCKET", "ewoc-aux-data")
-    # Create the config file
-    ewoc_ard_bucket = EWOCARDBucket()
-
-    if out_dirpath == Path(gettempdir()):
-        out_dirpath = out_dirpath / uid
-        out_dirpath.mkdir()
-    feature_blocks_dir = out_dirpath / "block_features"
-    feature_blocks_dir.mkdir(parents=True,exist_ok=True)
-    if sar_csv is None:
-        sar_csv = str(out_dirpath / f"{uid}_satio_sar.csv")
-        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
-    if optical_csv is None:
-        optical_csv = str(out_dirpath / f"{uid}_satio_optical.csv")
-        ewoc_ard_bucket.optical_to_satio_csv(
-            tile_id, production_id, filepath=optical_csv
-        )
-    if tir_csv is None:
-        tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
-        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
-    if agera5_csv is None:
-        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
-        ewoc_aux_data_bucket = EWOCAuxDataBucket()
-        ewoc_aux_data_bucket._bucket_name = agera5_bucket
-        logger.info(f"Using bucket {agera5_bucket}")
-        ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
-        update_agera5_bucket(agera5_csv)
-
-    csv_dict = {
-        "OPTICAL": str(optical_csv),
-        "SAR": str(sar_csv),
-        "TIR": str(tir_csv),
-        "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-        "METEO": str(agera5_csv),
-    }
-    ewoc_config = generate_config_file(
-        ewoc_detector,
-        str(end_season_year),
-        ewoc_season,
-        production_id,
-        cropland_model_version,
-        croptype_model_version,
-        irr_model_version,
-        csv_dict,
-        feature_blocks_dir= feature_blocks_dir
-    )
-    ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
-    if data_folder is not None:
-        ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
-    with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
-        dump(ewoc_config, ewoc_config_fp, indent=2)
-
-    postprocess_mosaic(tile_id,production_id,ewoc_config_filepath, out_dirpath)
+    pass
