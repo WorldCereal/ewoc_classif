@@ -8,7 +8,7 @@ import traceback
 from json import dump, load
 from pathlib import Path
 from tempfile import gettempdir
-from typing import List
+from typing import Optional, List
 from uuid import uuid4
 
 from ewoc_dag.ewoc_dag import get_blocks
@@ -29,21 +29,10 @@ from ewoc_classif.utils import (
 
 EWOC_CROPLAND_DETECTOR = "cropland"
 EWOC_CROPTYPE_DETECTOR = "croptype"
-EWOC_CROPTYPE_DETECTORS = [
-    "cereals",
-    "maize",
-    "springcereals",
-    "springwheat",
-    "wheat",
-    "wintercereals",
-    "winterwheat",
-]
-EWOC_IRRIGATION_DETECTOR = "irrigation"
 
 EWOC_DETECTORS = [
     EWOC_CROPLAND_DETECTOR,
-    EWOC_IRRIGATION_DETECTOR,
-].extend(EWOC_CROPTYPE_DETECTORS)
+    EWOC_CROPTYPE_DETECTOR,]
 
 EWOC_MODELS_BASEPATH = (
     "https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/"
@@ -54,7 +43,7 @@ EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
 def process_blocks(
     tile_id: str,
     ewoc_config_filepath: Path,
-    block_ids: List[int],
+    block_ids: Optional[List[int]],
     production_id: str,
     upload_block: bool,
     out_dirpath: Path,
@@ -87,10 +76,12 @@ def process_blocks(
         elif str(os.getenv("EWOC_BLOCKSIZE", "512")) == "1024":
             total_ids = 120
         logger.info(f"Processing {total_ids} blocks")
-        ids_range = range(total_ids + 1)
+        ids_range = list(range(total_ids + 1))
+
     with open(ewoc_config_filepath) as json_file:
         data = load(json_file)
         blocks_feature_dir = Path(data["parameters"]["features_dir"])
+
     for block_id in ids_range:
         try:
             logger.info(f"[{block_id}] Start processing")
@@ -230,12 +221,12 @@ def postprocess_mosaic(
 def run_classif(
     tile_id: str,
     production_id: str,
-    block_ids: List[int] = None,
-    sar_csv: Path = None,
-    optical_csv: Path = None,
-    tir_csv: Path = None,
-    agera5_csv: Path = None,
-    data_folder: Path = None,
+    block_ids: Optional[List[int]] = None,
+    sar_csv: Optional[Path] = None,
+    optical_csv: Optional[Path] = None,
+    tir_csv: Optional[Path] = None,
+    agera5_csv: Optional[Path] = None,
+    data_folder: Optional[Path] = None,
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2019,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
@@ -297,18 +288,18 @@ def run_classif(
     feature_blocks_dir = out_dirpath / "block_features"
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
     if sar_csv is None:
-        sar_csv = str(out_dirpath / f"{uid}_satio_sar.csv")
+        sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
     if optical_csv is None:
-        optical_csv = str(out_dirpath / f"{uid}_satio_optical.csv")
+        optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
             tile_id, production_id, filepath=optical_csv
         )
     if tir_csv is None:
-        tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
+        tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
-        agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
+        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
         ewoc_aux_data_bucket._bucket_name = agera5_bucket
         logger.info(f"Using bucket {agera5_bucket}")
@@ -324,7 +315,7 @@ def run_classif(
     }
     ewoc_config = generate_config_file(
         ewoc_detector,
-        end_season_year,
+        str(end_season_year),
         ewoc_season,
         production_id,
         cropland_model_version,
@@ -414,7 +405,7 @@ if __name__ == "__main__":
         tir_csv = str(out_dirpath / f"{uid}_satio_tir.csv")
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     if agera5_csv is None:
-        agera5_csv = str(out_dirpath / f"{uid}_satio_agera5.csv")
+        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
         ewoc_aux_data_bucket._bucket_name = agera5_bucket
         logger.info(f"Using bucket {agera5_bucket}")
@@ -430,7 +421,7 @@ if __name__ == "__main__":
     }
     ewoc_config = generate_config_file(
         ewoc_detector,
-        end_season_year,
+        str(end_season_year),
         ewoc_season,
         production_id,
         cropland_model_version,

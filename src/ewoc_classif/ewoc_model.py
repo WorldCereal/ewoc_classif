@@ -107,17 +107,18 @@ def get_links(url: str)->List:
     :return: a list of urls from the web page
     """
     res = requests.get(url)
+    links = []
     try:
         body_text = res.text
-        links = []
         soup = BeautifulSoup(body_text, 'html.parser')
         for link_ in soup.find_all('a'):
             link_href = link_.get('href')
             if not ".." in link_href:
                 links.append(url+link_href)
-        return links
     except:
         _logger.error(res.status_code)
+
+    return links
 
 def down_models(cp_url: str,model_dirpath: Path)-> None:
     """

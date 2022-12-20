@@ -83,7 +83,7 @@ def generate_config_file(
     croptype_model_version: str,
     irr_model_version: str,
     csv_dict: Dict,
-    feature_blocks_dir: str,
+    feature_blocks_dir: Path,
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
@@ -109,7 +109,7 @@ def generate_config_file(
     :param csv_dict: A dictionary with the initial params of the config file
     :type csv_dict: Dict
     :param feature_blocks_dir: Block features dir
-    :type feature_blocks_dir: str
+    :type feature_blocks_dir: Path
     :return: Dict
     """
     parameters = {
@@ -249,11 +249,11 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
         user_id_tmp = root_path.split("/")[-2]
     else:
         user_id_tmp = root_path.split("/")[-1]
-    user_id_tmp = user_id_tmp.split("_")[:-2]
-    if len(user_id_tmp) == 1:
-        user_id = user_id_tmp[0]
+    user_id_tmp2 = user_id_tmp.split("_")[:-2]
+    if len(user_id_tmp2) == 1:
+        user_id = user_id_tmp2[0]
     else:
-        user_id = "_".join(user_id_tmp)
+        user_id = "_".join(user_id_tmp2)
     # Find all json metadata files
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
