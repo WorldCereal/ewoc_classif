@@ -76,7 +76,7 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
 
 def generate_config_file(
     featuresettings: str,
-    end_season_year: str,
+    end_season_year: int,
     ewoc_season: str,
     production_id: str,
     cropland_model_version: str,
