@@ -147,6 +147,7 @@ def process_blocks(
     # If we process all the tile, generate the cogs and upload if requested
     # TODO manage the fact that we clean the block after upload!
     if block_ids is None:
+        upload_product=False
         raise NotImplementedError('Not currently correctly implemented!')
         logger.info("Start cog mosaic")
         run_tile(

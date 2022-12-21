@@ -40,7 +40,7 @@ def valid_year(cli_str: str) -> int:
     Raises:
         argparse.ArgumentTypeError: [description]
 
-    Returs:
+    Returns:
         int: a valid year as int
     """
     try:
@@ -190,7 +190,7 @@ def check_outfold(outdir: Path) -> bool:
     """
     check = False
     if outdir.exists():
-        for __unused, __unused, files in os.walk(outdir):
+        for __unused, __unused_list, files in os.walk(outdir):
             if len(files) > 0:
                 check = True
                 break
@@ -221,8 +221,8 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
         for meta in metajsons:
-            with open(out_dir_folder / meta, "r", encoding='UTF-8') as f:
-                data = json.load(f)
+            with open(out_dir_folder / meta, "r", encoding='UTF-8') as stac_file:
+                data = json.load(stac_file)
             # Update links
             for link in data["links"]:
                 if link["rel"] == "self":
@@ -319,7 +319,6 @@ def ingest_into_vdm(stac_path) -> bool:
         except Exception as x:
             logger.error(f'VDM ingestion failed (status code: {resp.status_code}): {x}')
             return False
-
 
 
 if __name__ == "__main__":
