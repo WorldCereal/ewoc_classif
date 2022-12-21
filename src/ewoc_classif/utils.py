@@ -8,14 +8,11 @@ import logging
 import os
 import shutil
 import sys
-import traceback
 from datetime import datetime
 from distutils.util import strtobool
 from pathlib import Path
 from typing import Dict
 
-import pandas as pd
-from ewoc_dag.bucket.eobucket import EOBucket
 from loguru import logger
 
 import requests
@@ -33,7 +30,6 @@ def setup_logging(loglevel: int) -> None:
         format=logformat,
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
 
 def valid_year(cli_str: str) -> int:
     """Check if the intput string is a valid year
@@ -70,7 +66,7 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
                 elem.unlink()
                 logger.info(f"Deleted tmp file: {elem}")
     except:
-        logger.warning(f"Could not delete all tmp files")
+        logger.warning("Could not delete all tmp files")
 
 def generate_config_file(
     featuresettings: str,
@@ -85,11 +81,10 @@ def generate_config_file(
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
-    
+
     The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local path to the models.
     If not specified, it use artifactory a source
-    
-    
+
     :param featuresettings: cropland or croptype
     :type featuresettings: str
     :param end_season_year: End of season year
@@ -187,37 +182,6 @@ def generate_config_file(
 
     return config
 
-def update_agera5_bucket(filepath: Path) -> None:
-    """
-    Update stac json files
-    :param filepath: Json file path
-    :type filepath: Path
-    :return: None
-    """
-    if os.getenv("AGERA5_BUCKET") is None:
-        logger.info("Using pod index to update bucket name")
-        pod_index = os.getenv("POD_INDEX", 20)
-        nb_buckets = os.getenv("NB_BUCKETS", 20)
-        b_index = str((int(pod_index) % int(nb_buckets)) + 1)
-        # Calculate new agera5 bucket index and replace in bucket name
-        ag_bucket = f"s3://ewoc-agera5-{b_index.zfill(2)}/"
-    else:
-        b_name = os.getenv("AGERA5_BUCKET")
-        logger.info(f"Using {b_name} to update bucket name")
-        ag_bucket = f"s3://{b_name}/"
-    old_bucket = "s3://ewoc-aux-data/"
-    # Read agera5 csv
-    df = pd.read_csv(filepath)
-    # replace old bucket name
-    df["path"].replace(old_bucket, ag_bucket, regex=True, inplace=True)
-    # remove Unnamed: 0 column
-    if "Unnamed: 0" in df.columns:
-        df.drop("Unnamed: 0", axis=1, inplace=True)
-    # Overwrite existing file
-    df.to_csv(filepath)
-    logger.info(f"Update Agera5 csv with {ag_bucket}")
-
-
 def check_outfold(outdir: Path) -> bool:
     """
     Check if folder is (really) empty
@@ -226,7 +190,7 @@ def check_outfold(outdir: Path) -> bool:
     """
     check = False
     if outdir.exists():
-        for root, dirs, files in os.walk(outdir):
+        for __unused, __unused, files in os.walk(outdir):
             if len(files) > 0:
                 check = True
                 break
@@ -257,7 +221,7 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
     metajsons = list(out_dir_folder.rglob("*metadata_*.json"))
     if metajsons:
         for meta in metajsons:
-            with open(out_dir_folder / meta, "r") as f:
+            with open(out_dir_folder / meta, "r", encoding='UTF-8') as f:
                 data = json.load(f)
             # Update links
             for link in data["links"]:
@@ -284,7 +248,7 @@ def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
                 )
                 data["properties"]["tile_collection_id"] = tmp_coll_id
                 logger.info(f"Updated tile collection id to {tmp_coll_id}")
-            with open(out_dir_folder / meta, "w") as out:
+            with open(out_dir_folder / meta, "w", encoding="UTF-8") as out:
                 json.dump(data, out)
             logger.info(f"Updated {meta} with {root_path}")
     else:
@@ -321,56 +285,6 @@ def update_config(config_dict: Dict, ewoc_detector: str, data_folder: Path) -> D
         )
     return config_dict
 
-
-def paginated_download(bucket: EOBucket, prd_prefix: str, out_dirpath: Path) -> None:
-    """
-    Download files (recursively) from s3 bucket
-    :param bucket: EOBucket
-    :type bucket: EOBucket
-    :param prd_prefix: Prefix in s3 bucket
-    :type prd_prefix: str
-    :param out_dirpath: Folder where the files will be written
-    :type out_dirpath: Path
-    :return: None
-    """
-    client = bucket._s3_client
-    paginator = client.get_paginator("list_objects_v2")
-    pages = paginator.paginate(Bucket=bucket._bucket_name, Prefix=prd_prefix)
-    counter = 0
-    for i, page in enumerate(pages):
-        page_counter = 0
-        logger.info(f"Paginated download: page {i + 1}")
-        try:
-            for obj in page["Contents"]:
-                if not obj["Key"].endswith("/"):
-                    filename = obj["Key"].split(
-                        sep="/", maxsplit=len(prd_prefix.split("/")) - 1
-                    )[-1]
-                    output_filepath = out_dirpath / filename
-                    (output_filepath.parent).mkdir(parents=True, exist_ok=True)
-                    if not output_filepath.exists():
-                        bucket._s3_client.download_file(
-                            Bucket=bucket._bucket_name,
-                            Key=obj["Key"],
-                            Filename=str(output_filepath),
-                        )
-                        counter += 1
-                        page_counter += 1
-                    else:
-                        logger.info(
-                            f"{output_filepath} already available, skip downloading!"
-                        )
-            logger.info(f"Downloaded {page_counter} files from page {i + 1}")
-        except Exception:
-            logger.error("No files were downloaded, check if the bucket is empty")
-            logger.error(traceback.format_exc())
-            raise
-    if counter == 0:
-        logger.error(f"Downloaded a total of {counter} files to {out_dirpath}")
-    else:
-        logger.info(f"Downloaded a total of {counter} files to {out_dirpath}")
-
-
 def ingest_into_vdm(stac_path) -> bool:
     if not os.path.isfile(stac_path):
         logger.error(f'JSON STAC file not found: "{stac_path}"')
@@ -378,17 +292,17 @@ def ingest_into_vdm(stac_path) -> bool:
 
     vdm_host = os.environ.get('VDM_HOST')
     if not vdm_host:
-        logger.error(f'VDM host required ; environment variable "VDM_HOST" not set')
+        logger.error('VDM host required ; environment variable "VDM_HOST" not set')
         return False
     vdm_endpoint = f'http://{vdm_host}/rest/project/worldCereal/product'
 
     vdm_auth = os.environ.get('VDM_USERINFO')
     if not vdm_auth:
-        logger.error(f'VDM user info missing ; environment variable "VDM_USERINFO" not set')
+        logger.error('VDM user info missing ; environment variable "VDM_USERINFO" not set')
         return False
     headers = {'x-userinfo': vdm_auth}
 
-    with open(stac_path, 'r') as fh:
+    with open(stac_path, 'r', encoding='UTF-8') as fh:
         try:
             payload = json.load(fh)
             # 5 sec connection timeout, 10 sec timeout to receive data
@@ -396,11 +310,11 @@ def ingest_into_vdm(stac_path) -> bool:
             resp.raise_for_status()
             print('VDM-Ingestion Response code:', resp.status_code)
             return resp.status_code == 200
-        except requests.ConnectTimeout as x:
-            logger.error(f'VDM Connection timeout for endpoint "{vdm_endpoint}"')
+        except requests.ConnectTimeout:
+            logger.error(f'VDM Connection timeout for endpoint {vdm_endpoint}')
             return False
-        except requests.ReadTimeout as x:
-            logger.error(f'VDM Read timeout (no data received) from endpoint "{vdm_endpoint}"')
+        except requests.ReadTimeout:
+            logger.error(f'VDM Read timeout (no data received) from endpoint {vdm_endpoint}')
             return False
         except Exception as x:
             logger.error(f'VDM ingestion failed (status code: {resp.status_code}): {x}')
