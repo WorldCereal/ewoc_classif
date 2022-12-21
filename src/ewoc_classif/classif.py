@@ -369,9 +369,10 @@ def run_classif(
         logger.error("Processing failed")
         logger.error(traceback.format_exc())
     finally:
-        logger.info(f"Cleaning the output folder {out_dirpath}")
-        shutil.rmtree(out_dirpath)
-        remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
+        if clean:
+            logger.info(f"Cleaning the output folder {out_dirpath}")
+            shutil.rmtree(out_dirpath)
+            remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
 
 
 if __name__ == "__main__":
