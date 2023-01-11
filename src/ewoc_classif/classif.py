@@ -5,6 +5,7 @@ Classification and postprocessing tools
 import os
 import shutil
 import traceback
+import csv
 from json import dump, load
 from pathlib import Path
 from tempfile import gettempdir
@@ -320,6 +321,14 @@ def run_classif(
     if tir_csv is None:
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
+    else:
+        with open(Path(tir_csv), 'r') as tir_file:
+            tir_dict = [row for row in csv.DictReader(tir_file)]
+            no_tir=False
+            if len(tir_dict) <= 1:
+                logger.warning(f"TIR ARD is empty for the tile {tile_id}")
+                no_tir=True 
+
     if agera5_csv is None:
         agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
@@ -332,6 +341,8 @@ def run_classif(
         "DEM": "s3://ewoc-aux-data/CopDEM_20m",
         "METEO": str(agera5_csv),
     }
+
+
     ewoc_config = generate_config_file(
         ewoc_detector,
         end_season_year,
@@ -343,6 +354,11 @@ def run_classif(
         csv_dict,
         feature_blocks_dir= feature_blocks_dir
     )
+
+    if no_tir:
+        ewoc_config["inputs"].pop("TIR")
+        ewoc_config["parameters"]["irrigation"] = False
+
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
     if data_folder is not None:
         ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
