@@ -87,7 +87,7 @@ def parse_args(args):
         dest="end_season_year",
         help="Year to use infer season date - format YYYY",
         type=valid_year,
-        default=2019,
+        default=2021,
     )
     parser.add_argument(
         "--ewoc-season",
@@ -102,14 +102,14 @@ def parse_args(args):
         dest="cropland_model_version",
         help="Cropland model version",
         type=str,
-        default="v512",
+        default="v700",
     )
     parser.add_argument(
         "--croptype-model-version",
         dest="croptype_model_version",
         help="Croptype model version",
         type=str,
-        default="v502",
+        default="v720",
     )
     parser.add_argument(
         "--irr-model-version",
@@ -118,13 +118,12 @@ def parse_args(args):
         type=str,
         default="v420",
     )
-    parser.add_argument(
-        "--upload-block",
-        dest="upload_block",
-        help="True if you want to upload each block, true by default",
-        type=bool,
-        default=True,
-    )
+    parser.add_argument("--no-upload",
+        action='store_false',
+        help= 'Skip the upload of files to s3 bucket')
+    parser.add_argument("--no-clean",
+        action='store_false',
+        help= 'Avoid to clean all dirs and files')
     parser.add_argument(
         "--postprocess",
         dest="postprocess",
