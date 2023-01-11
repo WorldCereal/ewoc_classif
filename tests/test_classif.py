@@ -14,6 +14,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_cropland_50HQH_64(self):
+        """ Nominal cropland test
+        """
         run_classif('50HQH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20220920095058',
         block_ids=[64],
@@ -21,6 +23,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_croptype_summer1_50HQH_64(self):
+        """ Nominal croptype summer 1 test
+        """
         run_classif('50HQH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20220920095058',
         block_ids=[64],
@@ -41,6 +45,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_croptype_winter_50HQH_64(self):
+        """ Nominal croptype winter test
+        """
         run_classif('50HQH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20220920095058',
         block_ids=[64],
@@ -48,6 +54,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
+    # TODO see with VITO to write a empty block in this case with warning message and return success
     def test_run_classif_cropland_22NBM_13(self):
         """ Less than 3 off-swath acquisitions found, therefore the block is skip
         """
@@ -64,6 +71,7 @@ class Test_classif(unittest.TestCase):
         block_ids=[1],
         upload_block=False)
 
+    # TODO see with VITO to write a empty block in this case with warning message and return success
     def test_run_classif_cropland_48MYS_110(self):
         """ Less than 3 off-swath acquisitions found, therefore the block is skip
         """
@@ -73,7 +81,7 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_croptype_summer1_45SVC_99(self):
-        """ No cropland pixels, therefore block is write with nodata 255 value
+        """ Nominal error: No cropland pixels, therefore block is write with nodata 255 value
         """
         run_classif('45SVC',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_25144_20220921094656',
