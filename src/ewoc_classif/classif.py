@@ -322,12 +322,12 @@ def run_classif(
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     else:
-        with open(Path(tir_csv), 'r') as tir_file:
+        with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
             tir_dict = [row for row in csv.DictReader(tir_file)]
             no_tir=False
             if len(tir_dict) <= 1:
                 logger.warning(f"TIR ARD is empty for the tile {tile_id}")
-                no_tir=True 
+                no_tir=True
 
     if agera5_csv is None:
         agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
