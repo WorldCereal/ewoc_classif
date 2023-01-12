@@ -200,6 +200,15 @@ class Test_classif(unittest.TestCase):
         block_ids=[120],
         upload_block=False)
 
+    def test_run_classif_cropland_36UVB_43(self):
+        """  This test failed due to the maxgap issue on OPTICAL (128 instead 60) on this block (land case)
+        UKR tile in 2021
+        """
+        run_classif('36UVB',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220929210524',
+        block_ids=[43],
+        upload_block=False)
+
     def test_run_classif_cropland_38UQB_1(self):
         """ This test failed due to the maxgap issue on OPTICAL (68 instead 60) on this block (land case)
         """
