@@ -192,8 +192,9 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_cropland_36UVB_120(self):
-        """ Must failed but not the case
-        UKR tile
+        """ Nominal case this block is ok
+
+        UKR tile 2021
         """
         run_classif('36UVB',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220929210524',
@@ -202,6 +203,7 @@ class Test_classif(unittest.TestCase):
 
     def test_run_classif_cropland_36UVB_43(self):
         """  This test failed due to the maxgap issue on OPTICAL (128 instead 60) on this block (land case)
+
         UKR tile in 2021
         """
         run_classif('36UVB',
@@ -215,6 +217,42 @@ class Test_classif(unittest.TestCase):
         run_classif('38UQB',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22096_20220906224410',
         block_ids=[1],
+        upload_block=False)
+
+    def test_run_classif_cropland_37UER_3(self):
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+
+        UKR tile in 2019
+        Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,27,34,35,37,38,63,66,67,77,78,84,90,91,92,100,101,103,108
+        """
+        run_classif('37UER',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22194_20220728095352',
+        block_ids=[3],
+        end_season_year=2019,
+        upload_block=False)
+
+    def test_run_classif_cropland_36UWC_72(self):
+        """ This test failed due to the maxgap issue on OPTICAL (121 instead 60) on this block (land case)
+
+        UKR tile in 2019
+        Only this block
+        """
+        run_classif('36UWC',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220728095401',
+        block_ids=[72],
+        end_season_year=2019,
+        upload_block=False)
+
+    def test_run_classif_cropland_36UWA_4(self):
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+
+        UKR tile in 2019
+        Same for block 47 (123 instead 60)
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220728095401',
+        block_ids=[4],
+        end_season_year=2019,
         upload_block=False)
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
