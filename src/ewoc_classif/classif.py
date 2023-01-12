@@ -327,7 +327,6 @@ def run_classif(
     else:
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
             tir_dict = [row for row in csv.DictReader(tir_file)]
-            no_tir=False
             if len(tir_dict) <= 1:
                 logger.warning(f"TIR ARD is empty for the tile {tile_id}")
                 no_tir=True
