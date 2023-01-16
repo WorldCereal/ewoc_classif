@@ -48,7 +48,6 @@ def parse_args(args):
         "--aez-id",
         dest="aez_id",
         help="Optionnal aez_id to fix mismatch cases"
-        type=int,
     )
     parser.add_argument(
         "--optical-csv",

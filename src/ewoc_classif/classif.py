@@ -46,7 +46,7 @@ def process_blocks(
     production_id: str,
     out_dirpath: Path,
     block_ids: Optional[List[int]]=None,
-    aez_id: int=None, 
+    aez_id: int=None,
     upload_block: bool=True,
     clean:bool=True
 ) -> bool:
@@ -60,10 +60,11 @@ def process_blocks(
     :type block_ids: List[int]
     :param production_id: EWoC production id
     :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
-     processed and merged into a mosaic within the same process (or command)
+    :param upload_block: True if you want to upload each block and skip the mosaic. If False, 
+    multiple blocks can be processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically derived from the Sentinel-2 tile ID.
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically 
+    derived from the Sentinel-2 tile ID.
     :type aez_id: int
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
@@ -156,7 +157,12 @@ def process_blocks(
         raise NotImplementedError('Not currently correctly implemented!')
         logger.info("Start cog mosaic")
         run_tile(
-            tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False, aez_id=aez_id
+            tile_id, 
+            ewoc_config_filepath, 
+            out_dirpath, 
+            postprocess=True, 
+            process=False, 
+            aez_id=aez_id
         )
         if upload_product:
         # Push the results to the s3 bucket
@@ -180,7 +186,11 @@ def process_blocks(
     return True
 
 def postprocess_mosaic(
-    tile_id: str, production_id: str, ewoc_config_filepath: Path, out_dirpath: Path, aez_id: int=None
+    tile_id: str, 
+    production_id: str, 
+    ewoc_config_filepath: Path, 
+    out_dirpath: Path, 
+    aez_id: int=None
 ) -> None:
     """
     Postprocessing (mosaic)
@@ -192,7 +202,8 @@ def postprocess_mosaic(
     :type ewoc_config_filepath: Path
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically derived from the Sentinel-2 tile ID.
+    :param aez_id : If provided, the AEZ ID will be enforced instead of 
+    automatically derived from the Sentinel-2 tile ID.
     :type aez_id: int
     :return: None
     """
@@ -265,9 +276,8 @@ def run_classif(
     upload_block: bool = True,
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
-    clean:bool=True, 
+    clean:bool=True,
     no_tir:bool=False,
-    aez_id: int=None,
 ) -> None:
     """
     Perform EWoC classification
@@ -279,9 +289,11 @@ def run_classif(
     :type block_ids: List[int]
     :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1 images to process
     :type sar_csv: Path
-    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/ Landsat 8 images to process
+    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/ 
+    Landsat 8 images to process
     :type optical_csv: Path
-    :param tir_csv: Path to a csv file with all the detail about all the Landsat 8 TIR images to process
+    :param tir_csv: Path to a csv file with all the detail about all 
+    the Landsat 8 TIR images to process
     :type tir_csv: Path
     :param agera5_csv: Path to a csv file with all the detail about all the AgERA5 images to process
     :type agera5_csv: Path
@@ -291,7 +303,8 @@ def run_classif(
     :type ewoc_detector: str
     :param end_season_year: End of season year
     :type end_season_year: int
-    :param ewoc_season: Which season are we processing, possible options: annual, summer1, summer2 and winter
+    :param ewoc_season: Which season are we processing, possible options: 
+    annual, summer1, summer2 and winter
     :type ewoc_season: str
     :param cropland_model_version: The version of the AI model used for the cropland prediction
     :type cropland_model_version: str
@@ -299,16 +312,19 @@ def run_classif(
     :type croptype_model_version: str
     :param irr_model_version: The version of the AI model used for croptype irrigation
     :type irr_model_version: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+    :param upload_block: True if you want to upload each block and skip the mosaic. 
+    If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, default to False
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, 
+    default to False
     :type postprocess: bool
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically derived from the Sentinel-2 tile ID.
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically 
+    derived from the Sentinel-2 tile ID.
     :type aez_id: int
     :return: None
     """
@@ -335,7 +351,7 @@ def run_classif(
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     else:
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
-            tir_dict = [row for row in csv.DictReader(tir_file)]
+            tir_dict = list(csv.DictReader(tir_file))
             if len(tir_dict) <= 1:
                 logger.warning(f"TIR ARD is empty for the tile {tile_id}")
                 no_tir=True
@@ -383,6 +399,7 @@ def run_classif(
     # Process tile (and optionally select blocks)
     try:
         if not postprocess:
+            aez_id=int(production_id.split('_')[-2])
             process_status = process_blocks(
                 tile_id,
                 ewoc_config_filepath,
