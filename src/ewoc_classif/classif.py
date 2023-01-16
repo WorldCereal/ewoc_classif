@@ -46,6 +46,7 @@ def process_blocks(
     production_id: str,
     out_dirpath: Path,
     block_ids: Optional[List[int]]=None,
+    aez_id: int=None, 
     upload_block: bool=True,
     clean:bool=True
 ) -> bool:
@@ -62,6 +63,8 @@ def process_blocks(
     :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically derived from the Sentinel-2 tile ID.
+    :type aez_id: int
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
     :return: None
@@ -99,6 +102,7 @@ def process_blocks(
                 blocks=[int(block_id)],
                 postprocess=False,
                 process=True,
+                aez_id=aez_id
             )
             if ret == 0:
                 logger.info(f"{tile_id}_{block_id} finished with success!")
@@ -152,7 +156,7 @@ def process_blocks(
         raise NotImplementedError('Not currently correctly implemented!')
         logger.info("Start cog mosaic")
         run_tile(
-            tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
+            tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False, aez_id=aez_id
         )
         if upload_product:
         # Push the results to the s3 bucket
@@ -176,7 +180,7 @@ def process_blocks(
     return True
 
 def postprocess_mosaic(
-    tile_id: str, production_id: str, ewoc_config_filepath: Path, out_dirpath: Path
+    tile_id: str, production_id: str, ewoc_config_filepath: Path, out_dirpath: Path, aez_id: int=None
 ) -> None:
     """
     Postprocessing (mosaic)
@@ -188,6 +192,8 @@ def postprocess_mosaic(
     :type ewoc_config_filepath: Path
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically derived from the Sentinel-2 tile ID.
+    :type aez_id: int
     :return: None
     """
     # Retrieve some parameters from config file
@@ -211,7 +217,7 @@ def postprocess_mosaic(
         )
     # Use VITO code to perform mosaic
     run_tile(
-        tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
+        tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False, aez_id=aez_id
     )
 
     # Upload data to EWoC product bucket
@@ -259,8 +265,9 @@ def run_classif(
     upload_block: bool = True,
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
-    clean:bool=True, 
-    no_tir:bool=False
+    clean=True,
+    no_tir:bool=False,
+    aez_id: int=None,
 ) -> None:
     """
     Perform EWoC classification
@@ -301,6 +308,8 @@ def run_classif(
     :type out_dirpath: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically derived from the Sentinel-2 tile ID.
+    :type aez_id: int
     :return: None
     """
     uid = uuid4().hex[:6]
@@ -387,13 +396,14 @@ def run_classif(
                 out_dirpath,
                 block_ids,
                 upload_block=upload_block,
-                clean=clean
+                clean=clean,
+                aez_id=aez_id
             )
             if not process_status:
                 raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!")
         else:
             postprocess_mosaic(
-                tile_id, production_id, ewoc_config_filepath, out_dirpath
+                tile_id, production_id, ewoc_config_filepath, out_dirpath, aez_id=aez_id
             )
     except Exception:
         logger.error("Processing failed")
