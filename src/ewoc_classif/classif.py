@@ -60,10 +60,10 @@ def process_blocks(
     :type block_ids: List[int]
     :param production_id: EWoC production id
     :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False, 
+    :param upload_block: True if you want to upload each block and skip the mosaic. If False,
     multiple blocks can be processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically 
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
     derived from the Sentinel-2 tile ID.
     :type aez_id: int
     :param out_dirpath: Output directory path
@@ -157,11 +157,11 @@ def process_blocks(
         raise NotImplementedError('Not currently correctly implemented!')
         logger.info("Start cog mosaic")
         run_tile(
-            tile_id, 
-            ewoc_config_filepath, 
-            out_dirpath, 
-            postprocess=True, 
-            process=False, 
+            tile_id,
+            ewoc_config_filepath,
+            out_dirpath,
+            postprocess=True,
+            process=False,
             aez_id=aez_id
         )
         if upload_product:
@@ -186,10 +186,10 @@ def process_blocks(
     return True
 
 def postprocess_mosaic(
-    tile_id: str, 
-    production_id: str, 
-    ewoc_config_filepath: Path, 
-    out_dirpath: Path, 
+    tile_id: str,
+    production_id: str,
+    ewoc_config_filepath: Path,
+    out_dirpath: Path,
     aez_id: int
 ) -> None:
     """
@@ -202,7 +202,7 @@ def postprocess_mosaic(
     :type ewoc_config_filepath: Path
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
-    :param aez_id : If provided, the AEZ ID will be enforced instead of 
+    :param aez_id : If provided, the AEZ ID will be enforced instead of
     automatically derived from the Sentinel-2 tile ID.
     :type aez_id: int
     :return: None
@@ -287,15 +287,17 @@ def run_classif(
     :type production_id: str
     :param block_ids: List of block ids to process (blocks= equal area subdivisions of a tile)
     :type block_ids: List[int]
-    :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1 images to process
+    :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1
+    images to process
     :type sar_csv: Path
-    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/ 
+    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/
     Landsat 8 images to process
     :type optical_csv: Path
-    :param tir_csv: Path to a csv file with all the detail about all 
+    :param tir_csv: Path to a csv file with all the detail about all
     the Landsat 8 TIR images to process
     :type tir_csv: Path
-    :param agera5_csv: Path to a csv file with all the detail about all the AgERA5 images to process
+    :param agera5_csv: Path to a csv file with all the detail about all the AgERA5
+    images to process
     :type agera5_csv: Path
     :param data_folder: Folder with CopDEM and/or cropland data
     :type data_folder: Path
@@ -303,7 +305,7 @@ def run_classif(
     :type ewoc_detector: str
     :param end_season_year: End of season year
     :type end_season_year: int
-    :param ewoc_season: Which season are we processing, possible options: 
+    :param ewoc_season: Which season are we processing, possible options:
     annual, summer1, summer2 and winter
     :type ewoc_season: str
     :param cropland_model_version: The version of the AI model used for the cropland prediction
@@ -312,18 +314,19 @@ def run_classif(
     :type croptype_model_version: str
     :param irr_model_version: The version of the AI model used for croptype irrigation
     :type irr_model_version: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. 
+    :param upload_block: True if you want to upload each block and skip the mosaic.
     If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, 
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed,
     default to False
     :type postprocess: bool
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
-    :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
+    :param no_tir: Boolean specifying if the csv file containing details on
+    ARD TIR is empty or not
     :type no_tir: bool
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically 
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
     derived from the Sentinel-2 tile ID.
     :type aez_id: int
     :return: None
@@ -387,7 +390,7 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
-        feature_blocks_dir= feature_blocks_dir, 
+        feature_blocks_dir= feature_blocks_dir,
         no_tir_data=no_tir
     )
 
@@ -405,10 +408,10 @@ def run_classif(
                 ewoc_config_filepath,
                 production_id,
                 out_dirpath,
+                aez_id,
                 block_ids,
                 upload_block=upload_block,
                 clean=clean,
-                aez_id=aez_id
             )
             if not process_status:
                 raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!")
