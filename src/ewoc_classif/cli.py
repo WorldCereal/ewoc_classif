@@ -45,6 +45,12 @@ def parse_args(args):
         nargs="+",
     )
     parser.add_argument(
+        "--aez-id",
+        dest="aez_id",
+        help="Optionnal aez_id to fix mismatch cases"
+        type=int,
+    )
+    parser.add_argument(
         "--optical-csv",
         dest="optical_csv",
         help="List of OPTICAL products for a given S2 tile",
@@ -178,6 +184,7 @@ def main(args):
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
+        aez_id=args.aez_id,
         cropland_model_version=args.cropland_model_version,
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
