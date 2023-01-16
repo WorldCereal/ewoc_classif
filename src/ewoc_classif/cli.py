@@ -45,11 +45,6 @@ def parse_args(args):
         nargs="+",
     )
     parser.add_argument(
-        "--aez-id",
-        dest="aez_id",
-        help="Optionnal aez_id to fix mismatch cases"
-    )
-    parser.add_argument(
         "--optical-csv",
         dest="optical_csv",
         help="List of OPTICAL products for a given S2 tile",
