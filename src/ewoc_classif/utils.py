@@ -83,8 +83,8 @@ def generate_config_file(
     """
     Automatic generation of worldcereal config files
 
-    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local path to the models.
-    If not specified, it use artifactory a source
+    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local
+    path to the models. If not specified, it use artifactory a source
 
     :param featuresettings: cropland or croptype
     :type featuresettings: str
@@ -130,7 +130,8 @@ def generate_config_file(
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
         models = {
-            "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
+            "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
+            {cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
@@ -146,6 +147,7 @@ def generate_config_file(
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
+<<<<<<< HEAD
         parameters.update(
             {
                 "active_marker": True,
@@ -160,10 +162,38 @@ def generate_config_file(
         logger.info(
             f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
         )
+=======
+        if not no_tir_data:
+            parameters.update(
+                {
+                    "active_marker": True,
+                    "cropland_mask": cropland_mask_bucket,
+                    "irrigation": True,
+                    "irrparameters": "irrigation",
+                    "irrmodels": {
+                        "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
+                        {irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                    },
+                }
+            )
+        else:
+            parameters.update(
+                {
+                    "active_marker": True,
+                    "cropland_mask": cropland_mask_bucket,
+                    "irrigation" : False
+                }
+            )
+            logger.info(
+                f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
+            )
+>>>>>>> 4a0f2a6... fix pylint error
         if ewoc_season == "summer1":
             models = {
-                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
-                "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
+                {croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
+                {croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
             if add_croptype:
                 models["sunflower"] = f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
@@ -171,17 +201,24 @@ def generate_config_file(
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
         elif ewoc_season == "summer2":
             models = {
-                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
+                {croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
         elif ewoc_season == "winter":
             models = {
+<<<<<<< HEAD
                 "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             if add_croptype:
                 models["rapeseed"] = f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
 
+=======
+            "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/\
+            wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                    }
+>>>>>>> 4a0f2a6... fix pylint error
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
     else:
@@ -289,7 +326,8 @@ def update_config(config_dict: Dict, ewoc_detector: str, data_folder: Path) -> D
             data_folder / old_crop_path.split("/")[-1]
         )
         logger.info(
-            f"Updated CopDEM path from {old_crop_path} to {config_dict['parameters']['cropland_mask']}"
+            f"Updated CopDEM path from {old_crop_path} to\
+            {config_dict['parameters']['cropland_mask']}"
         )
     return config_dict
 
