@@ -44,8 +44,8 @@ def process_blocks(
     ewoc_config_filepath: Path,
     production_id: str,
     out_dirpath: Path,
+    aez_id: int,
     block_ids: Optional[List[int]]=None,
-    aez_id: int=None,
     upload_block: bool=True,
     clean:bool=True
 ) -> bool:
@@ -189,7 +189,7 @@ def postprocess_mosaic(
     production_id: str, 
     ewoc_config_filepath: Path, 
     out_dirpath: Path, 
-    aez_id: int=None
+    aez_id: int
 ) -> None:
     """
     Postprocessing (mosaic)
