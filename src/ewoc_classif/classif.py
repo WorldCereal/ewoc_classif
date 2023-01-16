@@ -407,8 +407,8 @@ def run_classif(
         dump(ewoc_config, ewoc_config_fp, indent=2)
     # Process tile (and optionally select blocks)
     try:
+        aez_id=int(production_id.split('_')[-2])
         if not postprocess:
-            aez_id=int(production_id.split('_')[-2])
             process_status = process_blocks(
                 tile_id,
                 ewoc_config_filepath,
