@@ -325,6 +325,11 @@ def run_classif(
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
+    add_croptype = False
+    if end_season_year == 2022:
+        logger.info('Add additional croptype')
+        add_croptype = True
+
     csv_dict = {
         "OPTICAL": str(optical_csv),
         "SAR": str(sar_csv),
@@ -341,7 +346,8 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
-        feature_blocks_dir= feature_blocks_dir
+        feature_blocks_dir= feature_blocks_dir,
+        add_croptype = add_croptype
     )
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
     if data_folder is not None:

@@ -272,3 +272,43 @@ class Test_classif(unittest.TestCase):
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_25147_20220918052128',
         block_ids=[50],
         upload_block=False)
+
+    def test_run_classif_cropland_36UWA_4_2022(self):
+        """ Nominal case
+
+        UKR tile in 2022
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
+        block_ids=[4],
+        end_season_year=2022,
+        upload_block=False,
+        clean=False)
+
+    def test_run_classif_croptype_summer1_36UWA_4_2022(self):
+        """ Not tested no full cropland currently
+
+        UKR tile in 2022
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
+        block_ids=[4],
+        end_season_year=2022,
+        upload_block=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1],
+        clean=False)
+
+    def test_run_classif_croptype_winter_36UWA_4_2022(self):
+        """ Not tested no full cropland currently
+
+        UKR tile in 2022
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
+        block_ids=[4],
+        end_season_year=2022,
+        upload_block=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0],
+        clean=False)
