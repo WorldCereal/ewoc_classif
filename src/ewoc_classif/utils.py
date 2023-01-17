@@ -158,6 +158,9 @@ def generate_config_file(
                     },
                 }
             )
+            logger.info(
+                f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
+            )
         else:
             parameters.update(
                 {
@@ -165,9 +168,6 @@ def generate_config_file(
                     "cropland_mask": cropland_mask_bucket,
                     "irrigation" : False
                 }
-            )
-            logger.info(
-                f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
             )
         if ewoc_season == "summer1":
             models = {
