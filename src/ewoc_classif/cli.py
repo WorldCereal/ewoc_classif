@@ -181,7 +181,7 @@ def main(args):
         cropland_model_version=args.cropland_model_version,
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
-        upload_block=args.upload_block,
+        upload_block=args.no_upload,
         postprocess=args.postprocess,
         out_dirpath=args.out_dirpath,
     )
