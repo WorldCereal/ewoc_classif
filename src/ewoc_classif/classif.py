@@ -51,7 +51,7 @@ def process_blocks(
     clean:bool=True
 ) -> bool:
     """
-    Process a single block, cropland/croptype prediction
+    Process a single block, cropland/croptype prediction  
     :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
     :type tile_id: str
     :param ewoc_config_filepath: Path to the config file generated previously

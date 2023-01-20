@@ -218,13 +218,48 @@ class Test_classif(unittest.TestCase):
         block_ids=[50],
         upload_block=False)
 
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_winter_40KEC_71(self):
-        """This test return exit code 2
+        """ Nominal case with no tir detected
+
+        Island case (Mauritius)
         """
-        run_classif('40KEC', 
+        run_classif('40KEC',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
         block_ids=[71],
         upload_block=False,
         tir_csv="./tests/tir_preprocessed_path.csv",
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_run_classif_winter_40KEC_71_no_csv(self):
+        """ Nominal case with no tir detected
+
+        Island case (Mauritius)
+        """
+        run_classif('40KEC',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
+        block_ids=[71],
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
+    def test_run_classif_summer2_14RMU_10(self):
+        """Enforcing aez id to use the one frome production id
+        """
+        run_classif('14RMU',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_33117_20220823152041',
+        block_ids=[10],
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[2]) 
+
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
+    def test_run_classif_cropland_17MMP_10(self):
+        """Incomplete collection SAR, gapstart exceeeds threshold of 60"""
+        run_classif('17MMP',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        block_ids=[10],
+        upload_block=False)
