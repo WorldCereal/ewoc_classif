@@ -286,7 +286,7 @@ class Test_classif(unittest.TestCase):
         clean=False)
 
     def test_run_classif_croptype_summer1_36UWA_4_2022(self):
-        """ Not tested no full cropland currently
+        """ Issue with GDD
 
         UKR tile in 2022
         """
@@ -294,13 +294,13 @@ class Test_classif(unittest.TestCase):
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
         block_ids=[4],
         end_season_year=2022,
-        upload_block=True,
+        upload_block=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1],
         clean=False)
 
     def test_run_classif_croptype_winter_36UWA_4_2022(self):
-        """ Not tested no full cropland currently
+        """ Issue with GDD
 
         UKR tile in 2022
         """
@@ -308,7 +308,35 @@ class Test_classif(unittest.TestCase):
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
         block_ids=[4],
         end_season_year=2022,
-        upload_block=True,
+        upload_block=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0],
+        clean=False)
+
+    def test_run_classif_croptype_summer1_36TYQ_0_2022(self):
+        """ No crop area
+
+        UKR tile in 2022
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20221214110542',
+        block_ids=[0],
+        end_season_year=2022,
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1],
+        clean=False)
+
+    def test_run_classif_croptype_summer1_36TYQ_6_2022(self):
+        """ Issue with GDD
+
+        UKR tile in 2022
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20221214110542',
+        block_ids=[6],
+        end_season_year=2022,
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1],
         clean=False)
