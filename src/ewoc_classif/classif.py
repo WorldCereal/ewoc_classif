@@ -279,9 +279,7 @@ def run_classif(
     clean:bool=True,
     no_tir:bool=False,
     aez_id: int=None,
-    clean:bool=True,
-    no_tir:bool=False,
-) -> None:
+    ) -> None:
     """
     Perform EWoC classification
     :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
@@ -317,11 +315,11 @@ def run_classif(
     :type croptype_model_version: str
     :param irr_model_version: The version of the AI model used for croptype irrigation
     :type irr_model_version: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. 
+    :param upload_block: True if you want to upload each block and skip the mosaic.
     If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, 
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed,
     default to False
     :type postprocess: bool
     :param out_dirpath: Output directory path
