@@ -275,18 +275,7 @@ def run_classif(
     upload_block: bool = True,
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
-<<<<<<< HEAD
-<<<<<<< HEAD
     clean=True
-=======
-    clean:bool=True, 
-    no_tir:bool=False,
-    aez_id: int=None,
->>>>>>> ff46b20... add optionnal aez_id input
-=======
-    clean:bool=True,
-    no_tir:bool=False,
->>>>>>> db5ae5c... force to use aez_id by using aez contained in production id
 ) -> None:
     """
     Perform EWoC classification
@@ -332,19 +321,6 @@ def run_classif(
     :type postprocess: bool
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
-=======
-    :param no_tir: Boolean specifying if the csv file containing details on
-    ARD TIR is empty or not
->>>>>>> 4a0f2a6... fix pylint error
-    :type no_tir: bool
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
-    derived from the Sentinel-2 tile ID.
-    :type aez_id: int
->>>>>>> ff46b20... add optionnal aez_id input
     :return: None
     """
     uid = uuid4().hex[:6]
@@ -368,16 +344,6 @@ def run_classif(
     if tir_csv is None:
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
-<<<<<<< HEAD
-=======
-    else:
-        with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
-            tir_dict = list(csv.DictReader(tir_file))
-            if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id}")
-                no_tir=True
-
->>>>>>> db5ae5c... force to use aez_id by using aez contained in production id
     if agera5_csv is None:
         agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
@@ -405,12 +371,8 @@ def run_classif(
         irr_model_version,
         csv_dict,
         feature_blocks_dir= feature_blocks_dir,
-<<<<<<< HEAD
-        add_croptype = add_croptype
-=======
-        no_tir_data=no_tir
->>>>>>> 4a0f2a6... fix pylint error
-    )
+        add_croptype = add_croptype)
+
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
     if data_folder is not None:
         ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
