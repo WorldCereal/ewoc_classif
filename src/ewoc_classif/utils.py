@@ -78,6 +78,7 @@ def generate_config_file(
     irr_model_version: str,
     csv_dict: Dict,
     feature_blocks_dir: Path,
+    no_tir_data: bool,
     add_croptype:bool = False
 ) -> Dict:
     """
@@ -104,6 +105,8 @@ def generate_config_file(
     :type csv_dict: Dict
     :param feature_blocks_dir: Block features dir
     :type feature_blocks_dir: Path
+    :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
+    :type no_tir: bool
     :param add_croptype: Additional croptype
     :type add_croptype: bool
     :return: Dict
@@ -146,20 +149,29 @@ def generate_config_file(
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
-        parameters.update(
-            {
-                "active_marker": True,
-                "cropland_mask": cropland_mask_bucket,
-                "irrigation": True,
-                "irrparameters": "irrigation",
-                "irrmodels": {
-                    "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
-                },
-            }
-        )
-        logger.info(
-            f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
-        )
+        if not no_tir_data: 
+            parameters.update(
+                {
+                    "active_marker": True,
+                    "cropland_mask": cropland_mask_bucket,
+                    "irrigation": True,
+                    "irrparameters": "irrigation",
+                    "irrmodels": {
+                        "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                    },
+                }
+            )
+            logger.info(
+                f"[{featuresettings}] - Using Irrigation model version: {irr_model_version}"
+            )
+        else:
+            parameters.update(
+                {
+                    "active_marker": True,
+                    "cropland_mask": cropland_mask_bucket,
+                    "irrigation" : False
+                }
+            )
         if ewoc_season == "summer1":
             models = {
                 "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
