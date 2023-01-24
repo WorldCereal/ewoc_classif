@@ -14,6 +14,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_cropland_50HQH_64(self):
+        """ Nominal cropland test
+        """
         run_classif('50HQH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20220920095058',
         block_ids=[64],
@@ -21,6 +23,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_croptype_summer1_50HQH_64(self):
+        """ Nominal croptype summer 1 test
+        """
         run_classif('50HQH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20220920095058',
         block_ids=[64],
@@ -41,6 +45,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_croptype_winter_50HQH_64(self):
+        """ Nominal croptype winter test
+        """
         run_classif('50HQH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20220920095058',
         block_ids=[64],
@@ -48,6 +54,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
+    # TODO see with VITO to write a empty block in this case with warning message and return success
     def test_run_classif_cropland_22NBM_13(self):
         """ Less than 3 off-swath acquisitions found, therefore the block is skip
         """
@@ -64,6 +71,7 @@ class Test_classif(unittest.TestCase):
         block_ids=[1],
         upload_block=False)
 
+    # TODO see with VITO to write a empty block in this case with warning message and return success
     def test_run_classif_cropland_48MYS_110(self):
         """ Less than 3 off-swath acquisitions found, therefore the block is skip
         """
@@ -73,7 +81,7 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_croptype_summer1_45SVC_99(self):
-        """ No cropland pixels, therefore block is write with nodata 255 value
+        """ Nominal error: No cropland pixels, therefore block is write with nodata 255 value
         """
         run_classif('45SVC',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_25144_20220921094656',
@@ -184,12 +192,23 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_cropland_36UVB_120(self):
-        """ Must failed but not the case
-        UKR tile
+        """ Nominal case this block is ok
+
+        UKR tile 2021
         """
         run_classif('36UVB',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220929210524',
         block_ids=[120],
+        upload_block=False)
+
+    def test_run_classif_cropland_36UVB_43(self):
+        """  This test failed due to the maxgap issue on OPTICAL (128 instead 60) on this block (land case)
+
+        UKR tile in 2021
+        """
+        run_classif('36UVB',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220929210524',
+        block_ids=[43],
         upload_block=False)
 
     def test_run_classif_cropland_38UQB_1(self):
@@ -198,6 +217,42 @@ class Test_classif(unittest.TestCase):
         run_classif('38UQB',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22096_20220906224410',
         block_ids=[1],
+        upload_block=False)
+
+    def test_run_classif_cropland_37UER_3(self):
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+
+        UKR tile in 2019
+        Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,27,34,35,37,38,63,66,67,77,78,84,90,91,92,100,101,103,108
+        """
+        run_classif('37UER',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22194_20220728095352',
+        block_ids=[3],
+        end_season_year=2019,
+        upload_block=False)
+
+    def test_run_classif_cropland_36UWC_72(self):
+        """ This test failed due to the maxgap issue on OPTICAL (121 instead 60) on this block (land case)
+
+        UKR tile in 2019
+        Only this block
+        """
+        run_classif('36UWC',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220728095401',
+        block_ids=[72],
+        end_season_year=2019,
+        upload_block=False)
+
+    def test_run_classif_cropland_36UWA_4(self):
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+
+        UKR tile in 2019
+        Same for block 47 (123 instead 60)
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220728095401',
+        block_ids=[4],
+        end_season_year=2019,
         upload_block=False)
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
@@ -217,6 +272,47 @@ class Test_classif(unittest.TestCase):
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_25147_20220918052128',
         block_ids=[50],
         upload_block=False)
+
+    def test_run_classif_cropland_36UWA_4_2022(self):
+        """ Nominal case
+
+        UKR tile in 2022
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
+        block_ids=[4],
+        end_season_year=2022,
+        upload_block=False,
+        clean=False)
+
+    def test_run_classif_croptype_summer1_36UWA_4_2022(self):
+        """ Not tested no full cropland currently
+
+        UKR tile in 2022
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
+        block_ids=[4],
+        end_season_year=2022,
+        upload_block=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1],
+        clean=False)
+
+    def test_run_classif_croptype_winter_36UWA_4_2022(self):
+        """ Not tested no full cropland currently
+
+        UKR tile in 2022
+        """
+        run_classif('36UWA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20221214110523',
+        block_ids=[4],
+        end_season_year=2022,
+        upload_block=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0],
+        clean=False)
+
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_winter_40KEC_71(self):

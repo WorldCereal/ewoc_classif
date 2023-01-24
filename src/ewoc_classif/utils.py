@@ -79,6 +79,7 @@ def generate_config_file(
     csv_dict: Dict,
     feature_blocks_dir: Path,
     no_tir_data: bool,
+    add_croptype:bool = False
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
@@ -106,6 +107,8 @@ def generate_config_file(
     :type feature_blocks_dir: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
+    :param add_croptype: Additional croptype
+    :type add_croptype: bool
     :return: Dict
     """
     parameters = {
@@ -174,6 +177,8 @@ def generate_config_file(
                 "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
                 "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
+            if add_croptype:
+                models["sunflower"] = f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
         elif ewoc_season == "summer2":
@@ -186,6 +191,9 @@ def generate_config_file(
             models = {
                 "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
+            if add_croptype:
+                models["rapeseed"] = f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
     else:
