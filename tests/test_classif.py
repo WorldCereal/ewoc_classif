@@ -324,6 +324,7 @@ class Test_classif(unittest.TestCase):
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
         block_ids=[71],
         upload_block=False,
+        clean=False,
         tir_csv="./tests/tir_preprocessed_path.csv",
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
