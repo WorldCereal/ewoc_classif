@@ -326,12 +326,6 @@ def run_classif(
             ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, Path(out_features_dir))
             logger.info("features {bucket_prefix} downloaded with success")
 
-
-    if use_existing_features:
-        bucket_prefix=f'{production_id}/block_features/'
-        ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, feature_blocks_dir)
-        logger.info("Trying to download blocks: {bucket_prefix} to {feature_blocks_dir}")
-
     if sar_csv is None:
         sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
