@@ -317,7 +317,7 @@ def run_classif(
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
 
     aez_id=int(production_id.split('_')[-2])
-    if use_existing_features:
+    if use_existing_features and block_ids is not None:
         for block in block_ids:
             bucket_prefix=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_annual/features_cropland/{tile_id}_{aez_id}_{block:03d}_features.tif'
             logger.info(f"Trying to download blocks features : {bucket_prefix} to {feature_blocks_dir}")
