@@ -313,7 +313,6 @@ class Test_classif(unittest.TestCase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[0],
         clean=False)
 
-
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_winter_40KEC_71(self):
         """ Nominal case with no tir detected
@@ -341,3 +340,14 @@ class Test_classif(unittest.TestCase):
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+    
+    def test_run_classif_cropland_36TYQ_110_2021_with_features(self):
+        """ Using block features when existing
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[110],
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)   

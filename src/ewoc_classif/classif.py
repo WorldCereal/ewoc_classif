@@ -260,8 +260,9 @@ def run_classif(
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True, 
-    no_tir:bool=False
-) -> None:
+    no_tir:bool=False,
+    use_existing_features: bool = False
+    ) -> None:
     """
     Perform EWoC classification
     :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
@@ -307,12 +308,30 @@ def run_classif(
     uid = tile_id + "_" + uid
     # Create the config file
     ewoc_ard_bucket = EWOCARDBucket()
+    ewoc_prd_bucket  = EWOCPRDBucket()
 
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
         out_dirpath.mkdir()
     feature_blocks_dir = out_dirpath / "block_features"
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
+
+    aez_id=int(production_id.split('_')[-2])
+    if use_existing_features:
+        for block in block_ids:
+            bucket_prefix=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_annual/features_cropland/{tile_id}_{aez_id}_{block:03d}_features.tif'
+            logger.info(f"Trying to download blocks features : {bucket_prefix} to {feature_blocks_dir}")
+            out_features_dir=f'{str(feature_blocks_dir)}/blocks/{tile_id}/{end_season_year}_annual/features_cropland/'
+            os.makedirs(out_features_dir, exist_ok=True)
+            ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, Path(out_features_dir))
+            logger.info("features {bucket_prefix} downloaded with success")
+
+
+    if use_existing_features:
+        bucket_prefix=f'{production_id}/block_features/'
+        ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, feature_blocks_dir)
+        logger.info("Trying to download blocks: {bucket_prefix} to {feature_blocks_dir}")
+
     if sar_csv is None:
         sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
