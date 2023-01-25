@@ -341,3 +341,23 @@ class Test_classif(unittest.TestCase):
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_run_classif_summer1_44QPG_11(self):
+        """ Nominal india case to test new cropcalendar, issue still there
+        """
+        run_classif('44QPG',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
+        block_ids=[11],
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_summer1_45QXF_64(self):
+        """ Nominal india case to test new cropcalendar, issue still there
+        """
+        run_classif('45QXF',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
+        block_ids=[64],
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
