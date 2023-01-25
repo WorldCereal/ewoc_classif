@@ -332,8 +332,7 @@ def run_classif(
     if optical_csv is None:
         optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
-            tile_id, production_id, filepath=optical_csv
-        )
+            tile_id, production_id, filepath=optical_csv)
     if tir_csv is None:
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
