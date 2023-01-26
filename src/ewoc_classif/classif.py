@@ -5,6 +5,7 @@ Classification and postprocessing tools
 import os
 import shutil
 import traceback
+import csv
 from json import dump, load
 from pathlib import Path
 from tempfile import gettempdir
@@ -59,8 +60,8 @@ def process_blocks(
     :type block_ids: List[int]
     :param production_id: EWoC production id
     :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False,
-    multiple blocks can be processed and merged into a mosaic within the same process (or command)
+    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+     processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
     :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
     derived from the Sentinel-2 tile ID.
@@ -275,7 +276,8 @@ def run_classif(
     upload_block: bool = True,
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
-    clean=True
+    clean:bool=True, 
+    no_tir:bool=False
 ) -> None:
     """
     Perform EWoC classification
@@ -321,6 +323,8 @@ def run_classif(
     :type postprocess: bool
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
+    :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
+    :type no_tir: bool
     :return: None
     """
     uid = uuid4().hex[:6]
@@ -344,6 +348,13 @@ def run_classif(
     if tir_csv is None:
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
+    else:
+        with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
+            tir_dict = [row for row in csv.DictReader(tir_file)]
+            if len(tir_dict) <= 1:
+                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
+                no_tir=True
+
     if agera5_csv is None:
         agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
@@ -353,14 +364,24 @@ def run_classif(
     if end_season_year == 2022:
         logger.info('Add additional croptype')
         add_croptype = True
+    
+    if not no_tir:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "SAR": str(sar_csv),
+            "TIR": str(tir_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
+    else:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "SAR": str(sar_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
 
-    csv_dict = {
-        "OPTICAL": str(optical_csv),
-        "SAR": str(sar_csv),
-        "TIR": str(tir_csv),
-        "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-        "METEO": str(agera5_csv),
-    }
+
     ewoc_config = generate_config_file(
         ewoc_detector,
         end_season_year,
@@ -370,8 +391,10 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
-        feature_blocks_dir= feature_blocks_dir,
-        add_croptype = add_croptype)
+        feature_blocks_dir= feature_blocks_dir, 
+        no_tir_data=no_tir,
+        add_croptype = add_croptype
+    )
 
     ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
     if data_folder is not None:
