@@ -60,8 +60,8 @@ def process_blocks(
     :type block_ids: List[int]
     :param production_id: EWoC production id
     :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False,
-    multiple blocks can be processed and merged into a mosaic within the same process (or command)
+    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+     processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
     :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
     derived from the Sentinel-2 tile ID.
@@ -356,7 +356,7 @@ def run_classif(
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
             tir_dict = list(csv.DictReader(tir_file))
             if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id}")
+                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
                 no_tir=True
 
     if agera5_csv is None:
