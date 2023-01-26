@@ -224,7 +224,7 @@ def postprocess_mosaic(
             "/usr/bin/gdal_translate", "/opt/ewoc_classif_venv/bin/gdal_translate"
         )
         logger.info(
-            f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
+        f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
         )
     # Use VITO code to perform mosaic
     run_tile(
