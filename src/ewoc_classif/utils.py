@@ -150,7 +150,7 @@ def generate_config_file(
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
-        if not no_tir_data: 
+        if not no_tir_data:
             parameters.update(
                 {
                     "active_marker": True,
@@ -158,7 +158,7 @@ def generate_config_file(
                     "irrigation": True,
                     "irrparameters": "irrigation",
                     "irrmodels": {
-                        "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                    "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
                     },
                 }
             )

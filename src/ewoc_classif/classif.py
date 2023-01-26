@@ -352,7 +352,7 @@ def run_classif(
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
             tir_dict = [row for row in csv.DictReader(tir_file)]
             if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id} f=> No irrigation computed!")
+                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
                 no_tir=True
 
     if agera5_csv is None:
@@ -364,7 +364,7 @@ def run_classif(
     if end_season_year == 2022:
         logger.info('Add additional croptype')
         add_croptype = True
-    
+
     if not no_tir:
         csv_dict = {
             "OPTICAL": str(optical_csv),
@@ -391,7 +391,7 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
-        feature_blocks_dir= feature_blocks_dir, 
+        feature_blocks_dir= feature_blocks_dir,
         no_tir_data=no_tir,
         add_croptype = add_croptype
     )

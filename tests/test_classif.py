@@ -6,7 +6,9 @@ import unittest
 
 from ewoc_classif.classif import run_classif, EWOC_SUPPORTED_SEASONS, EWOC_CROPTYPE_DETECTOR
 
-class Test_classif(unittest.TestCase):
+class TestClassif(unittest.TestCase):
+    """Class for unittest cases
+    """
     def setUp(self):
         self.clean=True
         if os.getenv("EWOC_TEST_DEBUG_MODE") is not None:
@@ -167,7 +169,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_54VWM_106(self):
-        """ This test failed due to the maxgap issue on OPTICAL (61 instead 60) on this block (close to coastal area)
+        """ This test failed due to the maxgap issue on OPTICAL (61 instead 60)
+        on this block (close to coastal area)
         """
         run_classif('54VWM',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17163_20221114214029',
@@ -175,7 +178,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_43PCM_0(self):
-        """ This test failed due to the maxgap issue on OPTICAL (237 instead 60) on this block (island case)
+        """ This test failed due to the maxgap issue on OPTICAL (237 instead 60)
+        on this block (island case)
         """
         run_classif('43PCM',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28107_20220921094801',
@@ -183,7 +187,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_38UPD_120(self):
-        """ This test failed due to the maxgap issue on OPTICAL (124 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (124 instead 60)
+        on this block (land case)
         """
         run_classif('38UPD',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22194_20220908152510',
@@ -202,7 +207,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_36UVB_43(self):
-        """  This test failed due to the maxgap issue on OPTICAL (128 instead 60) on this block (land case)
+        """  This test failed due to the maxgap issue on OPTICAL (128 instead 60)
+        on this block (land case)
 
         UKR tile in 2021
         """
@@ -212,7 +218,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_38UQB_1(self):
-        """ This test failed due to the maxgap issue on OPTICAL (68 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (68 instead 60)
+        on this block (land case)
         """
         run_classif('38UQB',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22096_20220906224410',
@@ -220,10 +227,12 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_37UER_3(self):
-        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60)
+        on this block (land case)
 
         UKR tile in 2019
-        Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,27,34,35,37,38,63,66,67,77,78,84,90,91,92,100,101,103,108
+        Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,
+        27,34,35,37,38,63,66,67,77,78,84,90,91,92,100,101,103,108
         """
         run_classif('37UER',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22194_20220728095352',
@@ -232,7 +241,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_36UWC_72(self):
-        """ This test failed due to the maxgap issue on OPTICAL (121 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (121 instead 60)
+        on this block (land case)
 
         UKR tile in 2019
         Only this block
@@ -244,7 +254,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_36UWA_4(self):
-        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60)
+        on this block (land case)
 
         UKR tile in 2019
         Same for block 47 (123 instead 60)

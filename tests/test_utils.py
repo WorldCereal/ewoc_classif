@@ -1,9 +1,14 @@
-from ewoc_classif.utils import generate_config_file
+"""
+Utils to test ewoc classification
+"""
 from distutils.util import strtobool
 import os
+from ewoc_classif.utils import generate_config_file
 
 
 def test_generate_config_file(config_ref):
+    """Test the function generate_config_file()
+    """
     csv_dict = {
         "OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
         "SAR": "/data/worldcereal/s3collections/satio_sar.csv",

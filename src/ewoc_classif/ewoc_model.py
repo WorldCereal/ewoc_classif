@@ -152,7 +152,7 @@ def down_models(cp_url: str,model_dirpath: Path)-> None:
             download_file(link, outdir)
         else:
             _logger.warning(f' {link} is not downloaded')
-            
+
 
 def update_config(config_path: Path, root_dir: Path) -> None:
     """
@@ -165,15 +165,15 @@ def update_config(config_path: Path, root_dir: Path) -> None:
     """
     with open(config_path,'r') as f:
         data = json.load(f)
-    
+
     data['paths']["modelfile"] = data['paths']["modelfile"].replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
     if data['paths']["parentmodel"] is not None:
         data['paths']["parentmodel"] = data['paths']["parentmodel"]\
             .replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
-    
+
     with open(config_path, "w") as out:
         json.dump(data, out)
-    
+
     _logger.debug(f"Updated: {config_path}")
 
 def main(args):
