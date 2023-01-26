@@ -329,6 +329,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_winter_40KEC_71_no_csv(self):
         """ Nominal case with no tir detected
 
@@ -342,6 +343,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_summer1_44QPG_11(self):
         """ Nominal india case to test new cropcalendar, issue still there:
         
@@ -354,6 +356,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_summer1_45QXF_64(self):
         """ Nominal india case to test new cropcalendar, issue still there
         
@@ -363,6 +366,18 @@ class Test_classif(unittest.TestCase):
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
         block_ids=[64],
         upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_summer1_45QVE_72(self):
+        """ Nominal india case to test new cropcalendar, issue still there
+        
+        """
+        run_classif('45QVE',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
+        block_ids=[72],
+        upload_block=False,
+        clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
