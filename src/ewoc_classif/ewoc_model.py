@@ -206,7 +206,6 @@ def main(args):
 
     base_url= "https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost"
 
-<<<<<<< HEAD
     crop_url = f"{base_url}/v{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_v{cropland_models_version}-realms/"
     crop_optical_url = f"{base_url}/v{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_v{cropland_models_version}-realms-OPTICAL/"
     maize_url = f"{base_url}/v{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
@@ -220,26 +219,6 @@ def main(args):
     wintercereals_url = f"{base_url}/v{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
     wintercereals_optical_url = f"{base_url}/v{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
     irr_url = f"{base_url}/v{irr_models_version}/irrigation_detector_WorldCerealPixelCatBoost_v{irr_models_version}/"
-=======
-    crop_url = f"{base_url}/v{cropland_models_version}/\
-        cropland_detector_WorldCerealPixelCatBoost_v{cropland_models_version}-realms/"
-    crop_optical_url = f"{base_url}/v{cropland_models_version}/\
-        cropland_detector_WorldCerealPixelCatBoost_v{cropland_models_version}-realms-OPTICAL/"
-    maize_url = f"{base_url}/v{croptype_models_version}/\
-        maize_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    maize_optical_url = f"{base_url}/v{croptype_models_version}/\
-        maize_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    springcereals_url =f"{base_url}/v{croptype_models_version}/\
-        springcereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    springcereals_optical_url =f"{base_url}/v{croptype_models_version}/\
-        springcereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    wintercereals_url = f"{base_url}/v{croptype_models_version}/\
-        wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    wintercereals_optical_url = f"{base_url}/v{croptype_models_version}/\
-        wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    irr_url = f"{base_url}/v{irr_models_version}/\
-        irrigation_detector_WorldCerealPixelCatBoost_v{irr_models_version}/"
->>>>>>> 4a0f2a6... fix pylint error
 
     urls = [maize_url, maize_optical_url,
             crop_url, crop_optical_url,
