@@ -208,8 +208,8 @@ def main(args):
     rapeseed_optical_url =f"{base_url}/v{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
     springcereals_url =f"{base_url}/v{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
     springcereals_optical_url =f"{base_url}/v{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    sunflowers_url =f"{base_url}/v{croptype_models_version}/sunflowers_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    sunflowers_optical_url =f"{base_url}/v{croptype_models_version}/sunflowers_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
+    sunflower_url =f"{base_url}/v{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
+    sunflower_optical_url =f"{base_url}/v{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
     wintercereals_url = f"{base_url}/v{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
     wintercereals_optical_url = f"{base_url}/v{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
     irr_url = f"{base_url}/v{irr_models_version}/irrigation_detector_WorldCerealPixelCatBoost_v{irr_models_version}/"
@@ -218,7 +218,7 @@ def main(args):
             crop_url, crop_optical_url,
             rapeseed_url, rapeseed_optical_url,
             springcereals_url, springcereals_optical_url,
-            sunflowers_url, sunflowers_optical_url,
+            sunflower_url, sunflower_optical_url,
             wintercereals_url, wintercereals_optical_url,
             irr_url]
     for i,url in enumerate(urls):
