@@ -198,9 +198,6 @@ def generate_config_file(
             if add_croptype:
                 models["rapeseed"] = f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
 
-            "wintercereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/\
-            wintercereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
-                    }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
     else:
