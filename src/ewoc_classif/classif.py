@@ -39,6 +39,68 @@ EWOC_MODELS_BASEPATH = (
 )
 EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
 
+def download_features(
+    ewoc_prd_bucket,
+    tile_id,
+    end_season_year,
+    ewoc_season,
+    block,
+    production_id,
+    aez_id,
+    feature_blocks_dir
+    ) -> bool:
+    """
+    Check if block features exists and if True download features_cropland for cropland when season
+    is annual or download features_croptype and features_irrigation when season is summer1, summer2
+    or winter
+    :param ewoc_prd_bucket: EWOCPRDBucket to use check and download method
+    :type ewoc_prd_bucket: object of class EWOCPRDBucket
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param end_season_year: End of season year
+    :type end_season_year: int
+    :param ewoc_season: Which season are we processing, possible options:
+    annual, summer1, summer2 and winter
+    :type ewoc_season: str
+    :param block: block id to process (blocks= equal area subdivisions of a tile)
+    :type block: int
+    :param production_id: EWoC production id
+    :type production_id: str
+    :param features_block_dir: Path where the features are downloaded
+    :type features_block_dir: Path
+    """
+    check_product_irr=True
+    if ewoc_season=='annual':
+        season_tag='annual/features_cropland'
+    else:
+        season_tag=f'{ewoc_season}/features_croptype'
+        bucket_prefix_irrigation=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_{ewoc_season}/features_irrigation/{tile_id}_{aez_id}_{block:03d}_features.tif'
+        out_features_dir_irrigation=f'{str(feature_blocks_dir)}/blocks/{tile_id}/{end_season_year}_{ewoc_season}/features_irrigation/'
+        check_product_irr = ewoc_prd_bucket._check_product_file(bucket_prefix_irrigation)
+
+        if check_product_irr:
+            logger.info('Irrigation features exists')
+            os.makedirs(out_features_dir_irrigation, exist_ok=True)
+            ewoc_prd_bucket.download_bucket_prefix(
+                bucket_prefix_irrigation,
+                Path(out_features_dir_irrigation))
+            logger.info(f"features {bucket_prefix_irrigation} downloaded with success")
+        else:
+            logger.warning(f'Features {bucket_prefix_irrigation} does not exist, create features')
+
+    bucket_prefix=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_{season_tag}/{tile_id}_{aez_id}_{block:03d}_features.tif'
+    out_features_dir=f'{str(feature_blocks_dir)}/blocks/{tile_id}/{end_season_year}_{season_tag}'
+
+    check_product = ewoc_prd_bucket._check_product_file(bucket_prefix)
+    if check_product:
+        logger.info(f'{season_tag} features exists')
+        os.makedirs(out_features_dir, exist_ok=True)
+        ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, Path(out_features_dir))
+        logger.info(f"features {bucket_prefix} downloaded with success")
+    else:
+        logger.warning(f'Features {bucket_prefix} does not exist, create features')
+
+    return (check_product and check_product_irr)
 
 def process_blocks(
     tile_id: str,
@@ -59,7 +121,8 @@ def process_blocks(
     :type block_ids: List[int]
     :param production_id: EWoC production id
     :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+    :param upload_block: True if you want to upload each block and skip the mosaic.
+    If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
     :param out_dirpath: Output directory path
@@ -259,7 +322,7 @@ def run_classif(
     upload_block: bool = True,
     postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
-    clean:bool=True, 
+    clean:bool=True,
     no_tir:bool=False,
     use_existing_features: bool = False
     ) -> None:
@@ -269,11 +332,14 @@ def run_classif(
     :type tile_id: str
     :param production_id: EWoC production id
     :type production_id: str
-    :param block_ids: List of block ids to process (blocks= equal area subdivisions of a tile)
+    :param block_ids: List of block ids to process
+    (blocks= equal area subdivisions of a tile)
     :type block_ids: List[int]
-    :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1 images to process
+    :param sar_csv: Path to a csv file with all the detail about
+    all the Sentinel-1 images to process
     :type sar_csv: Path
-    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/ Landsat 8 images to process
+    :param optical_csv: Path to a csv file with all the detail about
+    all the Sentinel-2/ Landsat 8 images to process
     :type optical_csv: Path
     :param tir_csv: Path to a csv file with all the detail about all the Landsat 8 TIR images to process
     :type tir_csv: Path
@@ -285,7 +351,8 @@ def run_classif(
     :type ewoc_detector: str
     :param end_season_year: End of season year
     :type end_season_year: int
-    :param ewoc_season: Which season are we processing, possible options: annual, summer1, summer2 and winter
+    :param ewoc_season: Which season are we processing, possible options: 
+    annual, summer1, summer2 and winter
     :type ewoc_season: str
     :param cropland_model_version: The version of the AI model used for the cropland prediction
     :type cropland_model_version: str
@@ -293,10 +360,12 @@ def run_classif(
     :type croptype_model_version: str
     :param irr_model_version: The version of the AI model used for croptype irrigation
     :type irr_model_version: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+    :param upload_block: True if you want to upload each block and skip the mosaic. 
+    If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, default to False
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, 
+    default to False
     :type postprocess: bool
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
@@ -317,14 +386,19 @@ def run_classif(
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
 
     aez_id=int(production_id.split('_')[-2])
-    if use_existing_features and block_ids is not None:
+    if use_existing_features:
         for block in block_ids:
-            bucket_prefix=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_annual/features_cropland/{tile_id}_{aez_id}_{block:03d}_features.tif'
-            logger.info(f"Trying to download blocks features : {bucket_prefix} to {feature_blocks_dir}")
-            out_features_dir=f'{str(feature_blocks_dir)}/blocks/{tile_id}/{end_season_year}_annual/features_cropland/'
-            os.makedirs(out_features_dir, exist_ok=True)
-            ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, Path(out_features_dir))
-            logger.info("features {bucket_prefix} downloaded with success")
+            check_features=download_features(
+                ewoc_prd_bucket,
+                tile_id,
+                end_season_year,
+                ewoc_season,
+                block,
+                production_id,
+                aez_id,
+                feature_blocks_dir)
+
+        use_existing_features=check_features
 
     if sar_csv is None:
         sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
@@ -352,7 +426,7 @@ def run_classif(
     if end_season_year == 2022:
         logger.info('Add additional croptype')
         add_croptype = True
-    
+
     if not no_tir:
         csv_dict = {
             "OPTICAL": str(optical_csv),

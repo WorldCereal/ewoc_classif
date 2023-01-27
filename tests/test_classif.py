@@ -342,7 +342,7 @@ class Test_classif(unittest.TestCase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
     
     def test_run_classif_cropland_36TYQ_110_2021_with_features(self):
-        """ Using block features when existing
+        """ Using block features cropland case where features exists
         """
         run_classif('36TYQ',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
@@ -351,3 +351,30 @@ class Test_classif(unittest.TestCase):
         upload_block=False,
         clean=True,
         use_existing_features=True)   
+
+    def test_run_classif_summer1_36TYQ_110_2021_with_features(self):
+        """ Using block features summer1 when features does not exist 
+        Log a warning and compute features as default 
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[110],
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_summer1_36TYQ_14_2021_with_features(self):
+        """ Using block features summer1 when features exists
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[14],
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
