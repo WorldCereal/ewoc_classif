@@ -352,7 +352,7 @@ def run_classif(
     :type ewoc_detector: str
     :param end_season_year: End of season year
     :type end_season_year: int
-    :param ewoc_season: Which season are we processing, possible options: 
+    :param ewoc_season: Which season are we processing, possible options:
     annual, summer1, summer2 and winter
     :type ewoc_season: str
     :param cropland_model_version: The version of the AI model used for the cropland prediction
@@ -361,17 +361,20 @@ def run_classif(
     :type croptype_model_version: str
     :param irr_model_version: The version of the AI model used for croptype irrigation
     :type irr_model_version: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. 
+    :param upload_block: True if you want to upload each block and skip the mosaic.
     If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
-    :param postprocess: If True only the postprocessing (aka mosaic) will be performed, 
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed,
     default to False
     :type postprocess: bool
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
+    :param use_existing_features: If true, is going to download existing features, otherwise
+    computes it as usual
+    :param use_existing_features: bool
     :return: None
     """
     uid = uuid4().hex[:6]
@@ -444,7 +447,6 @@ def run_classif(
             "METEO": str(agera5_csv),
         }
 
-
     ewoc_config = generate_config_file(
         ewoc_detector,
         end_season_year,
@@ -454,7 +456,7 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
-        feature_blocks_dir= feature_blocks_dir, 
+        feature_blocks_dir= feature_blocks_dir,
         no_tir_data=no_tir,
         use_existing_features=use_existing_features,
         add_croptype = add_croptype

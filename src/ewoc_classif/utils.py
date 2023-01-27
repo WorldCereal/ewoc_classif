@@ -79,14 +79,14 @@ def generate_config_file(
     csv_dict: Dict,
     feature_blocks_dir: Path,
     no_tir_data: bool,
-    use_existing_features: str,
+    use_existing_features: bool,
     add_croptype:bool = False
 ) -> Dict:
     """
     Automatic generation of worldcereal config files
 
-    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local path to the models.
-    If not specified, it use artifactory a source
+    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local path 
+    to the models. If not specified, it use artifactory a source
 
     :param featuresettings: cropland or croptype
     :type featuresettings: str
@@ -108,6 +108,9 @@ def generate_config_file(
     :type feature_blocks_dir: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
+    :param use_existing_features: If true, is going to download existing features, otherwise
+    computes it as usual
+    :param use_existing_features: bool
     :param add_croptype: Additional croptype
     :type add_croptype: bool
     :return: Dict
@@ -152,7 +155,7 @@ def generate_config_file(
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
         parameters["use_existing_features"]=use_existing_features
-        if not no_tir_data: 
+        if not no_tir_data:
             parameters.update(
                 {
                     "active_marker": True,
