@@ -386,7 +386,7 @@ def run_classif(
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
 
     aez_id=int(production_id.split('_')[-2])
-    if use_existing_features:
+    if use_existing_features and block_ids is not None:
         for block in block_ids:
             check_features=download_features(
                 ewoc_prd_bucket,
