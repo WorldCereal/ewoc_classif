@@ -149,6 +149,7 @@ def process_blocks(
     with open(ewoc_config_filepath, encoding="UTF-8") as json_file:
         data = load(json_file)
         blocks_feature_dir = Path(data["parameters"]["features_dir"])
+        use_exisiting_features=data["parameters"]["use_existing_features"]
 
     return_codes=[]
     for block_id in ids_range:
@@ -177,7 +178,7 @@ def process_blocks(
                     ewoc_prd_bucket.upload_ewoc_prd(
                         out_dirpath / "proclogs", production_id + "/proclogs"
                     )
-                    if any(blocks_feature_dir.iterdir()):
+                    if any(blocks_feature_dir.iterdir()) and not use_exisiting_features:
                         ewoc_prd_bucket.upload_ewoc_prd(
                             blocks_feature_dir, production_id + "/block_features"
                         )
@@ -455,6 +456,7 @@ def run_classif(
         csv_dict,
         feature_blocks_dir= feature_blocks_dir, 
         no_tir_data=no_tir,
+        use_existing_features=use_existing_features,
         add_croptype = add_croptype
     )
 

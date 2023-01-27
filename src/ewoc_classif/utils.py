@@ -79,6 +79,7 @@ def generate_config_file(
     csv_dict: Dict,
     feature_blocks_dir: Path,
     no_tir_data: bool,
+    use_existing_features: str,
     add_croptype:bool = False
 ) -> Dict:
     """
@@ -132,6 +133,7 @@ def generate_config_file(
         parameters["localmodels"]=False
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
+        parameters["use_existing_features"]=use_existing_features
         models = {
             "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
@@ -149,6 +151,7 @@ def generate_config_file(
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
+        parameters["use_existing_features"]=use_existing_features
         if not no_tir_data: 
             parameters.update(
                 {
