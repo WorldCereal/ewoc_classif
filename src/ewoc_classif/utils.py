@@ -203,7 +203,7 @@ def generate_config_file(
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
     else:
-        logger.error(f'{featuresettings} not accepeted as value!')
+        logger.error(f'{featuresettings} not accepted as value!')
         config={}
 
     return config
