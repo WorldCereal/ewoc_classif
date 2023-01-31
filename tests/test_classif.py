@@ -345,9 +345,7 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_summer1_44QPG_11(self):
-        """ Nominal india case to test new cropcalendar, issue still there:
-
-        Nominal case to test new cropcalendar: with new version no more issue
+        """ Nominal case to test new cropcalendar: with new version no more issue
         """
         run_classif('44QPG',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
@@ -358,9 +356,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_summer1_45QXF_64(self):
-        """ Nominal india case to test new cropcalendar, issue still there
+        """ Nominal india case to test new cropcalendar: with new version no more issue
 
-        Incomplete collection `TIR`: got a collection size of 0 which is less than the threshold of 2
         """
         run_classif('45QXF',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
@@ -369,6 +366,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_summer1_45QVE_72(self):
         """ Nominal india case to test new cropcalendar: with new version no more issue
 
@@ -383,6 +381,7 @@ class Test_classif(unittest.TestCase):
 
     def test_run_classif_summer2_45RWH_10(self):
         """ Wrong AEZ detection case: no valid summer2 season found for this tile
+        No cropland found due to the new aez id provided by the wrapper => Runtime Error
         """
         run_classif('45RWH',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_48180_20220916010553',
