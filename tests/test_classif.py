@@ -57,6 +57,8 @@ class Test_classif(unittest.TestCase):
     # TODO see with VITO to write a empty block in this case with warning message and return success
     def test_run_classif_cropland_22NBM_13(self):
         """ Less than 3 off-swath acquisitions found, therefore the block is skip
+
+        cf. #71
         """
         run_classif('22NBM',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
@@ -448,7 +450,7 @@ class Test_classif(unittest.TestCase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
     def test_run_classif_summer1_58KHG_71(self):
-        """ No cropland
+        """ No cropland available
         """
         run_classif('58KHG',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_10033_20220926141527',
@@ -457,3 +459,16 @@ class Test_classif(unittest.TestCase):
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_winter_53UMR_44(self):
+        """  No cropland available
+
+        cf. #86 if error
+        """
+        run_classif('53UMR',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        block_ids=[44],
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
