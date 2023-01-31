@@ -329,8 +329,9 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
+    #@unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_winter_40KEC_71_no_csv(self):
-        """ Nominal case with no tir detected
+        """ Tir issue detected: missing B10
 
         Island case (Mauritius)
         """
@@ -341,6 +342,53 @@ class Test_classif(unittest.TestCase):
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
+    def test_run_classif_summer1_44QPG_11(self):
+        """ Nominal case to test new cropcalendar: with new version no more issue
+        """
+        run_classif('44QPG',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
+        block_ids=[11],
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
+    def test_run_classif_summer1_45QXF_64(self):
+        """ Nominal india case to test new cropcalendar: with new version no more issue
+
+        """
+        run_classif('45QXF',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
+        block_ids=[64],
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
+    def test_run_classif_summer1_45QVE_72(self):
+        """ Nominal india case to test new cropcalendar: with new version no more issue
+
+        """
+        run_classif('45QVE',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28122_20220916010432',
+        block_ids=[72],
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_summer2_45RWH_10(self):
+        """ Wrong AEZ detection case: no valid summer2 season found for this tile
+        No cropland found due to the new aez id provided by the wrapper => Runtime Error
+        """
+        run_classif('45RWH',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_48180_20220916010553',
+        block_ids=[10],
+        upload_block=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[2])
 
     def test_run_classif_summer1_58KHG_71(self):
         """ No cropland

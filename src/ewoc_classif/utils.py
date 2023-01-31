@@ -158,8 +158,7 @@ def generate_config_file(
                     "irrigation": True,
                     "irrparameters": "irrigation",
                     "irrmodels": {
-                        "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
-                        {irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
+                        "irrigation": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{irr_model_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_model_version}/config.json"
                     },
                 }
             )
@@ -176,10 +175,8 @@ def generate_config_file(
             )
         if ewoc_season == "summer1":
             models = {
-                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
-                {croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
-                "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
-                {croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
+                "springcereals": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json",
             }
             if add_croptype:
                 models["sunflower"] = f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
@@ -187,8 +184,7 @@ def generate_config_file(
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
         elif ewoc_season == "summer2":
             models = {
-                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
-                {croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
+                "maize": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{croptype_model_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_model_version}/config.json"
             }
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
@@ -202,7 +198,7 @@ def generate_config_file(
             config = {"parameters": parameters, "inputs": csv_dict, "models": models}
             logger.info(f"[{ewoc_season}] - Using model version: {croptype_model_version}")
     else:
-        logger.error(f'{featuresettings} not accepeted as value!')
+        logger.error(f'{featuresettings} not accepted as value!')
         config={}
 
     return config
