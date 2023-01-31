@@ -178,7 +178,6 @@ def main(args):
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
         block_ids=args.block_ids,
-        aez_id=args.aez_id,
         cropland_model_version=args.cropland_model_version,
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,

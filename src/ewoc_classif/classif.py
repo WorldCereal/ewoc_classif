@@ -279,7 +279,6 @@ def run_classif(
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
     no_tir:bool=False,
-    aez_id: int=None,
     ) -> None:
     """
     Perform EWoC classification
@@ -327,9 +326,6 @@ def run_classif(
     :type out_dirpath: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
-    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
-    derived from the Sentinel-2 tile ID.
-    :type aez_id: int
     :return: None
     """
     uid = uuid4().hex[:6]
