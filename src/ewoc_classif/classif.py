@@ -107,6 +107,7 @@ def process_blocks(
     ewoc_config_filepath: Path,
     production_id: str,
     out_dirpath: Path,
+    aez_id: int,
     block_ids: Optional[List[int]]=None,
     upload_block: bool=True,
     clean:bool=True
@@ -122,9 +123,12 @@ def process_blocks(
     :param production_id: EWoC production id
     :type production_id: str
     :param upload_block: True if you want to upload each block and skip the mosaic.
-    If False, multiple blocks can be
+     If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
+    derived from the Sentinel-2 tile ID.
+    :type aez_id: int
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
     :return: None
@@ -163,6 +167,7 @@ def process_blocks(
                 blocks=[int(block_id)],
                 postprocess=False,
                 process=True,
+                aez_id=aez_id
             )
             if ret == 0:
                 logger.info(f"{tile_id}_{block_id} finished with success!")
@@ -216,7 +221,12 @@ def process_blocks(
         raise NotImplementedError('Not currently correctly implemented!')
         logger.info("Start cog mosaic")
         run_tile(
-            tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
+            tile_id,
+            ewoc_config_filepath,
+            out_dirpath,
+            postprocess=True,
+            process=False,
+            aez_id=aez_id
         )
         if upload_product:
         # Push the results to the s3 bucket
@@ -240,7 +250,11 @@ def process_blocks(
     return True
 
 def postprocess_mosaic(
-    tile_id: str, production_id: str, ewoc_config_filepath: Path, out_dirpath: Path
+    tile_id: str,
+    production_id: str,
+    ewoc_config_filepath: Path,
+    out_dirpath: Path,
+    aez_id: int
 ) -> None:
     """
     Postprocessing (mosaic)
@@ -252,6 +266,9 @@ def postprocess_mosaic(
     :type ewoc_config_filepath: Path
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
+    :param aez_id : If provided, the AEZ ID will be enforced instead of
+    automatically derived from the Sentinel-2 tile ID.
+    :type aez_id: int
     :return: None
     """
     # Retrieve some parameters from config file
@@ -271,11 +288,11 @@ def postprocess_mosaic(
             "/usr/bin/gdal_translate", "/opt/ewoc_classif_venv/bin/gdal_translate"
         )
         logger.info(
-            f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
+        f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
         )
     # Use VITO code to perform mosaic
     run_tile(
-        tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False
+        tile_id, ewoc_config_filepath, out_dirpath, postprocess=True, process=False, aez_id=aez_id
     )
 
     # Upload data to EWoC product bucket
@@ -336,15 +353,17 @@ def run_classif(
     :param block_ids: List of block ids to process
     (blocks= equal area subdivisions of a tile)
     :type block_ids: List[int]
-    :param sar_csv: Path to a csv file with all the detail about
-    all the Sentinel-1 images to process
+    :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1
+    images to process
     :type sar_csv: Path
-    :param optical_csv: Path to a csv file with all the detail about
-    all the Sentinel-2/ Landsat 8 images to process
+    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/
+    Landsat 8 images to process
     :type optical_csv: Path
-    :param tir_csv: Path to a csv file with all the detail about all the Landsat 8 TIR images to process
+    :param tir_csv: Path to a csv file with all the detail about all
+    the Landsat 8 TIR images to process
     :type tir_csv: Path
-    :param agera5_csv: Path to a csv file with all the detail about all the AgERA5 images to process
+    :param agera5_csv: Path to a csv file with all the detail about all the AgERA5
+    images to process
     :type agera5_csv: Path
     :param data_folder: Folder with CopDEM and/or cropland data
     :type data_folder: Path
@@ -416,7 +435,7 @@ def run_classif(
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     else:
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
-            tir_dict = [row for row in csv.DictReader(tir_file)]
+            tir_dict = list(csv.DictReader(tir_file))
             if len(tir_dict) <= 1:
                 logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
                 no_tir=True
@@ -447,6 +466,7 @@ def run_classif(
             "METEO": str(agera5_csv),
         }
 
+
     ewoc_config = generate_config_file(
         ewoc_detector,
         end_season_year,
@@ -469,21 +489,23 @@ def run_classif(
         dump(ewoc_config, ewoc_config_fp, indent=2)
     # Process tile (and optionally select blocks)
     try:
+        aez_id=int(production_id.split('_')[-2])
         if not postprocess:
             process_status = process_blocks(
                 tile_id,
                 ewoc_config_filepath,
                 production_id,
                 out_dirpath,
+                aez_id,
                 block_ids,
                 upload_block=upload_block,
-                clean=clean
+                clean=clean,
             )
             if not process_status:
                 raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!")
         else:
             postprocess_mosaic(
-                tile_id, production_id, ewoc_config_filepath, out_dirpath
+                tile_id, production_id, ewoc_config_filepath, out_dirpath, aez_id=aez_id
             )
     except Exception:
         logger.error("Processing failed")

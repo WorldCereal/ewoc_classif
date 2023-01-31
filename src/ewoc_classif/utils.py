@@ -85,8 +85,8 @@ def generate_config_file(
     """
     Automatic generation of worldcereal config files
 
-    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local path 
-    to the models. If not specified, it use artifactory a source
+    The environment variable EWOC_MODELS_DIR_ROOT need to be set to define the local
+    path to the models. If not specified, it use artifactory a source
 
     :param featuresettings: cropland or croptype
     :type featuresettings: str

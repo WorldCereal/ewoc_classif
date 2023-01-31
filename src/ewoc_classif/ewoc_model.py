@@ -168,8 +168,9 @@ def update_config(config_path: Path, root_dir: Path) -> None:
 
     data['paths']["modelfile"] = data['paths']["modelfile"].replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
     if data['paths']["parentmodel"] is not None:
-        data['paths']["parentmodel"] = data['paths']["parentmodel"].replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
-
+        data['paths']["parentmodel"] = data['paths']["parentmodel"]\
+            .replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
+    
     with open(config_path, "w") as out:
         json.dump(data, out)
 
@@ -178,13 +179,16 @@ def update_config(config_path: Path, root_dir: Path) -> None:
 def main(args):
     """
     Downlaod VITO's models and create an archive
-    :param crop_land_version: AI Model version for cropland (will be the same for OPTICAL only crop models)
+    :param crop_land_version: AI Model version for cropland
+    (will be the same for OPTICAL only crop models)
     :param croptype_version: AI Model version for croptype
     :param irr_version: AI Model version for irrigation
-    :param work_dir: Folder for downloading the models, a "models" folder will be created inside it
+    :param work_dir: Folder for downloading the models, a "models" folder will
+    be created inside it
     :param outfold: Where the tar.gz will be stored
     :param keep_models: True if you want to keep the uncompressed models, default to False
-    :param root_dir: the base folder where the models are stored, leave to default=None (to get /models)
+    :param root_dir: the base folder where the models are stored, leave to default=None
+    (to get /models)
     :return: None
     """
 

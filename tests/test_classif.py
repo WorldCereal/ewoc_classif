@@ -398,3 +398,14 @@ class Test_classif(unittest.TestCase):
         use_existing_features=True,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+   def test_run_classif_summer1_58KHG_71(self):
+        """ No cropland
+        """
+        run_classif('58KHG',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_10033_20220926141527',
+        block_ids=[71],
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
