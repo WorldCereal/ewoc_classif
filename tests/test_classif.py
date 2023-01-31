@@ -404,7 +404,7 @@ class Test_classif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=True,
-        use_existing_features=True)   
+        use_existing_features=True)
 
     def test_run_classif_summer1_36TYQ_110_2021_with_features(self):
         """ Using block features summer1 when features does not exist
