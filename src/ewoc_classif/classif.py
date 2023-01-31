@@ -60,7 +60,8 @@ def process_blocks(
     :type block_ids: List[int]
     :param production_id: EWoC production id
     :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic. If False, multiple blocks can be
+    :param upload_block: True if you want to upload each block and skip the mosaic.
+     If False, multiple blocks can be
      processed and merged into a mosaic within the same process (or command)
     :type upload_block: bool
     :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
@@ -368,7 +369,7 @@ def run_classif(
     if end_season_year == 2022:
         logger.info('Add additional croptype')
         add_croptype = True
-    
+
     if not no_tir:
         csv_dict = {
             "OPTICAL": str(optical_csv),
@@ -395,7 +396,7 @@ def run_classif(
         croptype_model_version,
         irr_model_version,
         csv_dict,
-        feature_blocks_dir= feature_blocks_dir, 
+        feature_blocks_dir= feature_blocks_dir,
         no_tir_data=no_tir,
         add_croptype = add_croptype
     )
@@ -414,10 +415,10 @@ def run_classif(
                 ewoc_config_filepath,
                 production_id,
                 out_dirpath,
+                aez_id,
                 block_ids,
                 upload_block=upload_block,
                 clean=clean,
-                aez_id=aez_id
             )
             if not process_status:
                 raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!")
