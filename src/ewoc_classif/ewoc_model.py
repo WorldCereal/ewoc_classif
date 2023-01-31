@@ -127,8 +127,8 @@ def down_models(cp_url: str,model_dirpath: Path)-> None:
     :param cp_url: VITO's artifactory url
     :param out_dir: Folder to store the models
     :param root_dir: the root dir for the config.json files,
-    this need to be the dir where the models will be stored in the container
-    (ex /models/), leave it to None
+     this need to be the dir where the models will be stored in the container
+     (ex /models/), leave it to None
     :return: None
     """
     cp_links = get_links(cp_url)
@@ -152,20 +152,20 @@ def down_models(cp_url: str,model_dirpath: Path)-> None:
             download_file(link, outdir)
         else:
             _logger.warning(f' {link} is not downloaded')
-            
+
 
 def update_config(config_path: Path, root_dir: Path) -> None:
     """
     Update config files. This function will update model paths in the config files
      to match the new relative directories
     :param config_path: Path fo config.json file
-    :param root_dir: the base folder where the models are stored, leave to default=None
-    (to get /models)
+    :param root_dir: the base folder where the models are stored,
+    leave to default=None (to get /models)
     :return: None
     """
     with open(config_path,'r') as f:
         data = json.load(f)
-    
+
     data['paths']["modelfile"] = data['paths']["modelfile"].replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
     if data['paths']["parentmodel"] is not None:
         data['paths']["parentmodel"] = data['paths']["parentmodel"]\
@@ -173,7 +173,7 @@ def update_config(config_path: Path, root_dir: Path) -> None:
     
     with open(config_path, "w") as out:
         json.dump(data, out)
-    
+
     _logger.debug(f"Updated: {config_path}")
 
 def main(args):
@@ -232,7 +232,7 @@ def main(args):
         down_models(url, ewoc_model_dirpath)
 
 def run():
-    """Calls :func:`main` passing the CLI arguments extracted from :obj:`sys.argv
+    """Calls :func:`main` passing the CLI arguments extracted from :obj:`sys.argv`
 
     This function can be used as entry point to create console scripts with setuptools.
     """

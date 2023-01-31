@@ -39,6 +39,68 @@ EWOC_MODELS_BASEPATH = (
 )
 EWOC_MODELS_TYPE = "WorldCerealPixelCatBoost"
 
+def download_features(
+    ewoc_prd_bucket,
+    tile_id,
+    end_season_year,
+    ewoc_season,
+    block,
+    production_id,
+    aez_id,
+    feature_blocks_dir
+    ) -> bool:
+    """
+    Check if block features exists and if True download features_cropland for cropland when season
+    is annual or download features_croptype and features_irrigation when season is summer1, summer2
+    or winter
+    :param ewoc_prd_bucket: EWOCPRDBucket to use check and download method
+    :type ewoc_prd_bucket: object of class EWOCPRDBucket
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param end_season_year: End of season year
+    :type end_season_year: int
+    :param ewoc_season: Which season are we processing, possible options:
+    annual, summer1, summer2 and winter
+    :type ewoc_season: str
+    :param block: block id to process (blocks= equal area subdivisions of a tile)
+    :type block: int
+    :param production_id: EWoC production id
+    :type production_id: str
+    :param features_block_dir: Path where the features are downloaded
+    :type features_block_dir: Path
+    """
+    check_product_irr=True
+    if ewoc_season=='annual':
+        season_tag='annual/features_cropland'
+    else:
+        season_tag=f'{ewoc_season}/features_croptype'
+        bucket_prefix_irrigation=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_{ewoc_season}/features_irrigation/{tile_id}_{aez_id}_{block:03d}_features.tif'
+        out_features_dir_irrigation=f'{str(feature_blocks_dir)}/blocks/{tile_id}/{end_season_year}_{ewoc_season}/features_irrigation/'
+        check_product_irr = ewoc_prd_bucket._check_product_file(bucket_prefix_irrigation)
+
+        if check_product_irr:
+            logger.info('Irrigation features exists')
+            os.makedirs(out_features_dir_irrigation, exist_ok=True)
+            ewoc_prd_bucket.download_bucket_prefix(
+                bucket_prefix_irrigation,
+                Path(out_features_dir_irrigation))
+            logger.info(f"features {bucket_prefix_irrigation} downloaded with success")
+        else:
+            logger.warning(f'Features {bucket_prefix_irrigation} does not exist, create features')
+
+    bucket_prefix=f'{production_id}/block_features/blocks/{tile_id}/{end_season_year}_{season_tag}/{tile_id}_{aez_id}_{block:03d}_features.tif'
+    out_features_dir=f'{str(feature_blocks_dir)}/blocks/{tile_id}/{end_season_year}_{season_tag}'
+
+    check_product = ewoc_prd_bucket._check_product_file(bucket_prefix)
+    if check_product:
+        logger.info(f'{season_tag} features exists')
+        os.makedirs(out_features_dir, exist_ok=True)
+        ewoc_prd_bucket.download_bucket_prefix(bucket_prefix, Path(out_features_dir))
+        logger.info(f"features {bucket_prefix} downloaded with success")
+    else:
+        logger.warning(f'Features {bucket_prefix} does not exist, create features')
+
+    return (check_product and check_product_irr)
 
 def process_blocks(
     tile_id: str,
@@ -91,6 +153,7 @@ def process_blocks(
     with open(ewoc_config_filepath, encoding="UTF-8") as json_file:
         data = load(json_file)
         blocks_feature_dir = Path(data["parameters"]["features_dir"])
+        use_exisiting_features=data["parameters"]["use_existing_features"]
 
     return_codes=[]
     for block_id in ids_range:
@@ -120,7 +183,7 @@ def process_blocks(
                     ewoc_prd_bucket.upload_ewoc_prd(
                         out_dirpath / "proclogs", production_id + "/proclogs"
                     )
-                    if any(blocks_feature_dir.iterdir()):
+                    if any(blocks_feature_dir.iterdir()) and not use_exisiting_features:
                         ewoc_prd_bucket.upload_ewoc_prd(
                             blocks_feature_dir, production_id + "/block_features"
                         )
@@ -279,6 +342,7 @@ def run_classif(
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
     no_tir:bool=False,
+    use_existing_features: bool = False
     ) -> None:
     """
     Perform EWoC classification
@@ -286,7 +350,8 @@ def run_classif(
     :type tile_id: str
     :param production_id: EWoC production id
     :type production_id: str
-    :param block_ids: List of block ids to process (blocks= equal area subdivisions of a tile)
+    :param block_ids: List of block ids to process
+    (blocks= equal area subdivisions of a tile)
     :type block_ids: List[int]
     :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1
     images to process
@@ -326,26 +391,45 @@ def run_classif(
     :type out_dirpath: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
+    :param use_existing_features: If true, is going to download existing features, otherwise
+    computes it as usual
+    :param use_existing_features: bool
     :return: None
     """
     uid = uuid4().hex[:6]
     uid = tile_id + "_" + uid
     # Create the config file
     ewoc_ard_bucket = EWOCARDBucket()
+    ewoc_prd_bucket  = EWOCPRDBucket()
 
     if out_dirpath == Path(gettempdir()):
         out_dirpath = out_dirpath / uid
         out_dirpath.mkdir()
     feature_blocks_dir = out_dirpath / "block_features"
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
+
+    aez_id=int(production_id.split('_')[-2])
+    if use_existing_features and block_ids is not None:
+        for block in block_ids:
+            check_features=download_features(
+                ewoc_prd_bucket,
+                tile_id,
+                end_season_year,
+                ewoc_season,
+                block,
+                production_id,
+                aez_id,
+                feature_blocks_dir)
+
+        use_existing_features=check_features
+
     if sar_csv is None:
         sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
     if optical_csv is None:
         optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
-            tile_id, production_id, filepath=optical_csv
-        )
+            tile_id, production_id, filepath=optical_csv)
     if tir_csv is None:
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
@@ -394,6 +478,7 @@ def run_classif(
         csv_dict,
         feature_blocks_dir= feature_blocks_dir,
         no_tir_data=no_tir,
+        use_existing_features=use_existing_features,
         add_croptype = add_croptype
     )
 

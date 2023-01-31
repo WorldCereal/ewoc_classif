@@ -79,6 +79,7 @@ def generate_config_file(
     csv_dict: Dict,
     feature_blocks_dir: Path,
     no_tir_data: bool,
+    use_existing_features: bool,
     add_croptype:bool = False
 ) -> Dict:
     """
@@ -107,6 +108,9 @@ def generate_config_file(
     :type feature_blocks_dir: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
+    :param use_existing_features: If true, is going to download existing features, otherwise
+    computes it as usual
+    :param use_existing_features: bool
     :param add_croptype: Additional croptype
     :type add_croptype: bool
     :return: Dict
@@ -132,9 +136,9 @@ def generate_config_file(
         parameters["localmodels"]=False
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
+        parameters["use_existing_features"]=use_existing_features
         models = {
-            "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/\
-            {cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
+            "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
 
         logger.info(f"[{featuresettings}] - Using model version: {cropland_model_version}")
@@ -150,6 +154,7 @@ def generate_config_file(
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
+        parameters["use_existing_features"]=use_existing_features
         if not no_tir_data:
             parameters.update(
                 {
@@ -302,8 +307,7 @@ def update_config(config_dict: Dict, ewoc_detector: str, data_folder: Path) -> D
             data_folder / old_crop_path.split("/")[-1]
         )
         logger.info(
-            f"Updated CopDEM path from {old_crop_path} to\
-            {config_dict['parameters']['cropland_mask']}"
+            f"Updated CopDEM path from {old_crop_path} to {config_dict['parameters']['cropland_mask']}"
         )
     return config_dict
 

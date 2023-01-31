@@ -167,7 +167,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_54VWM_106(self):
-        """ This test failed due to the maxgap issue on OPTICAL (61 instead 60) on this block (close to coastal area)
+        """ This test failed due to the maxgap issue on OPTICAL (61 instead 60)
+        on this block (close to coastal area)
         """
         run_classif('54VWM',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17163_20221114214029',
@@ -175,7 +176,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_43PCM_0(self):
-        """ This test failed due to the maxgap issue on OPTICAL (237 instead 60) on this block (island case)
+        """ This test failed due to the maxgap issue on OPTICAL (237 instead 60)
+        on this block (island case)
         """
         run_classif('43PCM',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_28107_20220921094801',
@@ -183,7 +185,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_38UPD_120(self):
-        """ This test failed due to the maxgap issue on OPTICAL (124 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (124 instead 60)
+        on this block (land case)
         """
         run_classif('38UPD',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22194_20220908152510',
@@ -202,7 +205,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_36UVB_43(self):
-        """  This test failed due to the maxgap issue on OPTICAL (128 instead 60) on this block (land case)
+        """  This test failed due to the maxgap issue on OPTICAL (128 instead 60)
+        on this block (land case)
 
         UKR tile in 2021
         """
@@ -212,7 +216,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_38UQB_1(self):
-        """ This test failed due to the maxgap issue on OPTICAL (68 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (68 instead 60)
+        on this block (land case)
         """
         run_classif('38UQB',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22096_20220906224410',
@@ -220,7 +225,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_run_classif_cropland_37UER_3(self):
-        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on
+        this block (land case)
 
         UKR tile in 2019
         Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,27,34,35,37,38,63,66,67,77,78,84,90,91,92,100,101,103,108
@@ -313,7 +319,6 @@ class Test_classif(unittest.TestCase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[0],
         clean=False)
 
-
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_run_classif_winter_40KEC_71(self):
         """ Nominal case with no tir detected
@@ -389,6 +394,58 @@ class Test_classif(unittest.TestCase):
         upload_block=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[2])
+
+    def test_run_classif_cropland_36TYQ_110_2021_with_features(self):
+        """ Using block features cropland case where features exists
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[110],
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)
+
+    def test_run_classif_summer1_36TYQ_110_2021_with_features(self):
+        """ Using block features summer1 when features does not exist
+        Log a warning and compute features
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[110],
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_summer1_36TYQ_14_2021_with_features(self):
+        """ Using block features summer1 when features exists
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[14],
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_run_classif_summer1_36TYQ_14_2021_with_features_and_upload_block(self):
+        """ Using block features summer1 when features exists and
+        put upload_block to True to check that features are not uploaded
+        """
+        run_classif('36TYQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_6136_20220926141543',
+        block_ids=[14],
+        end_season_year=2021,
+        upload_block=True,
+        clean=True,
+        use_existing_features=True,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
     def test_run_classif_summer1_58KHG_71(self):
         """ No cropland
