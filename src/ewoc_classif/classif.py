@@ -342,7 +342,7 @@ def run_classif(
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
     no_tir:bool=False,
-    use_existing_features: bool = False
+    use_existing_features: bool = True
     ) -> None:
     """
     Perform EWoC classification
