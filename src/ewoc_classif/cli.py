@@ -166,6 +166,10 @@ def main(args):
     setup_logging(args.loglevel)
     # This print is here on purpose!
     print("Start of processing")
+    block_ids = []
+    for block_id in args.block_ids:
+        block_ids.append(int(block_id))
+
     run_classif(
         args.tile_id,
         args.production_id,
@@ -177,7 +181,7 @@ def main(args):
         end_season_year=args.end_season_year,
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
-        block_ids=args.block_ids,
+        block_ids=block_ids,
         cropland_model_version=args.cropland_model_version,
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
