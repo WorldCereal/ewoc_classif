@@ -18,7 +18,6 @@ class Test_Classif(unittest.TestCase):
     def test_generate_config_file_cropland(self):
         """ Nominal cropland test
         """
-        EWOC_MODELS_DIR_ROOT=None
         data = pkg_resources.open_text(worldcereal.resources.exampleconfigs, 'example_bucketrun_annual_config.json')
         data_js = json.load(data)
 
@@ -31,18 +30,18 @@ class Test_Classif(unittest.TestCase):
         croptype_model_version='v720',
         irr_model_version='v420',
         csv_dict={
-		"OPTICAL": "/data/worldcereal/tmp/kristof/collections/largescaletest_OPTICAL.csv",
-		"SAR": "/data/worldcereal/tmp/kristof/collections/largescaletest_SAR.csv",
-		"TIR": "/data/worldcereal/tmp/kristof/collections/largescaletest_TIR.csv",
-		"DEM": "/data/MEP/DEM/COP-DEM_GLO-30_DTED/S2grid_20m",
-		"METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
+		"OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
+		"SAR": "/data/worldcereal/s3collections/satio_sar.csv",
+		"TIR": "/data/worldcereal/s3collections/satio_tir.csv",
+		"DEM": "s3://ewoc-aux-data/CopDEM_20m",
+		"METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv"
         },
         feature_blocks_dir="/path/for/feature/blocks",
         no_tir_data=False,
         use_existing_features=True)
-        print(f"example_bucketrun_annual_config : {data_js}")
-        print(f"configuration result : {config_file_cropland}")
-        print(f"TEST CONFIG FILE {config_file_cropland==data_js}")
+        for i in data_js.keys():
+            print(f"--- for {i} with value of {data_js[i]} \n --- we have {config_file_cropland[i]}")
+            print(f"---> {i} equals ? : {config_file_cropland[i]==data_js[i]}")
 
 
     def test_generate_config_file_summer1(self):
@@ -61,18 +60,18 @@ class Test_Classif(unittest.TestCase):
         croptype_model_version='v720',
         irr_model_version='v420',
         csv_dict={
-		"OPTICAL": "/data/worldcereal/tmp/kristof/collections/largescaletest_OPTICAL.csv",
-		"SAR": "/data/worldcereal/tmp/kristof/collections/largescaletest_SAR.csv",
-		"TIR": "/data/worldcereal/tmp/kristof/collections/largescaletest_TIR.csv",
-		"DEM": "/data/MEP/DEM/COP-DEM_GLO-30_DTED/S2grid_20m",
+		"OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
+		"SAR": "/data/worldcereal/s3collections/satio_sar.csv",
+		"TIR": "/data/worldcereal/s3collections/satio_tir.csv",
+		"DEM": "s3://ewoc-aux-data/CopDEM_20m",
 		"METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
         },
         feature_blocks_dir="/path/for/feature/blocks",
         no_tir_data=False,
         use_existing_features=True)
-        print(f"example_bucketrun_annual_config : {data_js}")
-        print(f"configuration result : {config_file_cropland}")
-        print(f"TEST CONFIG FILE {config_file_cropland==data_js}")
+        for i in data_js.keys():
+            print(f"--- for {i} with value of {data_js[i]} \n --- we have {config_file_cropland[i]}")
+            print(f"---> {i} equals ? : {config_file_cropland[i]==data_js[i]}")
 
     def test_generate_config_file_summer2(self):
         """ Nominal summer2 test
@@ -90,18 +89,18 @@ class Test_Classif(unittest.TestCase):
         croptype_model_version='v720',
         irr_model_version='v420',
         csv_dict={
-		"OPTICAL": "/data/worldcereal/tmp/kristof/collections/largescaletest_OPTICAL.csv",
-		"SAR": "/data/worldcereal/tmp/kristof/collections/largescaletest_SAR.csv",
-		"TIR": "/data/worldcereal/tmp/kristof/collections/largescaletest_TIR.csv",
-		"DEM": "/data/MEP/DEM/COP-DEM_GLO-30_DTED/S2grid_20m",
+		"OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
+		"SAR": "/data/worldcereal/s3collections/satio_sar.csv",
+		"TIR": "/data/worldcereal/s3collections/satio_tir.csv",
+		"DEM": "s3://ewoc-aux-data/CopDEM_20m",
 		"METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
         },
         feature_blocks_dir="/path/for/feature/blocks",
         no_tir_data=False,
         use_existing_features=True)
-        print(f"example_bucketrun_annual_config : {data_js}")
-        print(f"configuration result : {config_file_cropland}")
-        print(f"TEST CONFIG FILE {config_file_cropland==data_js}")
+        for i in data_js.keys():
+            print(f"--- for {i} with value of {data_js[i]} \n --- we have {config_file_cropland[i]}")
+            print(f"---> {i} equals ? : {config_file_cropland[i]==data_js[i]}")
 
     def test_generate_config_file_winter(self):
         """ Nominal winter test
@@ -119,15 +118,15 @@ class Test_Classif(unittest.TestCase):
         croptype_model_version='v720',
         irr_model_version='v420',
         csv_dict={
-		"OPTICAL": "/data/worldcereal/tmp/kristof/collections/largescaletest_OPTICAL.csv",
-		"SAR": "/data/worldcereal/tmp/kristof/collections/largescaletest_SAR.csv",
-		"TIR": "/data/worldcereal/tmp/kristof/collections/largescaletest_TIR.csv",
-		"DEM": "/data/MEP/DEM/COP-DEM_GLO-30_DTED/S2grid_20m",
+		"OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
+		"SAR": "/data/worldcereal/s3collections/satio_sar.csv",
+		"TIR": "/data/worldcereal/s3collections/satio_tir.csv",
+		"DEM": "s3://ewoc-aux-data/CopDEM_20m",
 		"METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
         },
         feature_blocks_dir="/path/for/feature/blocks",
         no_tir_data=False,
         use_existing_features=True)
-        print(f"example_bucketrun_annual_config : {data_js}")
-        print(f"configuration result : {config_file_cropland}")
-        print(f"TEST CONFIG FILE {config_file_cropland==data_js}")
+        for i in data_js.keys():
+            print(f"--- for {i} with value of {data_js[i]} \n --- we have {config_file_cropland[i]}")
+            print(f"---> {i} equals ? : {config_file_cropland[i]==data_js[i]}")
