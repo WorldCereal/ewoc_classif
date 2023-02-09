@@ -35,7 +35,7 @@ EWOC_DETECTORS = [
     EWOC_CROPLAND_DETECTOR,
     EWOC_CROPTYPE_DETECTOR,]
 
-def blocks_mosaic(
+def mosaic_blocks(
     tile_id: str,
     production_id: str,
     ewoc_config_filepath: Path,
@@ -258,7 +258,7 @@ def generate_ewoc_products(
     tile_id_msg = f"{tile_id}-{end_season_year}-{ewoc_season}"
 
     # Retrieve blocks and mosaic them with VITO code
-    proc_status, cogs_dirpath=blocks_mosaic(
+    proc_status, cogs_dirpath=mosaic_blocks(
         tile_id,
         production_id,
         ewoc_config_filepath,
