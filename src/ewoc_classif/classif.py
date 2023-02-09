@@ -12,6 +12,7 @@ from tempfile import gettempdir
 from typing import Optional, List
 from uuid import uuid4
 
+from ewoc_dag.bucket.eobucket import UploadProductError
 from ewoc_dag.ewoc_dag import get_blocks
 from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
@@ -516,6 +517,286 @@ def run_classif(
             shutil.rmtree(out_dirpath)
             remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
 
+def classify_block(
+    tile_id: str,
+    ewoc_config_filepath: Path,
+    out_dirpath: Path,
+    aez_id: int,
+    block_id: int,
+) -> int:
+    """
+    Process a single block, cropland/croptype prediction
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param ewoc_config_filepath: Path to the config file generated previously
+    :type ewoc_config_filepath: Path
+    :param block_id: Block id to process
+    :type block_id: int
+    :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
+    derived from the Sentinel-2 tile ID.
+    :type aez_id: int
+    :param out_dirpath: Output directory path
+    :type out_dirpath: Path
+    :return: int
+    """
+    # Retrieve some parameters from config file
+    with open(ewoc_config_filepath, encoding="UTF-8") as json_file:
+        data = load(json_file)
+    year = data["parameters"]["year"]
+    season = data["parameters"]["season"]
+
+    # Expected dirpath where the block files are generated
+    out_dirpath.mkdir(exist_ok=True)
+
+    block_id_msg = f'{tile_id}_{block_id}-{season}-{year}'
+
+    # Use VITO code to block classification
+    logger.info(f"Start classification of {block_id_msg}")
+    try:
+        ret = run_tile(
+            tile_id,
+            ewoc_config_filepath,
+            out_dirpath,
+            blocks=[block_id],
+            postprocess=False,
+            process=True,
+            aez_id=aez_id
+        )
+    except Exception:
+        msg = f"Classification of {block_id_msg} failed with exception: {traceback.format_exc()}"
+        logger.critical(msg)
+        # TODO: remove this message used by Alex
+        # print(f"Error: {msg}")
+        return 2
+
+    if ret == 0:
+        logger.info(f"Classification of {block_id_msg} finished with success!")
+        return ret
+
+    if ret == 1:
+        logger.warning(f"{block_id_msg} classification is skip due to return code: {ret}")
+        return ret
+
+    msg = f"{block_id_msg} classification failed with return code: {ret}"
+    logger.error(msg)
+    # TODO: remove this message used by Alex
+    # print(f"Error: {msg}")
+    return ret
+
+
+def generate_ewoc_block(
+    tile_id: str,
+    production_id: str,
+    block_id: int,
+    sar_csv: Optional[Path] = None,
+    optical_csv: Optional[Path] = None,
+    tir_csv: Optional[Path] = None,
+    agera5_csv: Optional[Path] = None,
+    data_folder: Optional[Path] = None,
+    ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
+    end_season_year: int = 2021,
+    ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
+    cropland_model_version: str = "v700",
+    croptype_model_version: str = "v720",
+    irr_model_version: str = "v420",
+    upload_block: bool = True,
+    out_dirpath: Path = Path(gettempdir()),
+    clean:bool=True,
+    use_existing_features: bool = True
+    ) -> None:
+    """
+    Perform EWoC classification
+    :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
+    :type tile_id: str
+    :param production_id: EWoC production id
+    :type production_id: str
+    :param block_ids: List of block ids to process
+    (blocks= equal area subdivisions of a tile)
+    :type block_ids: List[int]
+    :param sar_csv: Path to a csv file with all the detail about all the Sentinel-1
+    images to process
+    :type sar_csv: Path
+    :param optical_csv: Path to a csv file with all the detail about all the Sentinel-2/
+    Landsat 8 images to process
+    :type optical_csv: Path
+    :param tir_csv: Path to a csv file with all the detail about all
+    the Landsat 8 TIR images to process
+    :type tir_csv: Path
+    :param agera5_csv: Path to a csv file with all the detail about all the AgERA5
+    images to process
+    :type agera5_csv: Path
+    :param data_folder: Folder with CopDEM and/or cropland data
+    :type data_folder: Path
+    :param ewoc_detector: Type of detector to use, possible choices are cropland or croptype
+    :type ewoc_detector: str
+    :param end_season_year: End of season year
+    :type end_season_year: int
+    :param ewoc_season: Which season are we processing, possible options:
+    annual, summer1, summer2 and winter
+    :type ewoc_season: str
+    :param cropland_model_version: The version of the AI model used for the cropland prediction
+    :type cropland_model_version: str
+    :param croptype_model_version: The version of the AI model used for the croptype prediction
+    :type croptype_model_version: str
+    :param irr_model_version: The version of the AI model used for croptype irrigation
+    :type irr_model_version: str
+    :param upload_block: True if you want to upload each block and skip the mosaic.
+    If False, multiple blocks can be
+     processed and merged into a mosaic within the same process (or command)
+    :type upload_block: bool
+    :param postprocess: If True only the postprocessing (aka mosaic) will be performed,
+    default to False
+    :type postprocess: bool
+    :param out_dirpath: Output directory path
+    :type out_dirpath: Path
+    :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
+    :type no_tir: bool
+    :param use_existing_features: If true, is going to download existing features, otherwise
+    computes it as usual
+    :param use_existing_features: bool
+    :return: None
+    """
+    uid = uuid4().hex[:6]
+    tile_uid = tile_id + "_" + uid
+    tile_id_msg = f"{tile_id}_{block_id}-{end_season_year}-{ewoc_season}"
+
+    if out_dirpath == Path(gettempdir()):
+        out_dirpath = out_dirpath / f'{tile_id_msg}_{uid}'
+        out_dirpath.mkdir()
+    feature_blocks_dir = out_dirpath / "block_features"
+    feature_blocks_dir.mkdir(parents=True,exist_ok=True)
+
+    aez_id=int(production_id.split('_')[-2])
+
+    ewoc_prd_bucket  = EWOCPRDBucket()
+    if use_existing_features:
+        use_existing_features=download_features(
+            ewoc_prd_bucket,
+            tile_id,
+            end_season_year,
+            ewoc_season,
+            block_id,
+            production_id,
+            aez_id,
+            feature_blocks_dir)
+
+    ewoc_ard_bucket = EWOCARDBucket()
+    if sar_csv is None:
+        sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
+        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
+    if optical_csv is None:
+        optical_csv = out_dirpath / f"{tile_uid}_satio_optical.csv"
+        ewoc_ard_bucket.optical_to_satio_csv(
+            tile_id, production_id, filepath=optical_csv)
+    no_tir=False
+    if tir_csv is None:
+        tir_csv = out_dirpath / f"{tile_uid}_satio_tir.csv"
+        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
+    else:
+        with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
+            tir_dict = list(csv.DictReader(tir_file))
+            if len(tir_dict) <= 1:
+                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
+                no_tir=True
+
+    if agera5_csv is None:
+        agera5_csv = out_dirpath / f"{tile_uid}_satio_agera5.csv"
+        ewoc_aux_data_bucket = EWOCAuxDataBucket()
+        ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
+
+    add_croptype = False
+    if end_season_year == 2022:
+        logger.info('Add additional croptype')
+        add_croptype = True
+
+    if not no_tir:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "SAR": str(sar_csv),
+            "TIR": str(tir_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
+    else:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "SAR": str(sar_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
+
+
+    # Create the config file
+    ewoc_config = generate_config_file(
+        ewoc_detector,
+        end_season_year,
+        ewoc_season,
+        production_id,
+        cropland_model_version,
+        croptype_model_version,
+        irr_model_version,
+        csv_dict,
+        feature_blocks_dir= feature_blocks_dir,
+        no_tir_data=no_tir,
+        use_existing_features=use_existing_features,
+        add_croptype = add_croptype
+    )
+
+    ewoc_config_filepath = out_dirpath / f"{tile_uid}_ewoc_config.json"
+    if data_folder is not None:
+        ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
+    with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
+        dump(ewoc_config, ewoc_config_fp, indent=2)
+
+    # Perform block classification with VITO code
+    ret = classify_block(
+        tile_id,
+        ewoc_config_filepath,
+        out_dirpath,
+        aez_id,
+        block_id,
+    )
+    if ret > 1:
+        raise RuntimeError(f"Processing of {tile_id_msg} failed with error or exception!")
+
+    if ret == 1:
+        # Block skip no need to upload
+        # TODO: remove this message used by Alex
+        print(f"Uploaded {0} files to bucket | placeholder")
+    else:
+        if upload_block:
+            root_s3 = f"s3://ewoc-prd/{production_id}"
+            try:
+                nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "blocks", production_id + "/blocks"
+                )
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "exitlogs", production_id + "/exitlogs"
+                )
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "proclogs", production_id + "/proclogs"
+                )
+                if any(feature_blocks_dir.iterdir()) and not use_existing_features:
+                    ewoc_prd_bucket.upload_ewoc_prd(
+                        feature_blocks_dir, production_id + "/block_features"
+                    )
+            except UploadProductError as exc:
+                msg= f'Upload from {out_dirpath} to {root_s3} failed for {tile_id_msg}!'
+                logger.error(msg)
+                # TODO: remove this message used by Alex
+                #print(f"Error: {msg}")
+                raise RuntimeError(msg) from exc
+
+            logger.info(f"Uploaded {out_dirpath} to {up_dir} ")
+            # TODO: remove this message used by Alex
+            print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+        else:
+            logger.info('No block uploaded as requested.')
+
+    if clean:
+        logger.info(f"Cleaning the output folder {out_dirpath}")
+        shutil.rmtree(out_dirpath)
+        remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
 
 if __name__ == "__main__":
     pass
