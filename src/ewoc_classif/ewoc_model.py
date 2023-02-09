@@ -87,7 +87,7 @@ def parse_args(args):
 
 def download_file(dwnl_url: str, out_dirpath:Path )->Path:
     out_filename = dwnl_url.split("/")[-1]
-    response = requests.get(dwnl_url)
+    response = requests.get(dwnl_url, timeout=5)
     # pylint: disable=no-member
     if response.status_code != requests.codes.ok:
         _logger.error(
@@ -110,7 +110,7 @@ def get_links(url: str)->List:
     :param url: web page url
     :return: a list of urls from the web page
     """
-    res = requests.get(url)
+    res = requests.get(url, timeout=5)
     links = []
     try:
         body_text = res.text
