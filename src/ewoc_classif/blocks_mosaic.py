@@ -41,7 +41,7 @@ def blocks_mosaic(
     ewoc_config_filepath: Path,
     out_dirpath: Path,
     aez_id: int
-) -> Tuple[bool, Optional[Path]]:
+) -> Tuple[bool, Path]:
     """
     Postprocessing (mosaic)
     :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
@@ -63,6 +63,9 @@ def blocks_mosaic(
     year = data["parameters"]["year"]
     season = data["parameters"]["season"]
 
+    # Expected dirpath where the cogs files are generated
+    cogs_dirpath= out_dirpath / "cogs"
+
     # Retrieve blocks data from EWoC products bucket
     logger.debug(f"Getting blocks from EWoC products bucket on {os.getenv('EWOC_CLOUD_PROVIDER')}")
     try:
@@ -72,7 +75,7 @@ def blocks_mosaic(
         logger.critical(msg)
         # TODO: remove this message used by Alex
         print(msg)
-        return False, None
+        return False, cogs_dirpath
 
     # Setup symlink for gdal translate
     if not os.path.islink("/opt/ewoc_classif_venv/bin/gdal_translate"):
@@ -98,10 +101,9 @@ def blocks_mosaic(
         logger.critical(msg)
         # TODO: remove this message used by Alex
         print(msg)
-        return False, None
+        return False, cogs_dirpath
 
     if ret == 0:
-        cogs_dirpath= out_dirpath / "cogs"
         if not is_empty_dirs(cogs_dirpath / f"{tile_id}/{year}_{season}"):
             logger.info(f"Mosaicing of {tile_id} ({year}, {season}) finished with success!")
             return True, cogs_dirpath
@@ -110,13 +112,13 @@ def blocks_mosaic(
         logger.error(msg)
         # TODO: remove this message used by Alex
         print(msg)
-        return False, None
+        return False, cogs_dirpath
 
     msg=f"Mosaicing of {tile_id} ({year}, {season}) failed with return code: {ret} !"
     logger.error(msg)
     # TODO: remove this message used by Alex
     print(msg)
-    return False, None
+    return False, cogs_dirpath
 
 def run_block_mosaic(
     tile_id: str,
