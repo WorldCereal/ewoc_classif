@@ -10,7 +10,7 @@ from tempfile import gettempdir
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
-from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, run_block_classif
+from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, generate_ewoc_block
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -34,11 +34,11 @@ def parse_args(args):
     parser.add_argument(
         "--version",
         action="version",
-        version=f"ewoc_classif {__version__}",
+        version=f"ewoc_generate_block {__version__}",
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
+    parser.add_argument(dest="block_id", help="Block id to process", type=int)
     parser.add_argument(dest="production_id", help="EWoC production id", type=str)
-    parser.add_argument("--block-id", dest="block_id", help="Block id to process", type=int)
     parser.add_argument(
         "--optical-csv",
         dest="optical_csv",
@@ -115,17 +115,12 @@ def parse_args(args):
     )
     parser.add_argument("--no-upload",
         action='store_false',
-        help= 'Skip the upload of files to s3 bucket')
+        help= 'Skip the upload of block files to s3 bucket')
+
     parser.add_argument("--no-clean",
         action='store_false',
         help= 'Avoid to clean all dirs and files')
-    parser.add_argument(
-        "--postprocess",
-        dest="postprocess",
-        help="True if you want to do mosaic only",
-        type=bool,
-        default=False,
-    )
+
     parser.add_argument(
         "-o",
         "--out-dirpath",
@@ -162,7 +157,7 @@ def main(args):
     # This print is here on purpose!
     print("Start of processing")
 
-    run_block_classif(
+    generate_ewoc_block(
         args.tile_id,
         args.production_id,
         args.block_id,
@@ -178,7 +173,6 @@ def main(args):
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
         upload_block=args.no_upload,
-        postprocess=args.postprocess,
         out_dirpath=args.out_dirpath,
     )
 

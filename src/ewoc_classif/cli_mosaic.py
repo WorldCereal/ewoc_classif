@@ -35,7 +35,7 @@ def parse_args(args):
     parser.add_argument(
         "--version",
         action="version",
-        version=f"ewoc_mosaic_blocks {__version__}",
+        version=f"ewoc_generate_prd {__version__}",
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
     parser.add_argument(dest="production_id", help="EWoC production id", type=str)
@@ -123,7 +123,7 @@ def parse_args(args):
 
     parser.add_argument("--no-upload",
         action='store_false',
-        help= 'Avoid to upload product to bucket')
+        help= 'Skip the upload product files to s3 bucket')
 
     parser.add_argument("--notify-vdm",
         action='store_true',

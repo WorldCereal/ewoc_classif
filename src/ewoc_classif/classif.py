@@ -12,6 +12,7 @@ from tempfile import gettempdir
 from typing import Optional, List
 from uuid import uuid4
 
+from ewoc_dag.bucket.eobucket import UploadProductError
 from ewoc_dag.ewoc_dag import get_blocks
 from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
@@ -516,15 +517,12 @@ def run_classif(
             shutil.rmtree(out_dirpath)
             remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
 
-def process_block(
+def classify_block(
     tile_id: str,
     ewoc_config_filepath: Path,
-    production_id: str,
     out_dirpath: Path,
     aez_id: int,
     block_id: int,
-    upload_block: bool=True,
-    clean:bool=True
 ) -> bool:
     """
     Process a single block, cropland/croptype prediction
@@ -534,12 +532,6 @@ def process_block(
     :type ewoc_config_filepath: Path
     :param block_id: Block id to process
     :type block_id: int
-    :param production_id: EWoC production id
-    :type production_id: str
-    :param upload_block: True if you want to upload each block and skip the mosaic.
-     If False, multiple blocks can be
-     processed and merged into a mosaic within the same process (or command)
-    :type upload_block: bool
     :param aez_id : If provided, the AEZ ID will be enforced instead of automatically
     derived from the Sentinel-2 tile ID.
     :type aez_id: int
@@ -547,17 +539,20 @@ def process_block(
     :type out_dirpath: Path
     :return: None
     """
-    logger.info("Running EWoC inference")
-
+    # Retrieve some parameters from config file
     with open(ewoc_config_filepath, encoding="UTF-8") as json_file:
         data = load(json_file)
-        blocks_feature_dir = Path(data["parameters"]["features_dir"])
-        use_exisiting_features=data["parameters"]["use_existing_features"]
+    year = data["parameters"]["year"]
+    season = data["parameters"]["season"]
 
-    proc_status = True
+    # Expected dirpath where the block files are generated
+    out_dirpath.mkdir(exist_ok=True)
+
+    block_id_msg = f'{tile_id}_{block_id}-{season}-{year}'
+
+    # Use VITO code to block classification
+    logger.info(f"Start classification of {block_id_msg}")
     try:
-        logger.info(f"[Start processing of {tile_id}_{block_id}] ")
-        out_dirpath.mkdir(exist_ok=True)
         ret = run_tile(
             tile_id,
             ewoc_config_filepath,
@@ -567,50 +562,31 @@ def process_block(
             process=True,
             aez_id=aez_id
         )
-        if ret == 0:
-            logger.info(f"{tile_id}_{block_id} finished with success!")
-            if upload_block:
-                ewoc_prd_bucket = EWOCPRDBucket()
-                nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
-                    out_dirpath / "blocks", production_id + "/blocks"
-                )
-                ewoc_prd_bucket.upload_ewoc_prd(
-                    out_dirpath / "exitlogs", production_id + "/exitlogs"
-                )
-                ewoc_prd_bucket.upload_ewoc_prd(
-                    out_dirpath / "proclogs", production_id + "/proclogs"
-                )
-                if any(blocks_feature_dir.iterdir()) and not use_exisiting_features:
-                    ewoc_prd_bucket.upload_ewoc_prd(
-                        blocks_feature_dir, production_id + "/block_features"
-                    )
-                # TODO: remove this message used by Alex
-                print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
-            else:
-                logger.info('No block uploaded as requested.')
-        elif ret == 1:
-            logger.warning(f"{tile_id}_{block_id} is skip due to return code: {ret}")
-            # TODO: remove this message used by Alex
-            print(f"Uploaded {0} files to bucket | placeholder")
-        else:
-            msg = f"{tile_id}_{block_id} failed with return code: {ret}"
-            logger.error(msg)
-            # TODO: remove this message used by Alex
-            print(msg)
-            proc_status = False
     except Exception:
-        msg = f"Block {tile_id}_{block_id} failed with exception: {traceback.format_exc()}"
+        msg = f"Classification of {block_id_msg} failed with exception: {traceback.format_exc()}"
         logger.critical(msg)
         # TODO: remove this message used by Alex
         print(msg)
-        proc_status = False
-    finally:
-        if clean:
-            shutil.rmtree(out_dirpath / "blocks", ignore_errors=True)
+        return False
 
-    return proc_status
+    if ret == 0:
+        logger.info(f"Classification of {block_id_msg} finished with success!")
+        return True
 
-def run_block_classif(
+    if ret == 1:
+        logger.warning(f"{block_id_msg} classification is skip due to return code: {ret}")
+        # TODO: remove this message used by Alex
+        print(f"Uploaded {0} files to bucket | placeholder")
+        return True
+
+    msg = f"{block_id_msg} classification failed with return code: {ret}"
+    logger.error(msg)
+    # TODO: remove this message used by Alex
+    print(msg)
+    return False
+
+
+def generate_ewoc_block(
     tile_id: str,
     production_id: str,
     block_id: int,
@@ -626,10 +602,8 @@ def run_block_classif(
     croptype_model_version: str = "v720",
     irr_model_version: str = "v420",
     upload_block: bool = True,
-    postprocess: bool = False,
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
-    no_tir:bool=False,
     use_existing_features: bool = True
     ) -> None:
     """
@@ -715,6 +689,7 @@ def run_block_classif(
         optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
             tile_id, production_id, filepath=optical_csv)
+    no_tir=False
     if tir_csv is None:
         tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
@@ -772,34 +747,54 @@ def run_block_classif(
         ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
-    # Process tile (and optionally select blocks)
-    try:
-        aez_id=int(production_id.split('_')[-2])
-        if not postprocess:
-            process_status = process_block(
-                tile_id,
-                ewoc_config_filepath,
-                production_id,
-                out_dirpath,
-                aez_id,
-                block_id,
-                upload_block=upload_block,
-                clean=clean,
+
+    tile_id_msg = f"{tile_id}_{block_id}-{end_season_year}-{ewoc_season}"
+
+    # Perform block classification with VITO code
+    process_status = classify_block(
+        tile_id,
+        ewoc_config_filepath,
+        out_dirpath,
+        aez_id,
+        block_id,
+    )
+    if not process_status:
+        raise RuntimeError(f"Processing of {tile_id_msg} failed with error or exception!")
+
+    if upload_block:
+        root_s3 = f"s3://ewoc-prd/{production_id}"
+        try:
+            ewoc_prd_bucket = EWOCPRDBucket()
+            nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
+                out_dirpath / "blocks", production_id + "/blocks"
             )
-            if not process_status:
-                raise RuntimeError(f"Processing of {tile_id}_{block_id} failed with error or exception!")
-        else:
-            postprocess_mosaic(
-                tile_id, production_id, ewoc_config_filepath, out_dirpath, aez_id=aez_id
+            ewoc_prd_bucket.upload_ewoc_prd(
+                out_dirpath / "exitlogs", production_id + "/exitlogs"
             )
-    except Exception:
-        logger.error("Processing failed")
-        logger.error(traceback.format_exc())
-    finally:
-        if clean:
-            logger.info(f"Cleaning the output folder {out_dirpath}")
-            shutil.rmtree(out_dirpath)
-            remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
+            ewoc_prd_bucket.upload_ewoc_prd(
+                out_dirpath / "proclogs", production_id + "/proclogs"
+            )
+            if any(feature_blocks_dir.iterdir()) and not use_existing_features:
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    feature_blocks_dir, production_id + "/block_features"
+                )
+        except UploadProductError as exc:
+            msg= f'Upload from {out_dirpath} to {root_s3} failed for {tile_id_msg}!'
+            logger.error(msg)
+            # TODO: remove this message used by Alex
+            print(msg)
+            raise RuntimeError(msg) from exc
+
+        logger.info(f"Uploaded {out_dirpath} to {up_dir} ")
+        # TODO: remove this message used by Alex
+        print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+    else:
+        logger.info('No block uploaded as requested.')
+
+    if clean:
+        logger.info(f"Cleaning the output folder {out_dirpath}")
+        shutil.rmtree(out_dirpath)
+        remove_tmp_files(Path.cwd(), f"{tile_id}.tif")
 
 if __name__ == "__main__":
     pass
