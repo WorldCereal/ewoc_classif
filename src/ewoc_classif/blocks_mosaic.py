@@ -12,8 +12,8 @@ from tempfile import gettempdir
 from typing import Optional, Tuple
 from uuid import uuid4
 
-from ewoc_dag.ewoc_dag import get_blocks
 from ewoc_dag.bucket.eobucket import UploadProductError
+from ewoc_dag.ewoc_dag import get_blocks
 from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
@@ -87,8 +87,8 @@ def blocks_mosaic(
         )
 
     # Use VITO code to perform mosaic
+    logger.info(f"Start mosaicing of {tile_id}")
     try:
-        logger.info(f"Start mosaicing of {tile_id}")
         ret =run_tile(
             tile_id,
             ewoc_config_filepath,
@@ -255,7 +255,8 @@ def generate_ewoc_products(
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
 
-    tile_id_season_year_id = f"{tile_id}-{end_season_year}-{ewoc_season}"
+    tile_id_msg = f"{tile_id}-{end_season_year}-{ewoc_season}"
+
     # Retrieve blocks and mosaic them with VITO code
     proc_status, cogs_dirpath=blocks_mosaic(
         tile_id,
@@ -265,14 +266,14 @@ def generate_ewoc_products(
         aez_id=aez_id
     )
     if not proc_status:
-        raise RuntimeError(f"Blocks mosaicing of {tile_id_season_year_id} failed!")
+        raise RuntimeError(f"Blocks mosaicing of {tile_id_msg} failed!")
 
     # Update metadata,
     logger.debug("Update metadata files")
     root_s3 = f"s3://ewoc-prd/{production_id}"
     stac_paths = update_metajsons(root_s3, cogs_dirpath)
     if not stac_paths:
-        msg = f"Product STAC metadata updating failed for {tile_id_season_year_id}!"
+        msg = f"Product STAC metadata updating failed for {tile_id_msg}!"
         logger.error(msg)
         # TODO: remove this message used by Alex
         print(msg)
@@ -280,13 +281,13 @@ def generate_ewoc_products(
 
     # Upload data to EWoC product bucket
     if upload_prd:
-        logger.debug(f"Try to upload files for {tile_id_season_year_id} to {root_s3}")
+        logger.debug(f"Try to upload files for {tile_id_msg} to {root_s3}")
         try:
             nb_prd, __unused, up_dir = EWOCPRDBucket().upload_ewoc_prd(
                 cogs_dirpath,
                 production_id)
         except UploadProductError as exc:
-            msg= f'Upload from {cogs_dirpath} to {root_s3} failed for {tile_id_season_year_id}!'
+            msg= f'Upload from {cogs_dirpath} to {root_s3} failed for {tile_id_msg}!'
             logger.error(msg)
             # TODO: remove this message used by Alex
             print(msg)
@@ -303,7 +304,7 @@ def generate_ewoc_products(
         logger.debug("Try to notify the VDM of new products to ingest")
         for stac_filepath in stac_paths:
             if not ingest_into_vdm(stac_filepath):
-                logger.error(f'VDM notification failed for {tile_id_season_year_id}')
+                logger.error(f'VDM notification failed for {tile_id_msg}')
                 # No error send to Alex
     else:
         logger.info('Notification to VDM skip as requested!')
