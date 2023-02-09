@@ -65,7 +65,7 @@ def remove_tmp_files(folder: Path, suffix: str) -> None:
             elif elem.is_file():
                 elem.unlink()
                 logger.info(f"Deleted tmp file: {elem}")
-    except:
+    except Exception:
         logger.warning("Could not delete all tmp files")
 
 def generate_config_file(
@@ -365,64 +365,4 @@ def ingest_into_vdm(stac_path) -> bool:
 
 
 if __name__ == "__main__":
-    from pathlib import Path
-
-    from pprint import pprint
-
-    test_dict = {
-        "parameters": {
-            "year": 2019,
-            "season": "annual",
-            "featuresettings": "cropland",
-            "save_confidence": True,
-            "save_features": False,
-            "localmodels": True,
-            "segment": False,
-            "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
-        },
-        "inputs": {
-            "OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
-            "SAR": "/data/worldcereal/s3collections/satio_sar.csv",
-            "TIR": "/data/worldcereal/s3collections/satio_tir.csv",
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
-        },
-        "models": {
-            "annualcropland": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v502/cropland_detector_WorldCerealPixelCatBoost_v502/config.json"
-        },
-    }
-    test_dict_croptype = {
-        "parameters": {
-            "year": 2019,
-            "season": "summer1",
-            "featuresettings": "croptype",
-            "save_confidence": True,
-            "save_features": False,
-            "localmodels": True,
-            "segment": False,
-            "filtersettings": {"kernelsize": 7, "conf_threshold": 0.75},
-            "active_marker": True,
-            "cropland_mask": "s3://world-cereal/EWOC_OUT",
-            "irrigation": True,
-            "irrparameters": "irrigation",
-            "irrmodels": {
-                "irrigation": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v420/irrigation_detector_WorldCerealPixelCatBoost_v420/config.json"
-            },
-        },
-        "inputs": {
-            "OPTICAL": "/data/worldcereal/s3collections/satio_optical.csv",
-            "SAR": "/data/worldcereal/s3collections/satio_sar.csv",
-            "TIR": "/data/worldcereal/s3collections/satio_tir.csv",
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": "/data/worldcereal/s3collections/satio_agera5_yearly.csv",
-        },
-        "models": {
-            "maize": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v502/maize_detector_WorldCerealPixelCatBoost_v502/config.json",
-            "springcereals": "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost/v502/springcereals_detector_WorldCerealPixelCatBoost_v502/config.json",
-        },
-    }
-    update_config(test_dict, "cropland", Path("/tmp/data_folder/"))
-    config_dict = update_config(
-        test_dict_croptype, "croptype", Path("/tmp/data_folder/")
-    )
-    pprint(config_dict, indent=4)
+    pass
