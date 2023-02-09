@@ -210,27 +210,25 @@ def main(args):
 
     base_url= "https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost"
 
-    crop_url = f"{base_url}/{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_models_version}-realms/"
-    crop_optical_url = f"{base_url}/{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_models_version}-realms-OPTICAL/"
-    maize_url = f"{base_url}/{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
-    maize_optical_url = f"{base_url}/{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
-    rapeseed_url =f"{base_url}/{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
-    rapeseed_optical_url =f"{base_url}/{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
-    springcereals_url =f"{base_url}/{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
-    springcereals_optical_url =f"{base_url}/{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
-    sunflower_url =f"{base_url}/{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
-    sunflower_optical_url =f"{base_url}/{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
-    wintercereals_url = f"{base_url}/{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
-    wintercereals_optical_url = f"{base_url}/{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
-    irr_url = f"{base_url}/{irr_models_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_models_version}/"
+    detector_name = 'detector_WorldCerealPixelCatBoost'
+    croptypes = ['maize', 'springcereals', 'wintercereals' ]
+    if croptype_models_version == 'v720':
+        croptypes += ['sunflower', 'rapeseed']
 
-    urls = [maize_url, maize_optical_url,
-            crop_url, crop_optical_url,
-            rapeseed_url, rapeseed_optical_url,
-            springcereals_url, springcereals_optical_url,
-            sunflower_url, sunflower_optical_url,
-            wintercereals_url, wintercereals_optical_url,
-            irr_url]
+    croptype_urls = []
+    for croptype in croptypes:
+        url = f"{base_url}/{croptype_models_version}/{croptype}_{detector_name}_{croptype_models_version}/"
+        url_optical_only = f"{base_url}/{croptype_models_version}/{croptype}_{detector_name}_{croptype_models_version}-OPTICAL/"
+        croptype_urls.append(url)
+        croptype_urls.append(url_optical_only)
+
+    crop_url = f"{base_url}/{cropland_models_version}/cropland_{detector_name}_{cropland_models_version}-realms/"
+    crop_optical_url = f"{base_url}/{cropland_models_version}/cropland_{detector_name}_{cropland_models_version}-realms-OPTICAL/"
+    irr_url = f"{base_url}/{irr_models_version}/irrigation_{detector_name}_{irr_models_version}/"
+
+    urls = [crop_url, crop_optical_url,irr_url]
+    urls += croptype_urls
+
     for i,url in enumerate(urls):
         _logger.info(f"[{i+1}/{len(urls)}] Downloading models from {url}")
         down_models(url, ewoc_model_dirpath)
