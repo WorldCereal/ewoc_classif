@@ -35,7 +35,7 @@ def parse_args(args):
     parser.add_argument(
         "--version",
         action="version",
-        version=f"ewoc_classif {__version__}",
+        version=f"ewoc_blocks_mosaic {__version__}",
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
     parser.add_argument(dest="production_id", help="EWoC production id", type=str)
@@ -61,7 +61,11 @@ def parse_args(args):
         type=Path,
     )
     parser.add_argument(
-        "--agera5-csv", dest="agera5_csv", help="Agera5 list", default=None, type=Path
+        "--agera5-csv",
+        dest="agera5_csv",
+        help="Agera5 list",
+        default=None,
+        type=Path
     )
     parser.add_argument(
         "--data-folder",
@@ -145,12 +149,12 @@ def parse_args(args):
 
 def main(args):
     """
-    Run EWoC Classification
+    Run EWoC blocks mosaicing
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
     # This print is here on purpose!
-    print("Start of processing")
+    print("Start of blocks mosaicing")
 
     run_block_mosaic(
         args.tile_id,
