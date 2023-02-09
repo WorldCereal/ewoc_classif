@@ -120,11 +120,12 @@ def generate_config_file(
         "season": ewoc_season,
         "featuresettings": featuresettings,
         "save_confidence": True,
-        "save_features": False,
-        "localmodels": True,
+        "save_features": True,
         "segment": False,
-        "filtersettings": {"kernelsize": 3, "conf_threshold": 0.85},
+        'features_dir': str(feature_blocks_dir),
+        'use_existing_features': use_existing_features,
     }
+
     # Support the switch between local models and use of artifactory
     ewoc_model_prefix = os.getenv("EWOC_MODELS_DIR_ROOT",
         "https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal")
@@ -132,10 +133,10 @@ def generate_config_file(
 
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
+        parameters["save_meta"]= True
         parameters["localmodels"]=False
-        parameters["save_features"]= True
-        parameters["features_dir"]=str(feature_blocks_dir)
-        parameters["use_existing_features"]=use_existing_features
+        parameters["filtersettings"]= {"kernelsize": 3, "conf_threshold": 0.85}
+
         models = {
             "annualcropland": f"{ewoc_model_prefix}/models/WorldCerealPixelCatBoost/{cropland_model_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_model_version}-realms"
         }
@@ -150,16 +151,15 @@ def generate_config_file(
             cropland_mask_bucket = f"s3://ewoc-prd/{production_id}"
 
         logger.info("Updating config file for croptype")
-        parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
+        parameters['localmodels']=True
         parameters["decision_threshold"] = 0.5
-        parameters["save_features"]= True
-        parameters["features_dir"]=str(feature_blocks_dir)
-        parameters["use_existing_features"]=use_existing_features
+        parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
+        parameters['active_marker']=True
+        parameters['cropland_mask']=cropland_mask_bucket
+
         if not no_tir_data:
             parameters.update(
                 {
-                    "active_marker": True,
-                    "cropland_mask": cropland_mask_bucket,
                     "irrigation": True,
                     "irrparameters": "irrigation",
                     "irrmodels": {
@@ -173,8 +173,6 @@ def generate_config_file(
         else:
             parameters.update(
                 {
-                    "active_marker": True,
-                    "cropland_mask": cropland_mask_bucket,
                     "irrigation" : False
                 }
             )
