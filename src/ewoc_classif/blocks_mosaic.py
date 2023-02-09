@@ -120,7 +120,7 @@ def blocks_mosaic(
     print(msg)
     return False, cogs_dirpath
 
-def run_block_mosaic(
+def generate_ewoc_products(
     tile_id: str,
     production_id: str,
     sar_csv: Optional[Path] = None,

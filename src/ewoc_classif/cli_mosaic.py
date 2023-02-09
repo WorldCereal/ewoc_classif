@@ -11,7 +11,7 @@ from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
 from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS
-from ewoc_classif.blocks_mosaic import run_block_mosaic
+from ewoc_classif.blocks_mosaic import generate_ewoc_products
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -120,6 +120,15 @@ def parse_args(args):
     parser.add_argument("--no-clean",
         action='store_false',
         help= 'Avoid to clean all dirs and files')
+
+    parser.add_argument("--no-upload",
+        action='store_false',
+        help= 'Avoid to upload product to bucket')
+
+    parser.add_argument("--notify-vdm",
+        action='store_true',
+        help= 'Notify VDM that product is available in the bucket')
+
     parser.add_argument(
         "-o",
         "--out-dirpath",
@@ -149,14 +158,14 @@ def parse_args(args):
 
 def main(args):
     """
-    Run EWoC blocks mosaicing
+    Run EWoC products generation
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
     # This print is here on purpose!
-    print("Start of blocks mosaicing")
+    print("Start EWoC products generation")
 
-    run_block_mosaic(
+    generate_ewoc_products(
         args.tile_id,
         args.production_id,
         sar_csv=args.sar_csv,
@@ -171,6 +180,9 @@ def main(args):
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
         out_dirpath=args.out_dirpath,
+        clean=args.no_clean,
+        upload_prd=args.no_upload,
+        notify_vdm=args.notify_vdm
     )
 
 
