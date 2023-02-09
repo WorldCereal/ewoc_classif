@@ -523,7 +523,7 @@ def classify_block(
     out_dirpath: Path,
     aez_id: int,
     block_id: int,
-) -> bool:
+) -> int:
     """
     Process a single block, cropland/croptype prediction
     :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
@@ -537,7 +537,7 @@ def classify_block(
     :type aez_id: int
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
-    :return: None
+    :return: int
     """
     # Retrieve some parameters from config file
     with open(ewoc_config_filepath, encoding="UTF-8") as json_file:
@@ -566,24 +566,22 @@ def classify_block(
         msg = f"Classification of {block_id_msg} failed with exception: {traceback.format_exc()}"
         logger.critical(msg)
         # TODO: remove this message used by Alex
-        print(msg)
-        return False
+        # print(f"Error: {msg}")
+        return 2
 
     if ret == 0:
         logger.info(f"Classification of {block_id_msg} finished with success!")
-        return True
+        return ret
 
     if ret == 1:
         logger.warning(f"{block_id_msg} classification is skip due to return code: {ret}")
-        # TODO: remove this message used by Alex
-        print(f"Uploaded {0} files to bucket | placeholder")
-        return True
+        return ret
 
     msg = f"{block_id_msg} classification failed with return code: {ret}"
     logger.error(msg)
     # TODO: remove this message used by Alex
-    print(msg)
-    return False
+    # print(f"Error: {msg}")
+    return ret
 
 
 def generate_ewoc_block(
@@ -751,44 +749,49 @@ def generate_ewoc_block(
         dump(ewoc_config, ewoc_config_fp, indent=2)
 
     # Perform block classification with VITO code
-    process_status = classify_block(
+    ret = classify_block(
         tile_id,
         ewoc_config_filepath,
         out_dirpath,
         aez_id,
         block_id,
     )
-    if not process_status:
+    if ret > 1:
         raise RuntimeError(f"Processing of {tile_id_msg} failed with error or exception!")
 
-    if upload_block:
-        root_s3 = f"s3://ewoc-prd/{production_id}"
-        try:
-            nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
-                out_dirpath / "blocks", production_id + "/blocks"
-            )
-            ewoc_prd_bucket.upload_ewoc_prd(
-                out_dirpath / "exitlogs", production_id + "/exitlogs"
-            )
-            ewoc_prd_bucket.upload_ewoc_prd(
-                out_dirpath / "proclogs", production_id + "/proclogs"
-            )
-            if any(feature_blocks_dir.iterdir()) and not use_existing_features:
-                ewoc_prd_bucket.upload_ewoc_prd(
-                    feature_blocks_dir, production_id + "/block_features"
-                )
-        except UploadProductError as exc:
-            msg= f'Upload from {out_dirpath} to {root_s3} failed for {tile_id_msg}!'
-            logger.error(msg)
-            # TODO: remove this message used by Alex
-            print(msg)
-            raise RuntimeError(msg) from exc
-
-        logger.info(f"Uploaded {out_dirpath} to {up_dir} ")
+    if ret == 1:
+        # Block skip no need to upload
         # TODO: remove this message used by Alex
-        print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+        print(f"Uploaded {0} files to bucket | placeholder")
     else:
-        logger.info('No block uploaded as requested.')
+        if upload_block:
+            root_s3 = f"s3://ewoc-prd/{production_id}"
+            try:
+                nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "blocks", production_id + "/blocks"
+                )
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "exitlogs", production_id + "/exitlogs"
+                )
+                ewoc_prd_bucket.upload_ewoc_prd(
+                    out_dirpath / "proclogs", production_id + "/proclogs"
+                )
+                if any(feature_blocks_dir.iterdir()) and not use_existing_features:
+                    ewoc_prd_bucket.upload_ewoc_prd(
+                        feature_blocks_dir, production_id + "/block_features"
+                    )
+            except UploadProductError as exc:
+                msg= f'Upload from {out_dirpath} to {root_s3} failed for {tile_id_msg}!'
+                logger.error(msg)
+                # TODO: remove this message used by Alex
+                #print(f"Error: {msg}")
+                raise RuntimeError(msg) from exc
+
+            logger.info(f"Uploaded {out_dirpath} to {up_dir} ")
+            # TODO: remove this message used by Alex
+            print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+        else:
+            logger.info('No block uploaded as requested.')
 
     if clean:
         logger.info(f"Cleaning the output folder {out_dirpath}")
