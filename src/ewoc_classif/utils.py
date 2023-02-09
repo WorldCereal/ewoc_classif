@@ -151,7 +151,7 @@ def generate_config_file(
 
         logger.info("Updating config file for croptype")
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
-        parameters["decision_threshold"] = 0.7
+        parameters["decision_threshold"] = 0.5
         parameters["save_features"]= True
         parameters["features_dir"]=str(feature_blocks_dir)
         parameters["use_existing_features"]=use_existing_features
