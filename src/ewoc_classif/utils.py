@@ -224,6 +224,25 @@ def check_outfold(outdir: Path) -> bool:
         logger.info(f"Non existing folder: {outdir}")
     return check
 
+def is_empty_dirs(dir_path: Path)->bool:
+    """ Check if a directory and its sub-directories are empty
+
+    Args:
+        dir_path (Path): Directory path
+
+    Raises:
+        FileNotFoundError: If the directory path don't exists
+
+    Returns:
+        bool: True if the directory and its sub-directories are empty
+    """
+    if dir_path.exists():
+        filepaths = list(dir_path.glob('**/*'))
+        if filepaths:
+            return False
+        return True
+    raise FileNotFoundError
+
 
 def update_metajsons(root_path: str, out_dir_folder: Path) -> list:
     """
