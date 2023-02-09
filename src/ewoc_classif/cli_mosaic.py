@@ -12,6 +12,7 @@ from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from ewoc_classif import __version__
 from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS
 from ewoc_classif.blocks_mosaic import generate_ewoc_products
+from ewoc_classif.ewoc_model import EWOC_CL_MODEL_VERSION, EWOC_CT_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -101,21 +102,21 @@ def parse_args(args):
         dest="cropland_model_version",
         help="Cropland model version",
         type=str,
-        default="v700",
+        default=EWOC_CL_MODEL_VERSION,
     )
     parser.add_argument(
         "--croptype-model-version",
         dest="croptype_model_version",
         help="Croptype model version",
         type=str,
-        default="v720",
+        default=EWOC_CT_MODEL_VERSION,
     )
     parser.add_argument(
         "--irr-model-version",
         dest="irr_model_version",
         help="Irrigation model version",
         type=str,
-        default="v420",
+        default=EWOC_IRR_MODEL_VERSION,
     )
     parser.add_argument("--no-clean",
         action='store_false',

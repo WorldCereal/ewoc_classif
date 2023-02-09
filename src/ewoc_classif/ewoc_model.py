@@ -18,6 +18,10 @@ __license__ = "Unlicense"
 
 _logger = logging.getLogger(__name__)
 
+EWOC_CL_MODEL_VERSION='v750'
+EWOC_CT_MODEL_VERSION='v750'
+EWOC_IRR_MODEL_VERSION='v420'
+
 def parse_args(args):
     """Parse command line parameters
 
@@ -32,7 +36,7 @@ def parse_args(args):
     parser.add_argument(
         "--version",
         action="version",
-        version=f"ewoc_classif {__version__}",
+        version=f"ewoc_get_models {__version__}",
     )
 
     parser.add_argument(
@@ -47,21 +51,21 @@ def parse_args(args):
         dest="cropland_models_version",
         help="Cropland models version",
         type=str,
-        default="700",
+        default=EWOC_CL_MODEL_VERSION,
     )
     parser.add_argument(
         "--croptype-models-version",
         dest="croptype_models_version",
         help="Croptype models version",
         type=str,
-        default="720",
+        default=EWOC_CT_MODEL_VERSION,
     )
     parser.add_argument(
         "--irr-models-version",
         dest="irr_models_version",
         help="Irrigation models version",
         type=str,
-        default="420",
+        default=EWOC_IRR_MODEL_VERSION,
     )
     parser.add_argument(
         "-v",
@@ -115,7 +119,7 @@ def get_links(url: str)->List:
             link_href = link_.get('href')
             if not ".." in link_href:
                 links.append(url+link_href)
-    except:
+    except Exception:
         _logger.error(res.status_code)
 
     return links
@@ -163,7 +167,7 @@ def update_config(config_path: Path, root_dir: Path) -> None:
     leave to default=None (to get /models)
     :return: None
     """
-    with open(config_path,'r') as f:
+    with open(config_path,'r', encoding="UTF-8") as f:
         data = json.load(f)
 
     data['paths']["modelfile"] = data['paths']["modelfile"].replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
@@ -171,7 +175,7 @@ def update_config(config_path: Path, root_dir: Path) -> None:
         data['paths']["parentmodel"] = data['paths']["parentmodel"]\
             .replace("https://artifactory.vgt.vito.be:443/auxdata-public/worldcereal/models",str(root_dir))
     
-    with open(config_path, "w") as out:
+    with open(config_path, "w", encoding="UTF-8") as out:
         json.dump(data, out)
 
     _logger.debug(f"Updated: {config_path}")
@@ -206,19 +210,19 @@ def main(args):
 
     base_url= "https://artifactory.vgt.vito.be/auxdata-public/worldcereal/models/WorldCerealPixelCatBoost"
 
-    crop_url = f"{base_url}/v{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_v{cropland_models_version}-realms/"
-    crop_optical_url = f"{base_url}/v{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_v{cropland_models_version}-realms-OPTICAL/"
-    maize_url = f"{base_url}/v{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    maize_optical_url = f"{base_url}/v{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    rapeseed_url =f"{base_url}/v{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    rapeseed_optical_url =f"{base_url}/v{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    springcereals_url =f"{base_url}/v{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    springcereals_optical_url =f"{base_url}/v{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    sunflower_url =f"{base_url}/v{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    sunflower_optical_url =f"{base_url}/v{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    wintercereals_url = f"{base_url}/v{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}/"
-    wintercereals_optical_url = f"{base_url}/v{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_v{croptype_models_version}-OPTICAL/"
-    irr_url = f"{base_url}/v{irr_models_version}/irrigation_detector_WorldCerealPixelCatBoost_v{irr_models_version}/"
+    crop_url = f"{base_url}/{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_models_version}-realms/"
+    crop_optical_url = f"{base_url}/{cropland_models_version}/cropland_detector_WorldCerealPixelCatBoost_{cropland_models_version}-realms-OPTICAL/"
+    maize_url = f"{base_url}/{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
+    maize_optical_url = f"{base_url}/{croptype_models_version}/maize_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
+    rapeseed_url =f"{base_url}/{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
+    rapeseed_optical_url =f"{base_url}/{croptype_models_version}/rapeseed_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
+    springcereals_url =f"{base_url}/{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
+    springcereals_optical_url =f"{base_url}/{croptype_models_version}/springcereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
+    sunflower_url =f"{base_url}/{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
+    sunflower_optical_url =f"{base_url}/{croptype_models_version}/sunflower_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
+    wintercereals_url = f"{base_url}/{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}/"
+    wintercereals_optical_url = f"{base_url}/{croptype_models_version}/wintercereals_detector_WorldCerealPixelCatBoost_{croptype_models_version}-OPTICAL/"
+    irr_url = f"{base_url}/{irr_models_version}/irrigation_detector_WorldCerealPixelCatBoost_{irr_models_version}/"
 
     urls = [maize_url, maize_optical_url,
             crop_url, crop_optical_url,
