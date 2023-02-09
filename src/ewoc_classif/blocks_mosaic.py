@@ -9,7 +9,7 @@ import csv
 from json import dump, load
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Optional
+from typing import Optional, Tuple
 from uuid import uuid4
 
 from ewoc_dag.ewoc_dag import get_blocks
@@ -41,7 +41,7 @@ def blocks_mosaic(
     ewoc_config_filepath: Path,
     out_dirpath: Path,
     aez_id: int
-) -> bool:
+) -> Tuple[bool, Optional[Path]]:
     """
     Postprocessing (mosaic)
     :param tile_id: Sentinel-2 MGRS tile id ex 31TCJ
