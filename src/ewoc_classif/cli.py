@@ -10,7 +10,7 @@ from tempfile import gettempdir
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
-from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, run_classif
+from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, run_block_classif
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"
@@ -38,12 +38,7 @@ def parse_args(args):
     )
     parser.add_argument(dest="tile_id", help="MGRS S2 tile id", type=str)
     parser.add_argument(dest="production_id", help="EWoC production id", type=str)
-    parser.add_argument(
-        "--block-ids",
-        dest="block_ids",
-        help="List of block id to process",
-        nargs="+",
-    )
+    parser.add_argument("--block-id", dest="block_id", help="Block id to process", type=int)
     parser.add_argument(
         "--optical-csv",
         dest="optical_csv",
@@ -166,13 +161,11 @@ def main(args):
     setup_logging(args.loglevel)
     # This print is here on purpose!
     print("Start of processing")
-    block_ids = []
-    for block_id in args.block_ids:
-        block_ids.append(int(block_id))
 
-    run_classif(
+    run_block_classif(
         args.tile_id,
         args.production_id,
+        args.block_id,
         sar_csv=args.sar_csv,
         optical_csv=args.optical_csv,
         tir_csv=args.tir_csv,
@@ -181,7 +174,6 @@ def main(args):
         end_season_year=args.end_season_year,
         ewoc_detector=args.ewoc_detector,
         ewoc_season=args.ewoc_season,
-        block_ids=block_ids,
         cropland_model_version=args.cropland_model_version,
         croptype_model_version=args.croptype_model_version,
         irr_model_version=args.irr_model_version,
