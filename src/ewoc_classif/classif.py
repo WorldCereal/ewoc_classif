@@ -659,18 +659,18 @@ def generate_ewoc_block(
     :return: None
     """
     uid = uuid4().hex[:6]
-    uid = tile_id + "_" + uid
-    # Create the config file
-    ewoc_ard_bucket = EWOCARDBucket()
-    ewoc_prd_bucket  = EWOCPRDBucket()
+    tile_uid = tile_id + "_" + uid
+    tile_id_msg = f"{tile_id}_{block_id}-{end_season_year}-{ewoc_season}"
 
     if out_dirpath == Path(gettempdir()):
-        out_dirpath = out_dirpath / uid
+        out_dirpath = out_dirpath / f'{tile_id_msg}_{uid}'
         out_dirpath.mkdir()
     feature_blocks_dir = out_dirpath / "block_features"
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
 
     aez_id=int(production_id.split('_')[-2])
+
+    ewoc_prd_bucket  = EWOCPRDBucket()
     if use_existing_features:
         use_existing_features=download_features(
             ewoc_prd_bucket,
@@ -682,16 +682,17 @@ def generate_ewoc_block(
             aez_id,
             feature_blocks_dir)
 
+    ewoc_ard_bucket = EWOCARDBucket()
     if sar_csv is None:
-        sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
+        sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
     if optical_csv is None:
-        optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
+        optical_csv = out_dirpath / f"{tile_uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
             tile_id, production_id, filepath=optical_csv)
     no_tir=False
     if tir_csv is None:
-        tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
+        tir_csv = out_dirpath / f"{tile_uid}_satio_tir.csv"
         ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     else:
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
@@ -701,7 +702,7 @@ def generate_ewoc_block(
                 no_tir=True
 
     if agera5_csv is None:
-        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
+        agera5_csv = out_dirpath / f"{tile_uid}_satio_agera5.csv"
         ewoc_aux_data_bucket = EWOCAuxDataBucket()
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
@@ -727,6 +728,7 @@ def generate_ewoc_block(
         }
 
 
+    # Create the config file
     ewoc_config = generate_config_file(
         ewoc_detector,
         end_season_year,
@@ -742,13 +744,11 @@ def generate_ewoc_block(
         add_croptype = add_croptype
     )
 
-    ewoc_config_filepath = out_dirpath / f"{uid}_ewoc_config.json"
+    ewoc_config_filepath = out_dirpath / f"{tile_uid}_ewoc_config.json"
     if data_folder is not None:
         ewoc_config = update_config(ewoc_config, ewoc_detector, data_folder)
     with open(ewoc_config_filepath, "w", encoding="UTF-8") as ewoc_config_fp:
         dump(ewoc_config, ewoc_config_fp, indent=2)
-
-    tile_id_msg = f"{tile_id}_{block_id}-{end_season_year}-{ewoc_season}"
 
     # Perform block classification with VITO code
     process_status = classify_block(
@@ -764,7 +764,6 @@ def generate_ewoc_block(
     if upload_block:
         root_s3 = f"s3://ewoc-prd/{production_id}"
         try:
-            ewoc_prd_bucket = EWOCPRDBucket()
             nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
                 out_dirpath / "blocks", production_id + "/blocks"
             )
