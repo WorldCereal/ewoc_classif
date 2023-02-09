@@ -78,12 +78,12 @@ def blocks_mosaic(
         return False, cogs_dirpath
 
     # Setup symlink for gdal translate
-    if not os.path.islink("/opt/ewoc_classif_venv/bin/gdal_translate"):
-        os.symlink(
-            "/usr/bin/gdal_translate", "/opt/ewoc_classif_venv/bin/gdal_translate"
-        )
+    gdal_tranlsate_filepath_opt = Path('/opt/ewoc_classif_venv/bin/gdal_translate')
+    gdal_tranlsate_filepath_usr = Path('/usr/bin/gdal_translate')
+    if gdal_tranlsate_filepath_opt.exists() and not gdal_tranlsate_filepath_opt.is_symlink():
+        gdal_tranlsate_filepath_opt.symlink_to(gdal_tranlsate_filepath_usr)
         logger.info(
-        f"Symbolic link created {'/usr/bin/gdal_translate'} -> {'/opt/ewoc_classif_venv/bin/gdal_translate'}"
+        f"Symbolic link created from {gdal_tranlsate_filepath_usr} to {gdal_tranlsate_filepath_opt}"
         )
 
     # Use VITO code to perform mosaic
@@ -136,6 +136,8 @@ def run_block_mosaic(
     irr_model_version: str = "v420",
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
+    upload_prd:bool=True,
+    notify_vdm:bool=True
     ) -> None:
     """
     Perform EWoC blocks mosaic
@@ -277,28 +279,34 @@ def run_block_mosaic(
         raise RuntimeError(msg)
 
     # Upload data to EWoC product bucket
-    logger.debug(f"Try to upload files for {tile_id_season_year_id} to {root_s3}")
-    try:
-        nb_prd, __unused, up_dir = EWOCPRDBucket().upload_ewoc_prd(
-            cogs_dirpath,
-            production_id)
-    except UploadProductError as exc:
-        msg= f'Upload from {cogs_dirpath} to {root_s3} failed for {tile_id_season_year_id}!'
-        logger.error(msg)
-        # TODO: remove this message used by Alex
-        print(msg)
-        raise RuntimeError(msg) from exc
+    if upload_prd:
+        logger.debug(f"Try to upload files for {tile_id_season_year_id} to {root_s3}")
+        try:
+            nb_prd, __unused, up_dir = EWOCPRDBucket().upload_ewoc_prd(
+                cogs_dirpath,
+                production_id)
+        except UploadProductError as exc:
+            msg= f'Upload from {cogs_dirpath} to {root_s3} failed for {tile_id_season_year_id}!'
+            logger.error(msg)
+            # TODO: remove this message used by Alex
+            print(msg)
+            raise RuntimeError(msg) from exc
 
-    logger.info(f"Uploaded {cogs_dirpath} to {up_dir} ")
-    # TODO: remove this message used by Alex
-    print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+        logger.info(f"Uploaded {cogs_dirpath} to {up_dir} ")
+        # TODO: remove this message used by Alex
+        print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
+    else:
+        logger.info('No product uploaded as requested!')
 
     # Notify VDM
-    logger.debug("Try to notify the VDM of new products to ingest")
-    for stac_filepath in stac_paths:
-        if not ingest_into_vdm(stac_filepath):
-            logger.error(f'VDM notification failed for {tile_id_season_year_id}')
-            # No error send to Alex
+    if upload_prd and notify_vdm:
+        logger.debug("Try to notify the VDM of new products to ingest")
+        for stac_filepath in stac_paths:
+            if not ingest_into_vdm(stac_filepath):
+                logger.error(f'VDM notification failed for {tile_id_season_year_id}')
+                # No error send to Alex
+    else:
+        logger.info('Notification to VDM skip as requested!')
 
     if clean:
         logger.info(f"Cleaning the output folder {out_dirpath}")
