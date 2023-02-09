@@ -584,18 +584,18 @@ def process_block(
                     ewoc_prd_bucket.upload_ewoc_prd(
                         blocks_feature_dir, production_id + "/block_features"
                     )
-                # TODO: remove this message used by Al
+                # TODO: remove this message used by Alex
                 print(f"Uploaded {nb_prd} files to bucket | {up_dir}")
             else:
                 logger.info('No block uploaded as requested.')
         elif ret == 1:
             logger.warning(f"{tile_id}_{block_id} is skip due to return code: {ret}")
-            # TODO: remove this message used by Al
+            # TODO: remove this message used by Alex
             print(f"Uploaded {0} files to bucket | placeholder")
         else:
             msg = f"{tile_id}_{block_id} failed with return code: {ret}"
             logger.error(msg)
-            # TODO: remove this message used by Al
+            # TODO: remove this message used by Alex
             print(msg)
             proc_status = False
     except Exception:
