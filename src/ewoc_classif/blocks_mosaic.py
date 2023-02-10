@@ -213,7 +213,7 @@ def generate_ewoc_products(
         ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
     add_croptype = False
-    if end_season_year == 2022:
+    if end_season_year == 2022 and croptype_model_version=='v720':
         logger.info('Add additional croptype')
         add_croptype = True
 
