@@ -124,6 +124,9 @@ def generate_config_file(
         "segment": False,
         'features_dir': str(feature_blocks_dir),
         'use_existing_features': use_existing_features,
+        'save_meta' : True,
+        'localmodels': False,
+        'decision_threshold' : 0.5
     }
 
     # Support the switch between local models and use of artifactory
@@ -133,8 +136,6 @@ def generate_config_file(
 
     if featuresettings == "cropland":
         logger.info("Updating config file for cropland")
-        parameters["save_meta"]= True
-        parameters["localmodels"]=False
         parameters["filtersettings"]= {"kernelsize": 3, "conf_threshold": 0.85}
 
         models = {
@@ -151,8 +152,6 @@ def generate_config_file(
             cropland_mask_bucket = f"s3://ewoc-prd/{production_id}"
 
         logger.info("Updating config file for croptype")
-        parameters['localmodels']=True
-        parameters["decision_threshold"] = 0.5
         parameters["filtersettings"] = {"kernelsize": 7, "conf_threshold": 0.75}
         parameters['active_marker']=True
         parameters['cropland_mask']=cropland_mask_bucket
