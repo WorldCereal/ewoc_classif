@@ -546,3 +546,32 @@ class Test_classif(unittest.TestCase):
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+
+    def test_generate_ewoc_block_cropland_12QVF_110_2021_with_features(self):
+        """ Case where there are no TIR data (but there are SAR and OPTICAL)
+        Return WARNING: Less than 3 off-swath acquisitions found
+        """
+        generate_ewoc_block('12QVF',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_39128_20221123011520',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=False,
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_cropland_27PUT_110_2021_with_features(self):
+        """ Case where there is no SAR data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('27PUT',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_42131_20221123011520',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=False,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        use_existing_features=True)
+    
