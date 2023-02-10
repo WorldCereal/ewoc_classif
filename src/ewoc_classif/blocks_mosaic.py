@@ -19,6 +19,7 @@ from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 
+from ewoc_classif.ewoc_model import EWOC_CL_MODEL_VERSION, EWOC_CT_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
 from ewoc_classif.utils import (
     is_empty_dirs,
     generate_config_file,
@@ -131,9 +132,9 @@ def generate_ewoc_products(
     ewoc_detector: str = EWOC_CROPLAND_DETECTOR,
     end_season_year: int = 2021,
     ewoc_season: str = EWOC_SUPPORTED_SEASONS[3],
-    cropland_model_version: str = "v700",
-    croptype_model_version: str = "v720",
-    irr_model_version: str = "v420",
+    cropland_model_version: str = EWOC_CL_MODEL_VERSION,
+    croptype_model_version: str = EWOC_CT_MODEL_VERSION,
+    irr_model_version: str = EWOC_IRR_MODEL_VERSION,
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
     upload_prd:bool=True,
