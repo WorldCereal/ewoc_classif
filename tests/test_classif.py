@@ -547,6 +547,7 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
+<<<<<<< Updated upstream
 
     def test_generate_ewoc_block_cropland_12QVF_110_2021_with_features(self):
         """ Case where there are no TIR data (but there are SAR and OPTICAL)
@@ -575,3 +576,192 @@ class Test_classif(unittest.TestCase):
         tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
         use_existing_features=True)
     
+=======
+    def test_generate_ewoc_block_cropland_27VVL_110_2021_with_features(self):
+        """Less than 3 off-swath acquisition found
+        """
+        generate_ewoc_block('27VVL',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37188_20221114214022',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)
+    
+    def test_generate_ewoc_block_cropland_28WEU_7_2021_with_features(self):
+        """Less than 3 off-swath acquisitions (missing 6 blocks)
+        """
+        generate_ewoc_block('28WEU',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37188_20221114214022',
+        7,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_cropland_29VNK_6_2021_with_features(self):
+        """Less than 3 off-swath acquisitions found (missing 24 blocks)
+        """
+        generate_ewoc_block('29VNK',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37187_20221114214133',
+        6,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)
+    
+    def test_generate_ewoc_block_29VPK_10_2021_with_features(self):
+        """Less than 3 off-swath acquisitions found (missing 67 blocks)
+        """
+        generate_ewoc_block('29VPK',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37187_20221114214133',
+        10,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_cropland_30VUQ_40_2021_with_features(self):
+        """Less than 3 off-swath acquisitions found (missing 68 blocks)
+        """
+        generate_ewoc_block('30VUQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37187_20221114214133',
+        40,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_summer1_47NLA_0(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('47NLA',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_8023_20220918052243',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_summer1_53UNR_0(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('53UNR',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_generate_ewoc_block_summer1_40KEC_16(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('40KEC',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
+        16,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_generate_ewoc_block_summer2_18MYS_37(self):
+        """Incomplete collection `TIR`: got a collection size of 1 
+        which is less than the threshold of 2
+        """
+        generate_ewoc_block('18MYS',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        37,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[2])
+
+    def test_generate_ewoc_block_winter_53UNR_0(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('53UNR',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_winter_40KEC_17(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('40KEC',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
+        17,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_winter_17MMQ_110(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('17MMQ',
+        'z',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_winter_17MMR_110(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('17MMR',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+    
+
+    def test_generate_ewoc_block_winter_17MNP_110(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('17MNP',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_winter_17MNQ_110(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('17MNQ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_winter_17MNR_110(self):
+        """ No cropland pixels found in this block: generating output 
+        products with fixed nodata value 255 
+        """
+        generate_ewoc_block('17MNR',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        110,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+>>>>>>> Stashed changes
