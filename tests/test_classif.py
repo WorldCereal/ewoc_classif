@@ -6,13 +6,13 @@ import unittest
 
 from ewoc_classif.classif import generate_ewoc_block, EWOC_SUPPORTED_SEASONS, EWOC_CROPTYPE_DETECTOR
 
-class Test_classif_base(unittest.TestCase):
+class TestClassifBase(unittest.TestCase):
     def setUp(self):
         self.clean=True
         if os.getenv("EWOC_TEST_DEBUG_MODE") is not None:
             self.clean=False
 
-class Test_classif_50HQH(Test_classif_base):
+class TestClassif50HQH(TestClassifBase):
     def setUp(self):
         super().setUp()
         self.prod_id='c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3148_20221223132126'
@@ -110,7 +110,7 @@ class Test_classif_50HQH(Test_classif_base):
         upload_block=False,
         clean=self.clean)
 
-class Test_classif_22NBM(Test_classif_base):
+class TestClassif22NBM(TestClassifBase):
     def setUp(self):
         super().setUp()
         self.prod_id='c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824'
@@ -126,7 +126,7 @@ class Test_classif_22NBM(Test_classif_base):
         upload_block=False,
         clean=self.clean)
 
-class Test_classif_15STU(Test_classif_base):
+class TestClassif15STU(TestClassifBase):
     """ Issue with TIR threshold"""
     def setUp(self):
         super().setUp()
@@ -144,7 +144,8 @@ class Test_classif_15STU(Test_classif_base):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_generate_ewoc_block_croptype_summer1_15STU_119_with_larger_TIR_gap(self):
-        """ This test no more failed due to the increase of the maxgap threshold for TIR (120 instead of 60)"""
+        """ This test no more failed due to the increase of the maxgap threshold for TIR
+        (120 instead of 60)"""
         os.environ['EWOC_COLL_MAXGAP_TIR']='120'
         print(os.environ['EWOC_COLL_MAXGAP_TIR'])
         generate_ewoc_block('15STU',
@@ -169,7 +170,7 @@ class Test_classif_15STU(Test_classif_base):
             clean=self.clean,
             use_existing_features=False)
 
-class Test_classif(unittest.TestCase):
+class TestClassif(unittest.TestCase):
     def setUp(self):
         self.clean=True
         if os.getenv("EWOC_TEST_DEBUG_MODE") is not None:
@@ -177,6 +178,8 @@ class Test_classif(unittest.TestCase):
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_generate_ewoc_block_cropland_48MYS_1(self):
+        """No errors on cropland
+        """
         generate_ewoc_block('48MYS',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_8023_20220918052243',
         1,
@@ -305,7 +308,8 @@ class Test_classif(unittest.TestCase):
         this block (land case)
 
         UKR tile in 2019
-        Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,27,34,35,37,38,63,66,67,77,78,84,90,91,92,100,101,103,108
+        Same apparently for following blocks: 4,5,6,12,13,14,15,16,17,23,27,34,35,37,
+        38,63,66,67,77,78,84,90,91,92,100,101,103,108
         """
         generate_ewoc_block('37UER',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22194_20220728095352',
@@ -314,7 +318,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_generate_ewoc_block_cropland_36UWC_72(self):
-        """ This test failed due to the maxgap issue on OPTICAL (121 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (121 instead 60)
+        on this block (land case)
 
         UKR tile in 2019
         Only this block
@@ -326,7 +331,8 @@ class Test_classif(unittest.TestCase):
         upload_block=False)
 
     def test_generate_ewoc_block_cropland_36UWA_4(self):
-        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60) on this block (land case)
+        """ This test failed due to the maxgap issue on OPTICAL (123 instead 60)
+        on this block (land case)
 
         UKR tile in 2019
         Same for block 47 (123 instead 60)
@@ -547,22 +553,69 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-<<<<<<< Updated upstream
+    def test_generate_ewoc_block_cropland_01gem_110(self):
+        """ Case where there is no SAR data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('01GEM',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3159_20221123011519',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=False,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        use_existing_features=True)
 
-    def test_generate_ewoc_block_cropland_12QVF_110_2021_with_features(self):
+    def test_generate_ewoc_block_cropland_01gel_110(self):
+        """ Case where there is no SAR data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('01GEL',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3159_20221123011519',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=False,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        use_existing_features=True)
+
+
+    def test_generate_ewoc_block_cropland_12qvf_109(self):
         """ Case where there are no TIR data (but there are SAR and OPTICAL)
-        Return WARNING: Less than 3 off-swath acquisitions found
+        Incomplete collection `SAR`: got a collection size of 0 which is less
+        than the threshold of 2
+        blocks 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+        57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
+        79, 80, 81, 82, 83, 84, 85, 86, 87, 94, 95, 96, 97, 98, 109
         """
         generate_ewoc_block('12QVF',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_39128_20221123011520',
-        110,
+        109,
         end_season_year=2021,
         upload_block=False,
         clean=False,
         tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
         use_existing_features=True)
 
-    def test_generate_ewoc_block_cropland_27PUT_110_2021_with_features(self):
+    def test_generate_ewoc_block_cropland_12qwf_110(self):
+        """Case where there is no SAR data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('12QWF',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_39128_20221123011520',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=False,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_cropland_27put_110(self):
         """ Case where there is no SAR data at all, raise an error in VITO processor
         on the wc collection because there are 0 data.
         """
@@ -575,102 +628,145 @@ class Test_classif(unittest.TestCase):
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
         tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
         use_existing_features=True)
-    
-=======
-    def test_generate_ewoc_block_cropland_27VVL_110_2021_with_features(self):
-        """Less than 3 off-swath acquisition found
+
+    def test_generate_ewoc_block_cropland_27vvl_112(self):
+        """Incomplete collection `OPTICAL`: got a value of 152 days for `gapend` which
+        exceeds the threshold of 60
+        blocks 112
         """
         generate_ewoc_block('27VVL',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37188_20221114214022',
-        110,
+        112,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         use_existing_features=True)
-    
-    def test_generate_ewoc_block_cropland_28WEU_7_2021_with_features(self):
-        """Less than 3 off-swath acquisitions (missing 6 blocks)
+
+    def test_generate_ewoc_block_cropland_28weu_20(self):
+        """Incomplete collection `OPTICAL`: got a value of 169 days for `maxgap` which
+        exceeds the threshold of 60
+        blocks 20
         """
         generate_ewoc_block('28WEU',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37188_20221114214022',
-        7,
+        20,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         use_existing_features=True)
 
-    def test_generate_ewoc_block_cropland_29VNK_6_2021_with_features(self):
-        """Less than 3 off-swath acquisitions found (missing 24 blocks)
+    def test_generate_ewoc_block_cropland_29vnk_15(self):
+        """Incomplete collection `OPTICAL`: got a value of 186 days for `gapstart` which
+        exceeds the threshold of 60
+        blocks 15
         """
         generate_ewoc_block('29VNK',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37187_20221114214133',
-        6,
+        15,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         use_existing_features=True)
-    
-    def test_generate_ewoc_block_29VPK_10_2021_with_features(self):
+
+    def test_generate_ewoc_block_cropland_29vpk_58(self):
         """Less than 3 off-swath acquisitions found (missing 67 blocks)
+        blocks 58
         """
         generate_ewoc_block('29VPK',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37187_20221114214133',
-        10,
+        58,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         use_existing_features=True)
 
-    def test_generate_ewoc_block_cropland_30VUQ_40_2021_with_features(self):
+    def test_generate_ewoc_block_cropland_30vuq_71(self):
         """Less than 3 off-swath acquisitions found (missing 68 blocks)
+        blocks 71
         """
         generate_ewoc_block('30VUQ',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_37187_20221114214133',
-        40,
+        71,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         use_existing_features=True)
 
-    def test_generate_ewoc_block_summer1_47NLA_0(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_cropland_54vuj_110(self):
+        """Case where there is no SAR, TIR and OPTICAL data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('54VUJ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_cropland_54vvj_110(self):
+        """Case where there is no SAR, TIR and OPTICAL data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('54VVJ',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_cropland_54vvk_110(self):
+        """Case where there is no SAR, TIR and OPTICAL data at all, raise an error in VITO processor
+        on the wc collection because there are 0 data.
+        """
+        generate_ewoc_block('54VVK',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        110,
+        end_season_year=2021,
+        upload_block=False,
+        clean=True,
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+        optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
+        use_existing_features=True)
+
+    def test_generate_ewoc_block_summer1_47nla_39(self):
+        """Incomplete collection `SAR`: got a collection size of 0 which is less
+        than the threshold of 2.
+        blocks 3, 4, 5, 6, 7, 15, 16, 17, 18, 27, 28, 38, 39
         """
         generate_ewoc_block('47NLA',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_8023_20220918052243',
-        110,
+        39,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_summer1_53UNR_0(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_summer1_53unr_116(self):
+        """ Incomplete collection `SAR`: got a value of 124 days for `gapstart` which
+        exceeds the threshold of 60.
+        blocks 54, 61, 65, 94, 95, 107, 116, 117, 118, 120
         """
         generate_ewoc_block('53UNR',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
-        110,
+        116,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
-    def test_generate_ewoc_block_summer1_40KEC_16(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
-        """
-        generate_ewoc_block('40KEC',
-        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
-        16,
-        upload_block=False,
-        clean=False,
-        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
-        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
-
-    def test_generate_ewoc_block_summer2_18MYS_37(self):
-        """Incomplete collection `TIR`: got a collection size of 1 
+    def test_generate_ewoc_block_summer2_18mys_37(self):
+        """Incomplete collection `TIR`: got a collection size of 1
         which is less than the threshold of 2
+        blocks 17, 37, 38, 39, 47, 48, 49, 50, 52, 53, 63, 64
         """
         generate_ewoc_block('18MYS',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
@@ -680,21 +776,37 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[2])
 
-    def test_generate_ewoc_block_winter_53UNR_0(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_summer2_18mzt_82(self):
+        """Incomplete collection `TIR`: got a collection size of 1
+        which is less than the threshold of 2
+        blocks 82
+        """
+        generate_ewoc_block('18MZT',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
+        82,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[2])
+
+    def test_generate_ewoc_block_winter_53unr_54(self):
+        """Incomplete collection `SAR`: got a collection size of 0 which is less
+        than the threshold of 2.
+        blocks 54, 61, 65, 94, 95, 107, 116, 117, 118, 120
         """
         generate_ewoc_block('53UNR',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
-        110,
+        54,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_winter_40KEC_17(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_winter_40kec_17(self):
+        """ewoc-ard/c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535/TIR/40/K/EC/2021-
+        /20210513/LC08_L1T_20210513T235959_15207402T1_40KEC-
+        /LC08_L2SP_20210513T235959_15207402T1_40KEC_B10.tif does not exist
+        does not exist in the file system, and is not recognized as a supported dataset name.
         """
         generate_ewoc_block('40KEC',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
@@ -704,64 +816,87 @@ class Test_classif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_winter_17MMQ_110(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_summer1_40kec_17(self):
+        """ewoc-ard/c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535/TIR/40/K/EC/2021-
+        /20210206/LC08_L1T_20210206T235959_15207402T1_40KEC-
+        /LC08_L2SP_20210206T235959_15207402T1_40KEC_B10.tif'
+        does not exist in the file system, and is not recognized as a supported dataset name.
+
+        """
+        generate_ewoc_block('40KEC',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_9026_20220926141535',
+        17,
+        upload_block=False,
+        clean=False,
+        ewoc_detector=EWOC_CROPTYPE_DETECTOR,
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
+
+    def test_generate_ewoc_block_winter_17mmq_32(self):
+        """Incomplete collection `SAR`: got a value of 131 days for `gapend` which
+        exceeds the threshold of 60.
+        blocks 32, 41, 42, 43, 52, 53 54, 65
         """
         generate_ewoc_block('17MMQ',
         'z',
-        110,
+        32,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_winter_17MMR_110(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_winter_17mmr_117(self):
+        """Incomplete collection `SAR`: got a value of 131 days for `gapend` which
+        exceeds the threshold of 60.
+        blocks 117
         """
         generate_ewoc_block('17MMR',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
-        110,
+        117,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
-    
 
-    def test_generate_ewoc_block_winter_17MNP_110(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_winter_17mnp_002(self):
+        """Incomplete collection `SAR`: got a value of 131 days for `gapend` which
+        exceeds the threshold of 60.
+        blocks 2, 3, 4, 10, 12, 13, 14, 15, 25, 26, 54, 64, 65, 75, 76, 86, 87, 96, 97, 98, 109
         """
         generate_ewoc_block('17MNP',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
-        110,
+        2,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_winter_17MNQ_110(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_winter_17mnq_112(self):
+        """Incomplete collection `SAR`: got a value of 131 days for `gapend` which
+        exceeds the threshold of 60.
+        blocks [3;10], [15;22], 24, [26, 59], 62, 63, 64, 65, 69, 70, 73, 74, 75, 76, 79, 80,
+        81, 85, 86, 87, 90, 91 92, 97, 98, 100, 101, 102, 103, 108, 109, 112, 113, 114, 120
         """
         generate_ewoc_block('17MNQ',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
-        110,
+        112,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_winter_17MNR_110(self):
-        """ No cropland pixels found in this block: generating output 
-        products with fixed nodata value 255 
+    def test_generate_ewoc_block_winter_17mnr_004(self):
+        """Incomplete collection `SAR`: got a value of 131 days for `gapend` which
+        exceeds the threshold of 60.
+        blocks 4, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18, 20, 21, 25, 26, 27, 31, 32,
+        36, 37, 39, 40, 41, 42, 43, 46, 47, 48, 49, 50, 51, 52, 53, 54, 60, 61, 62,
+        63, 64, 65, 71, 72, 73, 74, 75, 76, 80, 81, 82, 83, 84, 85, 86, 87, 88, 91, 92,
+        93, 94, 95, 96, 97, 98, 99, 102, 103, 104, 105, 106, 107, 108, 109, 113, 115,
+        116, 117, 118, 119, 120
         """
         generate_ewoc_block('17MNR',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
-        110,
+        4,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
->>>>>>> Stashed changes
