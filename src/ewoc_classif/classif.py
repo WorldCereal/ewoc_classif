@@ -11,6 +11,10 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Optional, List
 from uuid import uuid4
+from satio import layers
+from satio.grid import S2TileBlocks
+import pandas as pd
+
 
 from ewoc_dag.bucket.eobucket import UploadProductError
 from ewoc_dag.ewoc_dag import get_blocks
@@ -18,6 +22,9 @@ from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
+from worldcereal.collections import WorldCerealSigma0TiledCollection, WorldCerealThermalTiledCollection
+from worldcereal.seasons import get_processing_dates
+from worldcereal.utils.__init__ import COLL_MAXGAP, get_coll_maxgap
 
 from ewoc_classif.ewoc_model import EWOC_CL_MODEL_VERSION, EWOC_CT_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
 from ewoc_classif.utils import (
@@ -103,6 +110,95 @@ def download_features(
         logger.warning(f'Features {bucket_prefix} does not exist, create features')
 
     return (check_product and check_product_irr)
+
+def check_collection(collection, name,
+                     start_date, end_date, tile_id, block, fail_threshold=1000,
+                     min_size=2):
+    """Helper function to check collection completeness
+    and report gap lengths
+
+    Args:
+        collection (BaseCollection): a satio collection
+        name (str): name of the collection used for reporting
+        start_date (str): processing start date (Y-m-d)
+        end_date (str): processing end date (Y-m-d)
+        fail_threshold (int): amount of days beyond which
+                        an error is raised that the collection is
+                        incomplete.
+        min_size (int): minimum amount of products to be present
+                        in collection before failing anyway.
+    """
+    logger.info(f"DATE COLLECTION BEFORE FILTERING ; {collection.df.date}")
+    start_year = int(start_date[:4])
+    end_year = int(end_date[:4]) + 1
+    
+    S2_GRID = layers.load('s2grid')
+    splitter = S2TileBlocks(1024, s2grid=S2_GRID)
+    processingblocks = splitter.blocks(*tile_id)
+
+    processingblocks = processingblocks.loc[block]
+    collection = collection.filter_bounds(processingblocks['bounds'][block[0]], processingblocks['epsg'][block[0]])
+    collstart = (pd.to_datetime(start_date) -
+                     pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+    collend = (pd.to_datetime(end_date) +
+                   pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+
+    collection.df = collection.df[(collection.df.date >= collstart) 
+            & (collection.df.date < collend)]   
+
+    if name=='TIR':
+        collection=collection.filter_nodata()
+    #logger.info(f"COLLEND : {collection.df.date.max()} and END DATE : {end_date} AND GAPEND : {collection.df.date.max()-pd.to_datetime(end_date)}")
+    logger.info(f"DATE COLLECTION AFTER FILTERING ; {collection.df.date}")
+
+    opt_only=False
+
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    collstart = pd.to_datetime(collection.df.date.min())
+    collend = pd.to_datetime(collection.df.date.max())
+
+    # Check whether we have the minimum amount of
+    # products to not run into a pure processing issue
+    collsize = collection.df.shape[0]
+    if collsize < min_size:
+        logger.warning(f"Incomplete collection {name} : {collsize} less than {min_size}")
+        opt_only=True
+    
+    # Check collection start
+    gapstart = collstart - start_date
+    gapstart = gapstart.days
+
+    if gapstart < 0:
+        gapstart = 0
+
+    # Check collection end
+    gapend = end_date - collend
+    gapend = gapend.days
+    if gapend < 0:
+        gapend = 0
+
+    maxgap = pd.to_datetime(collection.df.date).diff().max().days
+
+    # Report on collection
+    logger.info('-' * 50)
+    logger.info(f'{name} first image: {collstart}')
+    logger.info(f'{name} last image: {collend}')
+    logger.info(f'{name} largest gap: {maxgap}')
+    logger.info(f"GAPEND; {gapend} and fail_threshold : {fail_threshold}")
+    # Fail processing if collection is incomplete
+    if gapstart > fail_threshold:
+        logger.warning(f"Incomplete collection {name}: {gapstart} exceeds {fail_threshold}")
+        opt_only=True
+    if gapend > fail_threshold:
+        logger.warning(f"Incomplete collection {name}: {gapend} exceeds {fail_threshold}")
+        opt_only=True
+    if maxgap > fail_threshold:
+        logger.warning(f"Incomplete collection {name}: {maxgap} exceeds {fail_threshold}")
+        opt_only=True
+
+    return opt_only
+
 
 def process_blocks(
     tile_id: str,
@@ -425,9 +521,16 @@ def run_classif(
 
         use_existing_features=check_features
 
+    no_sar=False
     if sar_csv is None:
         sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
+    else:
+        with open(Path(sar_csv), 'r', encoding='utf8') as sar_file:
+            sar_dict = list(csv.DictReader(sar_file))
+            if len(sar_dict) <= 1:
+                logger.warning(f"SAR ARD is empty for the tile {tile_id}")
+                no_sar=True
     if optical_csv is None:
         optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
@@ -452,7 +555,16 @@ def run_classif(
         logger.info('Add additional croptype')
         add_croptype = True
 
-    if not no_tir:
+    S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
+    l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
+
+    start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
+    logger.info("Checking collection of SAR")
+    no_sar=check_collection(S1coll, 'SAR', start_date, end_date, [tile_id], block_ids, fail_threshold=get_coll_maxgap('SAR'))
+    logger.info("Checking collection of TIR")
+    no_tir=check_collection(l8coll, 'TIR', start_date, end_date, [tile_id], block_ids, fail_threshold=get_coll_maxgap('TIR'))
+
+    if not no_tir and not no_sar:
         csv_dict = {
             "OPTICAL": str(optical_csv),
             "SAR": str(sar_csv),
@@ -460,14 +572,26 @@ def run_classif(
             "DEM": "s3://ewoc-aux-data/CopDEM_20m",
             "METEO": str(agera5_csv),
         }
-    else:
+    elif not no_sar and no_tir:
         csv_dict = {
             "OPTICAL": str(optical_csv),
             "SAR": str(sar_csv),
             "DEM": "s3://ewoc-aux-data/CopDEM_20m",
             "METEO": str(agera5_csv),
         }
-
+    elif not no_tir and no_sar:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "TIR": str(tir_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
+    else:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
 
     ewoc_config = generate_config_file(
         ewoc_detector,
@@ -682,9 +806,16 @@ def generate_ewoc_block(
             feature_blocks_dir)
 
     ewoc_ard_bucket = EWOCARDBucket()
+    no_sar=False
     if sar_csv is None:
         sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
         ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
+    else:
+        with open(Path(sar_csv), 'r', encoding='utf8') as sar_file:
+            sar_dict = list(csv.DictReader(sar_file))
+            if len(sar_dict) <= 1:
+                logger.warning(f"SAR ARD is empty for the tile {tile_id}")
+                no_sar=True
     if optical_csv is None:
         optical_csv = out_dirpath / f"{tile_uid}_satio_optical.csv"
         ewoc_ard_bucket.optical_to_satio_csv(
@@ -710,7 +841,16 @@ def generate_ewoc_block(
         logger.info('Add additional croptype')
         add_croptype = True
 
-    if not no_tir:
+    S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
+    l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
+
+    start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
+    logger.info("Checking collection of SAR")
+    no_sar=check_collection(S1coll, 'SAR', start_date, end_date, [tile_id], [block_id], fail_threshold=get_coll_maxgap('SAR'))
+    logger.info("Checking collection of TIR")
+    no_tir=check_collection(l8coll, 'TIR', start_date, end_date, [tile_id], [block_id], fail_threshold=get_coll_maxgap('TIR'))
+
+    if not no_tir and not no_sar:
         csv_dict = {
             "OPTICAL": str(optical_csv),
             "SAR": str(sar_csv),
@@ -718,14 +858,26 @@ def generate_ewoc_block(
             "DEM": "s3://ewoc-aux-data/CopDEM_20m",
             "METEO": str(agera5_csv),
         }
-    else:
+    elif not no_sar and no_tir:
         csv_dict = {
             "OPTICAL": str(optical_csv),
             "SAR": str(sar_csv),
             "DEM": "s3://ewoc-aux-data/CopDEM_20m",
             "METEO": str(agera5_csv),
         }
-
+    elif not no_tir and no_sar:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "TIR": str(tir_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
+    else:
+        csv_dict = {
+            "OPTICAL": str(optical_csv),
+            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+            "METEO": str(agera5_csv),
+        }
 
     # Create the config file
     ewoc_config = generate_config_file(

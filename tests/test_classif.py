@@ -559,7 +559,7 @@ class TestClassif(unittest.TestCase):
         """
         generate_ewoc_block('01GEM',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3159_20221123011519',
-        110,
+        0,
         end_season_year=2021,
         upload_block=False,
         clean=False,
@@ -573,7 +573,7 @@ class TestClassif(unittest.TestCase):
         """
         generate_ewoc_block('01GEL',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_3159_20221123011519',
-        110,
+        0,
         end_season_year=2021,
         upload_block=False,
         clean=False,
@@ -594,7 +594,7 @@ class TestClassif(unittest.TestCase):
         """
         generate_ewoc_block('12QVF',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_39128_20221123011520',
-        109,
+        98,
         end_season_year=2021,
         upload_block=False,
         clean=False,
@@ -607,7 +607,7 @@ class TestClassif(unittest.TestCase):
         """
         generate_ewoc_block('12QWF',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_39128_20221123011520',
-        110,
+        0,
         end_season_year=2021,
         upload_block=False,
         clean=False,
@@ -697,29 +697,27 @@ class TestClassif(unittest.TestCase):
         on the wc collection because there are 0 data.
         """
         generate_ewoc_block('54VUJ',
-        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20221123011519',
         110,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
         use_existing_features=True)
+#tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
+#optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
 
     def test_generate_ewoc_block_cropland_54vvj_110(self):
         """Case where there is no SAR, TIR and OPTICAL data at all, raise an error in VITO processor
         on the wc collection because there are 0 data.
         """
         generate_ewoc_block('54VVJ',
-        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20221123011519',
         110,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
         use_existing_features=True)
 
     def test_generate_ewoc_block_cropland_54vvk_110(self):
@@ -727,14 +725,12 @@ class TestClassif(unittest.TestCase):
         on the wc collection because there are 0 data.
         """
         generate_ewoc_block('54VVK',
-        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20220912005510',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_17169_20221123011519',
         110,
         end_season_year=2021,
         upload_block=False,
         clean=True,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
         use_existing_features=True)
 
     def test_generate_ewoc_block_summer1_47nla_39(self):
@@ -744,11 +740,11 @@ class TestClassif(unittest.TestCase):
         """
         generate_ewoc_block('47NLA',
         'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_8023_20220918052243',
-        39,
+        4,
         upload_block=False,
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
-        ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+        ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
     def test_generate_ewoc_block_summer1_53unr_116(self):
         """ Incomplete collection `SAR`: got a value of 124 days for `gapstart` which
@@ -837,7 +833,7 @@ class TestClassif(unittest.TestCase):
         blocks 32, 41, 42, 43, 52, 53 54, 65
         """
         generate_ewoc_block('17MMQ',
-        'z',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_20090_20221027083824',
         32,
         upload_block=False,
         clean=False,
