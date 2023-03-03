@@ -11,10 +11,9 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Optional, List
 from uuid import uuid4
-from satio import layers
-from satio.grid import S2TileBlocks
-import pandas as pd
-
+from satio import layers # type: ignore
+from satio.grid import S2TileBlocks # type: ignore
+import pandas as pd # type: ignore
 
 from ewoc_dag.bucket.eobucket import UploadProductError
 from ewoc_dag.ewoc_dag import get_blocks
