@@ -24,7 +24,7 @@ from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
 from worldcereal.collections import WorldCerealSigma0TiledCollection, WorldCerealThermalTiledCollection
 from worldcereal.seasons import get_processing_dates
-from worldcereal.utils.__init__ import COLL_MAXGAP, get_coll_maxgap
+from worldcereal.utils.__init__ import get_coll_maxgap
 
 from ewoc_classif.ewoc_model import EWOC_CL_MODEL_VERSION, EWOC_CT_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
 from ewoc_classif.utils import (
@@ -128,10 +128,6 @@ def check_collection(collection, name,
         min_size (int): minimum amount of products to be present
                         in collection before failing anyway.
     """
-    logger.info(f"DATE COLLECTION BEFORE FILTERING ; {collection.df.date}")
-    start_year = int(start_date[:4])
-    end_year = int(end_date[:4]) + 1
-    
     S2_GRID = layers.load('s2grid')
     splitter = S2TileBlocks(1024, s2grid=S2_GRID)
     processingblocks = splitter.blocks(*tile_id)
@@ -143,13 +139,11 @@ def check_collection(collection, name,
     collend = (pd.to_datetime(end_date) +
                    pd.Timedelta(days=1)).strftime('%Y-%m-%d')
 
-    collection.df = collection.df[(collection.df.date >= collstart) 
-            & (collection.df.date < collend)]   
+    collection.df = collection.df[(collection.df.date >= collstart)
+            & (collection.df.date < collend)]
 
     if name=='TIR':
         collection=collection.filter_nodata()
-    #logger.info(f"COLLEND : {collection.df.date.max()} and END DATE : {end_date} AND GAPEND : {collection.df.date.max()-pd.to_datetime(end_date)}")
-    logger.info(f"DATE COLLECTION AFTER FILTERING ; {collection.df.date}")
 
     opt_only=False
 
@@ -164,19 +158,16 @@ def check_collection(collection, name,
     if collsize < min_size:
         logger.warning(f"Incomplete collection {name} : {collsize} less than {min_size}")
         opt_only=True
-    
+
     # Check collection start
     gapstart = collstart - start_date
     gapstart = gapstart.days
-
-    if gapstart < 0:
-        gapstart = 0
+    gapstart = max(gapstart, 0)
 
     # Check collection end
     gapend = end_date - collend
     gapend = gapend.days
-    if gapend < 0:
-        gapend = 0
+    gapend = max(gapend, 0)
 
     maxgap = pd.to_datetime(collection.df.date).diff().max().days
 
@@ -185,7 +176,6 @@ def check_collection(collection, name,
     logger.info(f'{name} first image: {collstart}')
     logger.info(f'{name} last image: {collend}')
     logger.info(f'{name} largest gap: {maxgap}')
-    logger.info(f"GAPEND; {gapend} and fail_threshold : {fail_threshold}")
     # Fail processing if collection is incomplete
     if gapstart > fail_threshold:
         logger.warning(f"Incomplete collection {name}: {gapstart} exceeds {fail_threshold}")
@@ -542,7 +532,7 @@ def run_classif(
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
             tir_dict = list(csv.DictReader(tir_file))
             if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
+                logger.warning(f"TIR ARD is empty for the tile {tile_id}=>No irrigation computed!")
                 no_tir=True
 
     if agera5_csv is None:
@@ -828,7 +818,7 @@ def generate_ewoc_block(
         with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
             tir_dict = list(csv.DictReader(tir_file))
             if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
+                logger.warning(f"TIR ARD is empty for the tile {tile_id}=>No irrigation computed!")
                 no_tir=True
 
     if agera5_csv is None:
