@@ -896,3 +896,12 @@ class TestClassif(unittest.TestCase):
         clean=False,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
+
+    def test_generate_ewoc_block_cropland_36UVB_43(self):
+        """  Test upload_log parameter
+        """
+        generate_ewoc_block('36UVB',
+        'c728b264-5c97-4f4c-81fe-1500d4c4dfbd_22190_20220929210524',
+        43,
+        upload_block=True,
+        upload_log=False)
