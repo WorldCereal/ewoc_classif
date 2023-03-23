@@ -11,6 +11,9 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Optional, List
 from uuid import uuid4
+from satio import layers
+from satio.grid import S2TileBlocks
+import pandas as pd
 
 from ewoc_dag.bucket.eobucket import UploadProductError
 from ewoc_dag.ewoc_dag import get_blocks
@@ -18,6 +21,9 @@ from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
+from worldcereal.collections import WorldCerealSigma0TiledCollection, WorldCerealThermalTiledCollection
+from worldcereal.seasons import get_processing_dates
+from worldcereal.utils.__init__ import get_coll_maxgap
 
 from ewoc_classif.ewoc_model import EWOC_CL_MODEL_VERSION, EWOC_CT_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
 from ewoc_classif.utils import (
@@ -104,6 +110,85 @@ def download_features(
 
     return (check_product and check_product_irr)
 
+def check_collection(collection, name,
+                     start_date, end_date, tile_id, block, fail_threshold=1000,
+                     min_size=2):
+    """Helper function to check collection completeness
+    and report gap lengths
+
+    Args:
+        collection (BaseCollection): a satio collection
+        name (str): name of the collection used for reporting
+        start_date (str): processing start date (Y-m-d)
+        end_date (str): processing end date (Y-m-d)
+        fail_threshold (int): amount of days beyond which
+                        an error is raised that the collection is
+                        incomplete.
+        min_size (int): minimum amount of products to be present
+                        in collection before failing anyway.
+    """
+    S2_GRID = layers.load('s2grid')
+    splitter = S2TileBlocks(1024, s2grid=S2_GRID)
+    processingblocks = splitter.blocks(*tile_id)
+
+    processingblocks = processingblocks.loc[block]
+    collection = collection.filter_bounds(processingblocks['bounds'][block[0]], processingblocks['epsg'][block[0]])
+    collstart = (pd.to_datetime(start_date) -
+                     pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+    collend = (pd.to_datetime(end_date) +
+                   pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+
+    collection.df = collection.df[(collection.df.date >= collstart)
+            & (collection.df.date < collend)]
+
+    if name=='TIR':
+        collection=collection.filter_nodata()
+
+    opt_only=False
+
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    collstart = pd.to_datetime(collection.df.date.min())
+    collend = pd.to_datetime(collection.df.date.max())
+
+    # Check whether we have the minimum amount of
+    # products to not run into a pure processing issue
+    collsize = collection.df.shape[0]
+    if collsize < min_size:
+        logger.warning(f"Incomplete collection {name} : {collsize} less than {min_size}")
+        opt_only=True
+
+    # Check collection start
+    gapstart = collstart - start_date
+    gapstart = gapstart.days
+    gapstart = max(gapstart, 0)
+
+    # Check collection end
+    gapend = end_date - collend
+    gapend = gapend.days
+    gapend = max(gapend, 0)
+
+    maxgap = pd.to_datetime(collection.df.date).diff().max().days
+
+    # Report on collection
+    logger.info('-' * 50)
+    logger.info(f'{name} first image: {collstart}')
+    logger.info(f'{name} last image: {collend}')
+    logger.info(f'{name} largest gap: {maxgap}')
+    # Fail processing if collection is incomplete
+    if gapstart > fail_threshold:
+        logger.warning(f"Incomplete collection {name}: {gapstart} exceeds {fail_threshold}")
+        opt_only=True
+    if gapend > fail_threshold:
+        logger.warning(f"Incomplete collection {name}: {gapend} exceeds {fail_threshold}")
+        opt_only=True
+    if maxgap > fail_threshold:
+        logger.warning(f"Incomplete collection {name}: {maxgap} exceeds {fail_threshold}")
+        opt_only=True
+
+    return opt_only
+
+
 def process_blocks(
     tile_id: str,
     ewoc_config_filepath: Path,
@@ -112,7 +197,8 @@ def process_blocks(
     aez_id: int,
     block_ids: Optional[List[int]]=None,
     upload_block: bool=True,
-    clean:bool=True
+    clean:bool=True,
+    upload_log:bool=False
 ) -> bool:
     """
     Process a single block, cropland/croptype prediction
@@ -133,6 +219,8 @@ def process_blocks(
     :type aez_id: int
     :param out_dirpath: Output directory path
     :type out_dirpath: Path
+    :param upload_log : If true, upload exitlog and proclog with the block at the end of processing
+    :type upload_log : bool
     :return: None
     """
     logger.info("Running EWoC inference")
@@ -179,12 +267,13 @@ def process_blocks(
                     nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
                         out_dirpath / "blocks", production_id + "/blocks"
                     )
-                    ewoc_prd_bucket.upload_ewoc_prd(
-                        out_dirpath / "exitlogs", production_id + "/exitlogs"
-                    )
-                    ewoc_prd_bucket.upload_ewoc_prd(
-                        out_dirpath / "proclogs", production_id + "/proclogs"
-                    )
+                    if upload_log:
+                        ewoc_prd_bucket.upload_ewoc_prd(
+                            out_dirpath / "exitlogs", production_id + "/exitlogs"
+                        )
+                        ewoc_prd_bucket.upload_ewoc_prd(
+                            out_dirpath / "proclogs", production_id + "/proclogs"
+                        )
                     if any(blocks_feature_dir.iterdir()) and not use_exisiting_features:
                         ewoc_prd_bucket.upload_ewoc_prd(
                             blocks_feature_dir, production_id + "/block_features"
@@ -344,7 +433,8 @@ def run_classif(
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
     no_tir:bool=False,
-    use_existing_features: bool = True
+    use_existing_features: bool = True,
+    upload_log:bool=False
     ) -> None:
     """
     Perform EWoC classification
@@ -396,6 +486,8 @@ def run_classif(
     :param use_existing_features: If true, is going to download existing features, otherwise
     computes it as usual
     :param use_existing_features: bool
+    :param upload_log : If true, upload exitlog and proclog with the block at the end of processing
+    :type upload_log : bool
     :return: None
     """
     uid = uuid4().hex[:6]
@@ -411,62 +503,96 @@ def run_classif(
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
 
     aez_id=int(production_id.split('_')[-2])
-    if use_existing_features and block_ids is not None:
-        for block in block_ids:
-            check_features=download_features(
-                ewoc_prd_bucket,
-                tile_id,
-                end_season_year,
-                ewoc_season,
-                block,
-                production_id,
-                aez_id,
-                feature_blocks_dir)
-
-        use_existing_features=check_features
-
-    if sar_csv is None:
-        sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
-        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
-    if optical_csv is None:
-        optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
-        ewoc_ard_bucket.optical_to_satio_csv(
-            tile_id, production_id, filepath=optical_csv)
-    if tir_csv is None:
-        tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
-        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
-    else:
-        with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
-            tir_dict = list(csv.DictReader(tir_file))
-            if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
-                no_tir=True
-
-    if agera5_csv is None:
-        agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
-        ewoc_aux_data_bucket = EWOCAuxDataBucket()
-        ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
-
+    no_sar=False
+    no_tir=False
     add_croptype = False
-    if end_season_year == 2022:
-        logger.info('Add additional croptype')
-        add_croptype = True
+    csv_dict={}
 
-    if not no_tir:
-        csv_dict = {
-            "OPTICAL": str(optical_csv),
-            "SAR": str(sar_csv),
-            "TIR": str(tir_csv),
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": str(agera5_csv),
-        }
+    ewoc_prd_bucket  = EWOCPRDBucket()
+    if use_existing_features and block_ids is not None:
+            for block in block_ids:
+                check_features=download_features(
+                    ewoc_prd_bucket,
+                    tile_id,
+                    end_season_year,
+                    ewoc_season,
+                    block,
+                    production_id,
+                    aez_id,
+                    feature_blocks_dir)
+
+            use_existing_features=check_features
     else:
-        csv_dict = {
-            "OPTICAL": str(optical_csv),
-            "SAR": str(sar_csv),
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": str(agera5_csv),
-        }
+        if sar_csv is None:
+            sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
+            ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
+        else:
+            with open(Path(sar_csv), 'r', encoding='utf8') as sar_file:
+                sar_dict = list(csv.DictReader(sar_file))
+                if len(sar_dict) <= 1:
+                    logger.warning(f"SAR ARD is empty for the tile {tile_id}")
+                    no_sar=True
+        if optical_csv is None:
+            optical_csv = out_dirpath / f"{uid}_satio_optical.csv"
+            ewoc_ard_bucket.optical_to_satio_csv(
+                tile_id, production_id, filepath=optical_csv)
+        if tir_csv is None:
+            tir_csv = out_dirpath / f"{uid}_satio_tir.csv"
+            ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
+        else:
+            with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
+                tir_dict = list(csv.DictReader(tir_file))
+                if len(tir_dict) <= 1:
+                    logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
+                    no_tir=True
+
+        if agera5_csv is None:
+            agera5_csv = out_dirpath / f"{uid}_satio_agera5.csv"
+            ewoc_aux_data_bucket = EWOCAuxDataBucket()
+            ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
+
+        if end_season_year == 2022:
+            logger.info('Add additional croptype')
+            add_croptype = True
+
+        S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
+        l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
+
+        start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
+        logger.info("Checking collection of SAR")
+        no_sar=check_collection(S1coll, 'SAR', start_date, end_date, [tile_id], block_ids, fail_threshold=get_coll_maxgap('SAR'))
+        logger.info("Checking collection of TIR")
+        no_tir=check_collection(l8coll, 'TIR', start_date, end_date, [tile_id], block_ids, fail_threshold=get_coll_maxgap('TIR'))
+
+        if not no_tir and not no_sar:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "SAR": str(sar_csv),
+                "TIR": str(tir_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+        elif not no_sar and no_tir:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "SAR": str(sar_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+        elif not no_tir and no_sar:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "TIR": str(tir_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+        else:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+
 
 
     ewoc_config = generate_config_file(
@@ -502,6 +628,7 @@ def run_classif(
                 block_ids,
                 upload_block=upload_block,
                 clean=clean,
+                upload_log=upload_log
             )
             if not process_status:
                 raise RuntimeError(f"Processing of {tile_id}_{block_ids} failed with error!")
@@ -603,7 +730,8 @@ def generate_ewoc_block(
     upload_block: bool = True,
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
-    use_existing_features: bool = True
+    use_existing_features: bool = True,
+    upload_log: bool=False
     ) -> None:
     """
     Perform EWoC classification
@@ -656,6 +784,9 @@ def generate_ewoc_block(
     computes it as usual
     :param use_existing_features: bool
     :return: None
+    :param upload_log : If true, upload exitlog and proclog with the block at the end of processing
+    :type upload_log : bool
+    :return None
     """
     uid = uuid4().hex[:6]
     tile_uid = tile_id + "_" + uid
@@ -668,6 +799,10 @@ def generate_ewoc_block(
     feature_blocks_dir.mkdir(parents=True,exist_ok=True)
 
     aez_id=int(production_id.split('_')[-2])
+    no_sar=False
+    no_tir=False
+    add_croptype = False
+    csv_dict={}
 
     ewoc_prd_bucket  = EWOCPRDBucket()
     if use_existing_features:
@@ -681,51 +816,77 @@ def generate_ewoc_block(
             aez_id,
             feature_blocks_dir)
 
-    ewoc_ard_bucket = EWOCARDBucket()
-    if sar_csv is None:
-        sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
-        ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
-    if optical_csv is None:
-        optical_csv = out_dirpath / f"{tile_uid}_satio_optical.csv"
-        ewoc_ard_bucket.optical_to_satio_csv(
-            tile_id, production_id, filepath=optical_csv)
-    no_tir=False
-    if tir_csv is None:
-        tir_csv = out_dirpath / f"{tile_uid}_satio_tir.csv"
-        ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
     else:
-        with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
-            tir_dict = list(csv.DictReader(tir_file))
-            if len(tir_dict) <= 1:
-                logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
-                no_tir=True
+        ewoc_ard_bucket = EWOCARDBucket()
+        if sar_csv is None:
+            sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
+            ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
+        else:
+            with open(Path(sar_csv), 'r', encoding='utf8') as sar_file:
+                sar_dict = list(csv.DictReader(sar_file))
+                if len(sar_dict) <= 1:
+                    logger.warning(f"SAR ARD is empty for the tile {tile_id}")
+                    no_sar=True
+        if optical_csv is None:
+            optical_csv = out_dirpath / f"{tile_uid}_satio_optical.csv"
+            ewoc_ard_bucket.optical_to_satio_csv(
+                tile_id, production_id, filepath=optical_csv)
+        if tir_csv is None:
+            tir_csv = out_dirpath / f"{tile_uid}_satio_tir.csv"
+            ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
+        else:
+            with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
+                tir_dict = list(csv.DictReader(tir_file))
+                if len(tir_dict) <= 1:
+                    logger.warning(f"TIR ARD is empty for the tile {tile_id}=>No irrigation computed!")
+                    no_tir=True
 
-    if agera5_csv is None:
-        agera5_csv = out_dirpath / f"{tile_uid}_satio_agera5.csv"
-        ewoc_aux_data_bucket = EWOCAuxDataBucket()
-        ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
+        if agera5_csv is None:
+            agera5_csv = out_dirpath / f"{tile_uid}_satio_agera5.csv"
+            ewoc_aux_data_bucket = EWOCAuxDataBucket()
+            ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
-    add_croptype = False
-    if end_season_year == 2022 and croptype_model_version=='v720':
-        logger.info('Add additional croptype')
-        add_croptype = True
+        if end_season_year == 2022 and croptype_model_version=='v720':
+            logger.info('Add additional croptype')
+            add_croptype = True
 
-    if not no_tir:
-        csv_dict = {
-            "OPTICAL": str(optical_csv),
-            "SAR": str(sar_csv),
-            "TIR": str(tir_csv),
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": str(agera5_csv),
-        }
-    else:
-        csv_dict = {
-            "OPTICAL": str(optical_csv),
-            "SAR": str(sar_csv),
-            "DEM": "s3://ewoc-aux-data/CopDEM_20m",
-            "METEO": str(agera5_csv),
-        }
+        S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
+        l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
 
+        start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
+        logger.info("Checking collection of SAR")
+        no_sar=check_collection(S1coll, 'SAR', start_date, end_date, [tile_id], [block_id], fail_threshold=get_coll_maxgap('SAR'))
+        logger.info("Checking collection of TIR")
+        no_tir=check_collection(l8coll, 'TIR', start_date, end_date, [tile_id], [block_id], fail_threshold=get_coll_maxgap('TIR'))
+
+        if not no_tir and not no_sar:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "SAR": str(sar_csv),
+                "TIR": str(tir_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+        elif not no_sar and no_tir:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "SAR": str(sar_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+        elif not no_tir and no_sar:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "TIR": str(tir_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
+        else:
+            csv_dict = {
+                "OPTICAL": str(optical_csv),
+                "DEM": "s3://ewoc-aux-data/CopDEM_20m",
+                "METEO": str(agera5_csv),
+            }
 
     # Create the config file
     ewoc_config = generate_config_file(
@@ -771,12 +932,13 @@ def generate_ewoc_block(
                 nb_prd, __unused, up_dir = ewoc_prd_bucket.upload_ewoc_prd(
                     out_dirpath / "blocks", production_id + "/blocks"
                 )
-                ewoc_prd_bucket.upload_ewoc_prd(
-                    out_dirpath / "exitlogs", production_id + "/exitlogs"
-                )
-                ewoc_prd_bucket.upload_ewoc_prd(
-                    out_dirpath / "proclogs", production_id + "/proclogs"
-                )
+                if upload_log:
+                    ewoc_prd_bucket.upload_ewoc_prd(
+                        out_dirpath / "exitlogs", production_id + "/exitlogs"
+                    )
+                    ewoc_prd_bucket.upload_ewoc_prd(
+                        out_dirpath / "proclogs", production_id + "/proclogs"
+                    )
                 if any(feature_blocks_dir.iterdir()) and not use_existing_features:
                     ewoc_prd_bucket.upload_ewoc_prd(
                         feature_blocks_dir, production_id + "/block_features"
