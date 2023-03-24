@@ -19,7 +19,7 @@ __license__ = "Unlicense"
 _logger = logging.getLogger(__name__)
 
 EWOC_CL_MODEL_VERSION='v750'
-EWOC_CT_MODEL_VERSION='v750'
+EWOC_CT_MODEL_VERSION='v751'
 EWOC_IRR_MODEL_VERSION='v420'
 
 def parse_args(args):
