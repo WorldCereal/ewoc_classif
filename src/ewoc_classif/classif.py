@@ -835,7 +835,7 @@ def generate_ewoc_block(
             with open(Path(sar_csv), 'r', encoding='utf8') as sar_file:
                 sar_dict = list(csv.DictReader(sar_file))
                 if len(sar_dict) <= 1:
-                    logger.warning(f"SAR ARD is empty for {tile_id}: Use optical only mode!")
+                    logger.warning(f"SAR ARD is empty for {tile_id}: Use optical only model!")
                     no_sar=True
 
         logger.info("Checking SAR ARD collection completeness.")
