@@ -98,7 +98,7 @@ def parse_args(args):
         dest="cropland_model_version",
         help="Cropland model version",
         type=str,
-        default=EWOC_CROPLAND_DETECTOR,
+        default=EWOC_CL_MODEL_VERSION,
     )
     parser.add_argument(
         "--croptype-model-version",
