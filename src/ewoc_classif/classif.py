@@ -819,7 +819,11 @@ def generate_ewoc_block(
             feature_blocks_dir)
 
     if not use_existing_features:
+        # Use ARD if block features are not found
         ewoc_ard_bucket = EWOCARDBucket()
+        start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
+
+        # SAR ARD collection
         if sar_csv is None:
             sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
             ewoc_ard_bucket.sar_to_satio_csv(tile_id, production_id, filepath=sar_csv)
@@ -827,12 +831,21 @@ def generate_ewoc_block(
             with open(Path(sar_csv), 'r', encoding='utf8') as sar_file:
                 sar_dict = list(csv.DictReader(sar_file))
                 if len(sar_dict) <= 1:
-                    logger.warning(f"SAR ARD is empty for the tile {tile_id}")
+                    logger.warning(f"SAR ARD is empty for {tile_id}: Use optical only mode!")
                     no_sar=True
+
+        logger.info("Checking SAR ARD collection completeness.")
+        S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
+        no_sar=check_collection(S1coll, 'SAR', start_date, end_date,
+                                [tile_id], [block_id], fail_threshold=get_coll_maxgap('SAR'))
+
+        # Optical ARD collection
         if optical_csv is None:
             optical_csv = out_dirpath / f"{tile_uid}_satio_optical.csv"
             ewoc_ard_bucket.optical_to_satio_csv(
                 tile_id, production_id, filepath=optical_csv)
+
+        # TIR ARD collection
         if tir_csv is None:
             tir_csv = out_dirpath / f"{tile_uid}_satio_tir.csv"
             ewoc_ard_bucket.tir_to_satio_csv(tile_id, production_id, filepath=tir_csv)
@@ -840,24 +853,18 @@ def generate_ewoc_block(
             with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
                 tir_dict = list(csv.DictReader(tir_file))
                 if len(tir_dict) <= 1:
-                    logger.warning(f"TIR ARD is empty for the tile {tile_id}=>No irrigation computed!")
+                    logger.warning(f"TIR ARD is empty for {tile_id}: No irrigation computed!")
                     no_tir=True
+
+        logger.info("Checking TIR ARD collection completeness.")
+        l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
+        no_tir=check_collection(l8coll, 'TIR', start_date, end_date,
+                                [tile_id], [block_id], fail_threshold=get_coll_maxgap('TIR'))
 
         if agera5_csv is None:
             agera5_csv = out_dirpath / f"{tile_uid}_satio_agera5.csv"
             ewoc_aux_data_bucket = EWOCAuxDataBucket()
             ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
-
-
-
-        S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
-        l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
-
-        start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
-        logger.info("Checking collection of SAR")
-        no_sar=check_collection(S1coll, 'SAR', start_date, end_date, [tile_id], [block_id], fail_threshold=get_coll_maxgap('SAR'))
-        logger.info("Checking collection of TIR")
-        no_tir=check_collection(l8coll, 'TIR', start_date, end_date, [tile_id], [block_id], fail_threshold=get_coll_maxgap('TIR'))
 
         if not no_tir and not no_sar:
             csv_dict = {
