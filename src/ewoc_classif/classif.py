@@ -848,9 +848,7 @@ def generate_ewoc_block(
             ewoc_aux_data_bucket = EWOCAuxDataBucket()
             ewoc_aux_data_bucket.agera5_to_satio_csv(filepath=agera5_csv)
 
-        if end_season_year == 2022 and croptype_model_version=='v720':
-            logger.info('Add additional croptype')
-            add_croptype = True
+
 
         S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
         l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
@@ -889,6 +887,10 @@ def generate_ewoc_block(
                 "DEM": "s3://ewoc-aux-data/CopDEM_20m",
                 "METEO": str(agera5_csv),
             }
+
+    if end_season_year == 2022 and croptype_model_version=='v720':
+        logger.info('Add additional croptype')
+        add_croptype = True
 
     # Create the config file
     ewoc_config = generate_config_file(
