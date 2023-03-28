@@ -730,7 +730,7 @@ def generate_ewoc_block(
     upload_block: bool = True,
     out_dirpath: Path = Path(gettempdir()),
     clean:bool=True,
-    use_existing_features: bool = True,
+    ignore_existing_features:bool = False,
     upload_log: bool=False
     ) -> None:
     """
@@ -780,9 +780,9 @@ def generate_ewoc_block(
     :type out_dirpath: Path
     :param no_tir: Boolean specifying if the csv file containing details on ARD TIR is empty or not
     :type no_tir: bool
-    :param use_existing_features: If true, is going to download existing features, otherwise
-    computes it as usual
-    :param use_existing_features: bool
+    :param ignore_existing_features: If true, is going to ignore the existing features, otherwise
+    computes we will use it
+    :param ignore_existing_features : bool
     :return: None
     :param upload_log : If true, upload exitlog and proclog with the block at the end of processing
     :type upload_log : bool
@@ -805,7 +805,9 @@ def generate_ewoc_block(
     csv_dict={}
 
     ewoc_prd_bucket  = EWOCPRDBucket()
-    if use_existing_features:
+
+    use_existing_features = False
+    if not ignore_existing_features:
         use_existing_features=download_features(
             ewoc_prd_bucket,
             tile_id,
@@ -816,7 +818,7 @@ def generate_ewoc_block(
             aez_id,
             feature_blocks_dir)
 
-    else:
+    if not use_existing_features:
         ewoc_ard_bucket = EWOCARDBucket()
         if sar_csv is None:
             sar_csv = out_dirpath / f"{tile_uid}_satio_sar.csv"
