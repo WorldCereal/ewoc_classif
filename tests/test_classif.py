@@ -26,7 +26,7 @@ class TestClassif50HQH(TestClassifBase):
         64,
         upload_block=False,
         clean=self.clean,
-        use_existing_features=False)
+        ignore_existing_features=True)
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_generate_ewoc_block_croptype_summer1_50HQH_64(self):
@@ -39,7 +39,7 @@ class TestClassif50HQH(TestClassifBase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[1],
         upload_block=False,
         clean=self.clean,
-        use_existing_features=False)
+        ignore_existing_features=True)
 
     def test_generate_ewoc_block_croptype_summer2_50HQH_64(self):
         """ No summer2 for this aez, therefore the block raise an exception
@@ -52,7 +52,7 @@ class TestClassif50HQH(TestClassifBase):
             ewoc_season=EWOC_SUPPORTED_SEASONS[2],
             upload_block=False,
             clean=self.clean,
-            use_existing_features=False)
+            ignore_existing_features=True)
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_generate_ewoc_block_croptype_winter_50HQH_64(self):
@@ -65,7 +65,7 @@ class TestClassif50HQH(TestClassifBase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[0],
         upload_block=False,
         clean=self.clean,
-        use_existing_features=False)
+        ignore_existing_features=True)
 
     def test_generate_ewoc_block_cropland_50HQH_64_from_features(self):
         """ Nominal cropland test from features
@@ -155,7 +155,7 @@ class TestClassif15STU(TestClassifBase):
         ewoc_season=EWOC_SUPPORTED_SEASONS[1],
         upload_block=False,
         clean=self.clean,
-        use_existing_features=False)
+        ignore_existing_features=True)
 
     @unittest.skipIf(os.getenv("EWOC_TEST_VAL_TEST") is None,"env variable not set")
     def test_generate_ewoc_block_croptype_summer1_15STU_119(self):
@@ -168,7 +168,7 @@ class TestClassif15STU(TestClassifBase):
             ewoc_season=EWOC_SUPPORTED_SEASONS[1],
             upload_block=False,
             clean=self.clean,
-            use_existing_features=False)
+            ignore_existing_features=True)
 
 class TestClassif(unittest.TestCase):
     def setUp(self):
@@ -485,8 +485,7 @@ class TestClassif(unittest.TestCase):
         110,
         end_season_year=2021,
         upload_block=False,
-        clean=True,
-        use_existing_features=True)
+        clean=True)
 
     def test_generate_ewoc_block_summer1_36TYQ_110_2021_with_features(self):
         """ Using block features summer1 when features does not exist
@@ -498,7 +497,6 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=True,
-        use_existing_features=True,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
@@ -511,7 +509,6 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=True,
-        use_existing_features=True,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
@@ -525,7 +522,6 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=True,
         clean=True,
-        use_existing_features=True,
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[1])
 
@@ -564,8 +560,7 @@ class TestClassif(unittest.TestCase):
         upload_block=False,
         clean=False,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        use_existing_features=True)
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv")
 
     def test_generate_ewoc_block_cropland_01gel_110(self):
         """ Case where there is no SAR data at all, raise an error in VITO processor
@@ -578,8 +573,7 @@ class TestClassif(unittest.TestCase):
         upload_block=False,
         clean=False,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        use_existing_features=True)
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv")
 
 
     def test_generate_ewoc_block_cropland_12qvf_109(self):
@@ -598,8 +592,7 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=False,
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        use_existing_features=True)
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv")
 
     def test_generate_ewoc_block_cropland_12qwf_110(self):
         """Case where there is no SAR data at all, raise an error in VITO processor
@@ -612,8 +605,7 @@ class TestClassif(unittest.TestCase):
         upload_block=False,
         clean=False,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        use_existing_features=True)
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv")
 
     def test_generate_ewoc_block_cropland_27put_110(self):
         """ Case where there is no SAR data at all, raise an error in VITO processor
@@ -626,8 +618,7 @@ class TestClassif(unittest.TestCase):
         upload_block=False,
         clean=False,
         sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
-        use_existing_features=True)
+        tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv")
 
     def test_generate_ewoc_block_cropland_27vvl_112(self):
         """Incomplete collection `OPTICAL`: got a value of 152 days for `gapend` which
@@ -639,8 +630,7 @@ class TestClassif(unittest.TestCase):
         112,
         end_season_year=2021,
         upload_block=False,
-        clean=True,
-        use_existing_features=True)
+        clean=True)
 
     def test_generate_ewoc_block_cropland_28weu_20(self):
         """Incomplete collection `OPTICAL`: got a value of 169 days for `maxgap` which
@@ -652,8 +642,7 @@ class TestClassif(unittest.TestCase):
         20,
         end_season_year=2021,
         upload_block=False,
-        clean=True,
-        use_existing_features=True)
+        clean=True)
 
     def test_generate_ewoc_block_cropland_29vnk_15(self):
         """Incomplete collection `OPTICAL`: got a value of 186 days for `gapstart` which
@@ -665,8 +654,7 @@ class TestClassif(unittest.TestCase):
         15,
         end_season_year=2021,
         upload_block=False,
-        clean=True,
-        use_existing_features=True)
+        clean=True)
 
     def test_generate_ewoc_block_cropland_29vpk_58(self):
         """Less than 3 off-swath acquisitions found (missing 67 blocks)
@@ -677,8 +665,7 @@ class TestClassif(unittest.TestCase):
         58,
         end_season_year=2021,
         upload_block=False,
-        clean=True,
-        use_existing_features=True)
+        clean=True)
 
     def test_generate_ewoc_block_cropland_30vuq_71(self):
         """Less than 3 off-swath acquisitions found (missing 68 blocks)
@@ -689,8 +676,7 @@ class TestClassif(unittest.TestCase):
         71,
         end_season_year=2021,
         upload_block=False,
-        clean=True,
-        use_existing_features=True)
+        clean=True)
 
     def test_generate_ewoc_block_cropland_54vuj_110(self):
         """Case where there is no SAR, TIR and OPTICAL data at all, raise an error in VITO processor
@@ -702,8 +688,7 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=True,
-        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        use_existing_features=True)
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv")
 #tir_csv="/home/rbuguetd/dev/ewoc_classif/tests/tir_preprocessed_path.csv",
 #optical_csv="/home/rbuguetd/dev/ewoc_classif/tests/optical_preprocessed_path.csv",
 
@@ -717,8 +702,7 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=True,
-        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        use_existing_features=True)
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv")
 
     def test_generate_ewoc_block_cropland_54vvk_110(self):
         """Case where there is no SAR, TIR and OPTICAL data at all, raise an error in VITO processor
@@ -730,8 +714,7 @@ class TestClassif(unittest.TestCase):
         end_season_year=2021,
         upload_block=False,
         clean=True,
-        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv",
-        use_existing_features=True)
+        sar_csv="/home/rbuguetd/dev/ewoc_classif/tests/sar_preprocessed_path.csv")
 
     def test_generate_ewoc_block_summer1_47nla_39(self):
         """Incomplete collection `SAR`: got a collection size of 0 which is less
@@ -897,7 +880,7 @@ class TestClassif(unittest.TestCase):
         ewoc_detector=EWOC_CROPTYPE_DETECTOR,
         ewoc_season=EWOC_SUPPORTED_SEASONS[0])
 
-    def test_generate_ewoc_block_cropland_36UVB_43(self):
+    def test_generate_ewoc_block_cropland_36UVB_43_no_log(self):
         """  Test upload_log parameter
         """
         generate_ewoc_block('36UVB',
