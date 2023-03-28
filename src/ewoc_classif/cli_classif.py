@@ -11,7 +11,9 @@ from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 
 from ewoc_classif import __version__
 from ewoc_classif.classif import EWOC_CROPLAND_DETECTOR, EWOC_DETECTORS, generate_ewoc_block
-from ewoc_classif.ewoc_model import EWOC_CT_MODEL_VERSION, EWOC_CL_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
+from ewoc_classif.ewoc_model import (EWOC_CT_MODEL_VERSION,
+                                     EWOC_CL_MODEL_VERSION,
+                                     EWOC_IRR_MODEL_VERSION)
 from ewoc_classif.utils import setup_logging, valid_year
 
 __author__ = "Mickael Savinaud"

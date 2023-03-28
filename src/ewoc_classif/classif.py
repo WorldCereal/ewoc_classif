@@ -21,11 +21,14 @@ from ewoc_dag.bucket.ewoc import EWOCARDBucket, EWOCAuxDataBucket, EWOCPRDBucket
 from loguru import logger
 from worldcereal import SUPPORTED_SEASONS as EWOC_SUPPORTED_SEASONS
 from worldcereal.worldcereal_products import run_tile
-from worldcereal.collections import WorldCerealSigma0TiledCollection, WorldCerealThermalTiledCollection
+from worldcereal.collections import (WorldCerealSigma0TiledCollection,
+                                     WorldCerealThermalTiledCollection)
 from worldcereal.seasons import get_processing_dates
 from worldcereal.utils.__init__ import get_coll_maxgap
 
-from ewoc_classif.ewoc_model import EWOC_CL_MODEL_VERSION, EWOC_CT_MODEL_VERSION, EWOC_IRR_MODEL_VERSION
+from ewoc_classif.ewoc_model import (EWOC_CL_MODEL_VERSION,
+                                     EWOC_CT_MODEL_VERSION,
+                                     EWOC_IRR_MODEL_VERSION)
 from ewoc_classif.utils import (
     check_outfold,
     generate_config_file,
@@ -127,12 +130,11 @@ def check_collection(collection, name,
         min_size (int): minimum amount of products to be present
                         in collection before failing anyway.
     """
-    S2_GRID = layers.load('s2grid')
-    splitter = S2TileBlocks(1024, s2grid=S2_GRID)
-    processingblocks = splitter.blocks(*tile_id)
+    processingblocks = S2TileBlocks(1024, s2grid=layers.load('s2grid')).blocks(*tile_id)
 
     processingblocks = processingblocks.loc[block]
-    collection = collection.filter_bounds(processingblocks['bounds'][block[0]], processingblocks['epsg'][block[0]])
+    collection = collection.filter_bounds(processingblocks['bounds'][block[0]],
+                                          processingblocks['epsg'][block[0]])
     collstart = (pd.to_datetime(start_date) -
                      pd.Timedelta(days=1)).strftime('%Y-%m-%d')
     collend = (pd.to_datetime(end_date) +
@@ -510,18 +512,18 @@ def run_classif(
 
     ewoc_prd_bucket  = EWOCPRDBucket()
     if use_existing_features and block_ids is not None:
-            for block in block_ids:
-                check_features=download_features(
-                    ewoc_prd_bucket,
-                    tile_id,
-                    end_season_year,
-                    ewoc_season,
-                    block,
-                    production_id,
-                    aez_id,
-                    feature_blocks_dir)
+        for block in block_ids:
+            check_features=download_features(
+                ewoc_prd_bucket,
+                tile_id,
+                end_season_year,
+                ewoc_season,
+                block,
+                production_id,
+                aez_id,
+                feature_blocks_dir)
 
-            use_existing_features=check_features
+        use_existing_features=check_features
     else:
         if sar_csv is None:
             sar_csv = out_dirpath / f"{uid}_satio_sar.csv"
@@ -543,7 +545,7 @@ def run_classif(
             with open(Path(tir_csv), 'r', encoding='utf8') as tir_file:
                 tir_dict = list(csv.DictReader(tir_file))
                 if len(tir_dict) <= 1:
-                    logger.warning(f"TIR ARD is empty for the tile {tile_id} => No irrigation computed!")
+                    logger.warning(f"TIR ARD is empty for {tile_id}: No irrigation computed!")
                     no_tir=True
 
         if agera5_csv is None:
@@ -555,14 +557,16 @@ def run_classif(
             logger.info('Add additional croptype')
             add_croptype = True
 
-        S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
-        l8coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
+        sar_ard_coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
+        tir_ard_coll = WorldCerealThermalTiledCollection.from_path(tir_csv)
 
         start_date, end_date = get_processing_dates(ewoc_season, aez_id, end_season_year)
         logger.info("Checking collection of SAR")
-        no_sar=check_collection(S1coll, 'SAR', start_date, end_date, [tile_id], block_ids, fail_threshold=get_coll_maxgap('SAR'))
+        no_sar=check_collection(sar_ard_coll, 'SAR', start_date, end_date,
+                                [tile_id], block_ids, fail_threshold=get_coll_maxgap('SAR'))
         logger.info("Checking collection of TIR")
-        no_tir=check_collection(l8coll, 'TIR', start_date, end_date, [tile_id], block_ids, fail_threshold=get_coll_maxgap('TIR'))
+        no_tir=check_collection(tir_ard_coll, 'TIR', start_date, end_date,
+                                [tile_id], block_ids, fail_threshold=get_coll_maxgap('TIR'))
 
         if not no_tir and not no_sar:
             csv_dict = {
@@ -835,8 +839,8 @@ def generate_ewoc_block(
                     no_sar=True
 
         logger.info("Checking SAR ARD collection completeness.")
-        S1coll = WorldCerealSigma0TiledCollection.from_path(sar_csv)
-        no_sar=check_collection(S1coll, 'SAR', start_date, end_date,
+        no_sar=check_collection(WorldCerealSigma0TiledCollection.from_path(sar_csv),
+                                'SAR', start_date, end_date,
                                 [tile_id], [block_id], fail_threshold=get_coll_maxgap('SAR'))
 
         # Optical ARD collection
